@@ -44,7 +44,7 @@ class Api(env: ItemRepository) extends JsonSupport with ZioSupport {
             extractHost { host => 
               entity(Directives.as[CreateItemRequest]) { req =>
                 ApplicationService.addItem(req.name, req.price).provide(env).map { id =>
-                  respondWithHeader(Location(Uri(scheme = scheme).withHost(host).withPath(Uri.Path(s"items/$id")))) {
+                  respondWithHeader(Location(Uri(scheme = scheme).withAuthority(host, port).withPath(Uri.Path(s"/items/${id.value}")))) {
                     complete {
                       HttpResponse(StatusCodes.Created)
                     }
