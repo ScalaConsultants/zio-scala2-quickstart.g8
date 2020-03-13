@@ -6,10 +6,12 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives._
 import $package$.application.ApplicationService
-import $package$.domain.{ Item, ItemId, ItemRepository }
+import $package$.domain._
 import $package$.infrastructure._
-import $package$.interop.ZioSupport
+import $package$.interop.akka._
 import spray.json._
+import zio.Runtime
+import zio.internal.Platform
 
 case class CreateItemRequest(name: String, price: BigDecimal)
 case class UpdateItemRequest(name: String, price: BigDecimal)
@@ -29,9 +31,20 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val partialUpdateItemRequestFormat = jsonFormat2(PartialUpdateItemRequest)
 }
 
-class Api(env: ItemRepository) extends JsonSupport with ZioSupport {
+class Api(env: ItemRepository, port: Int) extends JsonSupport with ZioSupport {
+
+  override val environment: Unit = Runtime.default.environment
+
+  override val platform: Platform = Runtime.default.platform
 
   lazy val route = itemRoute
+
+  implicit val domainErrorMapper = new ErrorMapper[DomainError] {
+    def toHttpResponse(e: DomainError): HttpResponse = e match {
+      case RepositoryError(cause) => HttpResponse(StatusCodes.InternalServerError)
+      case ValidationError(msg)   => HttpResponse(StatusCodes.BadRequest)
+    }
+  }
 
   val itemRoute =
     pathPrefix("items") {
@@ -44,7 +57,7 @@ class Api(env: ItemRepository) extends JsonSupport with ZioSupport {
             extractHost { host => 
               entity(Directives.as[CreateItemRequest]) { req =>
                 ApplicationService.addItem(req.name, req.price).provide(env).map { id =>
-                  respondWithHeader(Location(Uri(scheme = scheme).withAuthority(host, port).withPath(Uri.Path(s"/items/${id.value}")))) {
+                  respondWithHeader(Location(Uri(scheme = scheme).withAuthority(host, port).withPath(Uri.Path(s"/items/\${id.value}")))) {
                     complete {
                       HttpResponse(StatusCodes.Created)
                     }
