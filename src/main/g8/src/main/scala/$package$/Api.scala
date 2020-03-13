@@ -54,7 +54,7 @@ class Api(env: ItemRepository, port: Int) extends JsonSupport with ZioSupport {
         } ~
         post {
           extractScheme { scheme =>
-            extractHost { host => 
+            extractHost { host =>
               entity(Directives.as[CreateItemRequest]) { req =>
                 ApplicationService.addItem(req.name, req.price).provide(env).map { id =>
                   respondWithHeader(Location(Uri(scheme = scheme).withAuthority(host, port).withPath(Uri.Path(s"/items/\${id.value}")))) {
@@ -88,3 +88,4 @@ class Api(env: ItemRepository, port: Int) extends JsonSupport with ZioSupport {
       }
     }
 }
+
