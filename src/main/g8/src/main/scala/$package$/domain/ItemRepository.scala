@@ -12,17 +12,17 @@ object ItemRepository {
 
   trait Service {
 
-    def add(name: String, price: BigDecimal): IO[RepositoryFailure, ItemId]
+    def add(name: String, price: BigDecimal): IO[RepositoryError, ItemId]
 
-    def delete(id: ItemId): IO[RepositoryFailure, Unit]
+    def delete(id: ItemId): IO[RepositoryError, Unit]
 
-    val getAll: IO[RepositoryFailure, List[Item]]
+    val getAll: IO[RepositoryError, List[Item]]
 
-    def getById(id: ItemId): IO[RepositoryFailure, Option[Item]]
+    def getById(id: ItemId): IO[RepositoryError, Option[Item]]
 
-    def getByIds(ids: Set[ItemId]): IO[RepositoryFailure, List[Item]]
+    def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]]
 
-    def update(id: ItemId, name: String, price: BigDecimal): IO[RepositoryFailure, Option[Unit]]
+    def update(id: ItemId, name: String, price: BigDecimal): IO[RepositoryError, Option[Unit]]
   }
 
 }
