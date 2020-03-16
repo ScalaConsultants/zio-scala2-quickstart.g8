@@ -21,7 +21,7 @@ object SlickItemRepository {
         def add(name: String, price: BigDecimal): IO[RepositoryError, ItemId] = {
           val insert = (items returning items.map(_.id)) += Item(None, name, price)
 
-          logInfo(s"Adding item with name = $name, price = $price") *>
+          logInfo(s"Adding item with name = \$name, price = \$price") *>
           ZIO
             .fromDBIO(insert)
             .refineOrDie {
@@ -33,7 +33,7 @@ object SlickItemRepository {
         def delete(id: ItemId): IO[RepositoryError, Unit] = {
           val delete = items.filter(_.id === id).delete
 
-          logInfo(s"Adding item ${id.value}") *>
+          logInfo(s"Adding item \${id.value}") *>
           ZIO.fromDBIO(delete).unit.refineOrDie {
             case e: Exception => RepositoryError(e)
           }
@@ -74,7 +74,7 @@ object SlickItemRepository {
 
           val foundF = (n: Int) => if (n > 0) Some(()) else None
 
-          logInfo(s"Updating item ${id.value} to name = $name, price = $price") *>
+          logInfo(s"Updating item \${id.value} to name = \$name, price = \$price") *>
           ZIO.fromDBIO(update).map(foundF).refineOrDie {
             case e: Exception => RepositoryError(e)
           }
