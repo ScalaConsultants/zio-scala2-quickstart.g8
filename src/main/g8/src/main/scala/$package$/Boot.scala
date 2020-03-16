@@ -7,6 +7,8 @@ import $package$.api.Api.ApiConfig
 import $package$.infrastructure._
 import $package$.interop.slick.DatabaseProvider
 import zio.console._
+import zio.logging._
+import zio.logging.slf4j._
 import zio.{ App, ZIO, ZLayer }
 
 import scala.concurrent.ExecutionContext
@@ -34,7 +36,15 @@ object Boot extends App {
 
   def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] = {
 
-    val dbLayer = DatabaseProvider.live >>> SlickItemRepository.live
+    val logger = Slf4jLogger.make { (context, message) =>
+      val logFormat = "[correlation-id = %s] %s"
+      val correlationId = LogAnnotation.CorrelationId.render(
+        context.get(LogAnnotation.CorrelationId)
+      )
+      logFormat.format(correlationId, message)
+    }
+
+    val dbLayer = (logger ++ DatabaseProvider.live) >>> SlickItemRepository.live
     val api     = (ZLayer.succeed(ApiConfig(port)) ++ dbLayer) >>> Api.live
     val liveEnv = Console.live ++ api
 
