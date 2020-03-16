@@ -36,7 +36,7 @@ object Boot extends App {
 
   def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] = {
 
-    val configLayer = TypesafeConfig.fromHoconFile(appConfigDesc, new File("src/main/resources/application.conf"))
+    val configLayer = TypesafeConfig.fromDefaultLoader(appConfigDesc)
 
     val dbConfigLayer = configLayer.map(c => Has(new Config.Service[DbConfig] { def config = c.get.config.db }) )
     val apiConfigLayer = configLayer.map(c => Has(new Config.Service[ApiConfig] { def config = c.get.config.api }) )
