@@ -17,8 +17,10 @@ import zio.config.magnolia.ConfigDescriptorProvider.description
 
 object Api {
 
+  final case class AppConfig(api: ApiConfig, db: DbConfig)
+  final case class DbConfig(url: String, driver: String)
   final case class ApiConfig(host: String, port: Int)
-  val configDescr = description[ApiConfig]
+  val appConfigDesc = description[AppConfig]
 
   trait Service {
     def routes: Route

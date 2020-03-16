@@ -1,11 +1,13 @@
 package $package$.interop.slick
 
-import _root_.slick.basic.BasicBackend
-import _root_.slick.dbio.{ DBIO, StreamingDBIO }
-import _root_.slick.jdbc.H2Profile.backend._
+import slick.basic.BasicBackend
+import slick.dbio.{ DBIO, StreamingDBIO }
+import slick.jdbc.H2Profile.backend._
+import zio.config.Config
 import zio.interop.reactiveStreams._
 import zio.stream.ZStream
-import zio.{ Layer, UIO, ZIO, ZLayer, ZManaged }
+import zio.{ UIO, ZIO, ZLayer, ZManaged }
+import $package$.api.Api.DbConfig
 
 object DatabaseProvider {
 
@@ -13,10 +15,10 @@ object DatabaseProvider {
     def db: UIO[BasicBackend#DatabaseDef]
   }
 
-  val live: Layer[Throwable, DatabaseProvider] =
-    ZLayer.fromManaged(
+  val live: ZLayer[Config[DbConfig], Throwable, DatabaseProvider] =
+    ZLayer.fromServiceManaged { c: Config.Service[DbConfig] =>
       ZManaged
-        .make(ZIO.effect(Database.forURL("jdbc:h2:mem:test1;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")))(db =>
+        .make(ZIO.effect(Database.forURL(c.config.url, driver = c.config.driver)))(db =>
           ZIO.effectTotal(db.close())
         )
         .map(d =>
@@ -24,7 +26,8 @@ object DatabaseProvider {
             val db: UIO[BasicBackend#DatabaseDef] = ZIO.effectTotal(d)
           }
         )
-    )
+    }
+
 }
 
 object dbio {
