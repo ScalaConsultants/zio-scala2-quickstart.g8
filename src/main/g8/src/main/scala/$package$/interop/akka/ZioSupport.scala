@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshalling.{ Marshaller, Marshalling, PredefinedToRes
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.{ RequestContext, Route, RouteResult }
 import akka.http.scaladsl.server.RouteResult.Complete
-import zio.{ IO, BootstrapRuntime }
+import zio.{ BootstrapRuntime, IO }
 
 import scala.concurrent.{ Future, Promise }
 import scala.language.implicitConversions
@@ -20,8 +20,11 @@ trait ZioSupport extends BootstrapRuntime { self =>
       PredefinedToResponseMarshallers.fromResponse(implicitly[ErrorMapper[E]].toHttpResponse(a))
     }
 
-  implicit def zioMarshaller[A, E](implicit m1: Marshaller[A, HttpResponse], m2: Marshaller[E, HttpResponse]): Marshaller[IO[E, A], HttpResponse] =
-    Marshaller { implicit ec => a => {
+  implicit def zioMarshaller[A, E](
+    implicit m1: Marshaller[A, HttpResponse],
+    m2: Marshaller[E, HttpResponse]
+  ): Marshaller[IO[E, A], HttpResponse] =
+    Marshaller { implicit ec => a =>
       val r = a.foldM(
         e => IO.fromFuture(implicit ec => m2(e)),
         a => IO.fromFuture(implicit ec => m1(a))
@@ -29,12 +32,10 @@ trait ZioSupport extends BootstrapRuntime { self =>
 
       val p = Promise[List[Marshalling[HttpResponse]]]()
 
-      self.unsafeRunAsync(r) { exit =>
-        exit.fold(e => p.failure(e.squash), s => p.success(s))
-      }
+      self.unsafeRunAsync(r)(exit => exit.fold(e => p.failure(e.squash), s => p.success(s)))
 
       p.future
-    }}
+    }
 
   implicit def zioRoute[E: ErrorMapper](z: IO[E, Route]): Route = ctx => {
     val p = Promise[RouteResult]()
@@ -44,9 +45,7 @@ trait ZioSupport extends BootstrapRuntime { self =>
       a => a
     )
 
-    self.unsafeRunAsync(f) { exit =>
-      exit.fold(e => p.failure(e.squash), s => p.completeWith(s.apply(ctx)))
-    }
+    self.unsafeRunAsync(f)(exit => exit.fold(e => p.failure(e.squash), s => p.completeWith(s.apply(ctx))))
 
     p.future
   }

@@ -47,11 +47,11 @@ object Api {
       def routes: Route = itemRoute
 
       implicit val domainErrorMapper = new ErrorMapper[DomainError] {
-         def toHttpResponse(e: DomainError): HttpResponse = e match {
-           case RepositoryError(cause) => HttpResponse(StatusCodes.InternalServerError)
-           case ValidationError(msg)   => HttpResponse(StatusCodes.BadRequest)
-         }
-       }
+        def toHttpResponse(e: DomainError): HttpResponse = e match {
+          case RepositoryError(cause) => HttpResponse(StatusCodes.InternalServerError)
+          case ValidationError(msg)   => HttpResponse(StatusCodes.BadRequest)
+        }
+      }
 
       val itemRoute: Route =
         pathPrefix("items") {
@@ -59,65 +59,65 @@ object Api {
             get {
               complete(ApplicationService.getItems.provide(env))
             } ~
-              post {
-                extractScheme { scheme =>
-                  extractHost { host =>
-                    entity(Directives.as[CreateItemRequest]) { req =>
-                      ApplicationService
-                        .addItem(req.name, req.price)
-                        .provide(env)
-                        .map { id =>
-                          respondWithHeader(
-                            Location(
-                              Uri(scheme = scheme)
-                                .withAuthority(host, env.get[ApiConfig].port)
-                                .withPath(Uri.Path(s"/items/\${id.value}"))
-                            )
-                          ) {
-                            complete {
-                              HttpResponse(StatusCodes.Created)
-                            }
+            post {
+              extractScheme { scheme =>
+                extractHost { host =>
+                  entity(Directives.as[CreateItemRequest]) { req =>
+                    ApplicationService
+                      .addItem(req.name, req.price)
+                      .provide(env)
+                      .map { id =>
+                        respondWithHeader(
+                          Location(
+                            Uri(scheme = scheme)
+                              .withAuthority(host, env.get[ApiConfig].port)
+                              .withPath(Uri.Path(s"/items/\${id.value}"))
+                          )
+                        ) {
+                          complete {
+                            HttpResponse(StatusCodes.Created)
                           }
                         }
-                    }
+                      }
                   }
                 }
               }
+            }
           } ~
-            path(LongNumber) {
-              itemId =>
-                delete {
+          path(LongNumber) {
+            itemId =>
+              delete {
+                complete(
+                  ApplicationService
+                    .deleteItem(ItemId(itemId))
+                    .provide(env)
+                    .as(JsObject.empty)
+                )
+              } ~
+              get {
+                complete(ApplicationService.getItem(ItemId(itemId)).provide(env))
+              } ~
+              patch {
+                entity(Directives.as[PartialUpdateItemRequest]) { req =>
                   complete(
                     ApplicationService
-                      .deleteItem(ItemId(itemId))
+                      .partialUpdateItem(ItemId(itemId), req.name, req.price)
                       .provide(env)
                       .as(JsObject.empty)
                   )
-                } ~
-                  get {
-                    complete(ApplicationService.getItem(ItemId(itemId)).provide(env))
-                  } ~
-                  patch {
-                    entity(Directives.as[PartialUpdateItemRequest]) { req =>
-                      complete(
-                        ApplicationService
-                          .partialUpdateItem(ItemId(itemId), req.name, req.price)
-                          .provide(env)
-                          .as(JsObject.empty)
-                      )
-                    }
-                  } ~
-                  put {
-                    entity(Directives.as[UpdateItemRequest]) { req =>
-                      complete(
-                        ApplicationService
-                          .updateItem(ItemId(itemId), req.name, req.price)
-                          .provide(env)
-                          .as(JsObject.empty)
-                      )
-                    }
-                  }
-            }
+                }
+              } ~
+              put {
+                entity(Directives.as[UpdateItemRequest]) { req =>
+                  complete(
+                    ApplicationService
+                      .updateItem(ItemId(itemId), req.name, req.price)
+                      .provide(env)
+                      .as(JsObject.empty)
+                  )
+                }
+              }
+          }
         }
     }
   )
