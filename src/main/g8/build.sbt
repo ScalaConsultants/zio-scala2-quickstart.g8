@@ -1,7 +1,8 @@
-lazy val akkaHttpVersion = "$akka_http_version$"
-lazy val akkaVersion     = "$akka_version$"
-lazy val slickVersion    = "$slick_version$"
-lazy val zioVersion      = "$zio_version$"
+lazy val akkaHttpVersion  = "$akka_http_version$"
+lazy val akkaVersion      = "$akka_version$"
+lazy val slickVersion     = "$slick_version$"
+lazy val zioVersion       = "$zio_version$"
+lazy val zioConfigVersion = "$zio_config_version$"
 
 lazy val root = (project in file(".")).settings(
   inThisBuild(
@@ -18,6 +19,9 @@ lazy val root = (project in file(".")).settings(
     "com.typesafe.akka"  %% "akka-stream"                 % akkaVersion,
     "com.typesafe.slick" %% "slick"                       % slickVersion,
     "dev.zio"            %% "zio"                         % zioVersion,
+    "dev.zio"            %% "zio-config"                  % zioConfigVersion,
+    "dev.zio"            %% "zio-config-magnolia"         % zioConfigVersion,
+    "dev.zio"            %% "zio-config-typesafe"         % zioConfigVersion,
     "dev.zio"            %% "zio-interop-reactivestreams" % "1.0.3.5-RC3",
     "ch.qos.logback"     % "logback-classic"              % "1.2.3",
     "com.h2database"     % "h2"                           % "1.4.200",

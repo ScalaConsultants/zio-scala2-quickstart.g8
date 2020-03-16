@@ -12,10 +12,13 @@ import spray.json.{ deserializationError, DefaultJsonProtocol, JsNumber, JsObjec
 import zio.{ Has, ZLayer }
 import zio.Runtime
 import zio.internal.Platform
+import zio.config.Config
+import zio.config.magnolia.ConfigDescriptorProvider.description
 
 object Api {
 
-  final case class ApiConfig(port: Int)
+  final case class ApiConfig(host: String, port: Int)
+  val configDescr = description[ApiConfig]
 
   trait Service {
     def routes: Route
@@ -41,7 +44,7 @@ object Api {
     )
   }
 
-  val live: ZLayer[ItemRepository with Has[ApiConfig], Nothing, Api] = ZLayer.fromFunction(env =>
+  val live: ZLayer[Config[ApiConfig] with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZioSupport {
 
       def routes: Route = itemRoute
@@ -70,7 +73,7 @@ object Api {
                         respondWithHeader(
                           Location(
                             Uri(scheme = scheme)
-                              .withAuthority(host, env.get[ApiConfig].port)
+                              .withAuthority(host, env.get.config.port)
                               .withPath(Uri.Path(s"/items/\${id.value}"))
                           )
                         ) {
