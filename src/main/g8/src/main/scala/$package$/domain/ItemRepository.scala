@@ -2,12 +2,6 @@ package $package$.domain
 
 import zio.IO
 
-trait ItemRepository {
-
-  def itemRepository: ItemRepository.Service
-  
-}
-
 object ItemRepository {
 
   trait Service {
