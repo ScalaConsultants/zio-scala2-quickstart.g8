@@ -18,7 +18,7 @@ object SlickItemRepository {
       val service: ItemRepository.Service = new ItemRepository.Service {
 
         def add(name: String, price: BigDecimal): IO[RepositoryError, ItemId] = {
-          val insert = (items returning items.map(_.id)) += Item(None, name, price)
+          val insert = (items returning items.map(_.id)) += Item(ItemId(0), name, price)
 
           ZIO.fromDBIO(insert).provide(dbProvider).refineOrDie {
             case e: Exception => RepositoryError(e)
