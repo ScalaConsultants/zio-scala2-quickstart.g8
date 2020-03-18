@@ -41,6 +41,8 @@ object Api {
     )
   }
 
+  object JsonSupport extends JsonSupport
+
   val live: ZLayer[ItemRepository with Has[ApiConfig], Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZioSupport {
 

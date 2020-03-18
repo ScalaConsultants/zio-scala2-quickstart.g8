@@ -23,7 +23,6 @@ lazy val root = (project in file(".")).settings(
     "com.h2database"     % "h2"                           % "1.4.200",
     "com.typesafe.akka"  %% "akka-http-testkit"           % akkaHttpVersion % Test,
     "com.typesafe.akka"  %% "akka-actor-testkit-typed"    % akkaVersion % Test,
-    "dev.zio"            %% "zio"                         % zioVersion % Test,
     "dev.zio"            %% "zio-test-sbt"                % zioVersion % Test
   ),
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
