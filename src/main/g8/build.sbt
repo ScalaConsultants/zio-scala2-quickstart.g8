@@ -1,8 +1,9 @@
-lazy val akkaHttpVersion  = "$akka_http_version$"
-lazy val akkaVersion      = "$akka_version$"
-lazy val slickVersion     = "$slick_version$"
-lazy val zioVersion       = "$zio_version$"
-lazy val zioConfigVersion = "$zio_config_version$"
+lazy val akkaHttpVersion   = "$akka_http_version$"
+lazy val akkaVersion       = "$akka_version$"
+lazy val slickVersion      = "$slick_version$"
+lazy val zioVersion        = "$zio_version$"
+lazy val zioLoggingVersion = "$zio_logging_version$"
+lazy val zioConfigVersion  = "$zio_config_version$"
 
 lazy val root = (project in file(".")).settings(
   inThisBuild(
@@ -24,6 +25,8 @@ lazy val root = (project in file(".")).settings(
     "dev.zio"            %% "zio-config-typesafe"         % zioConfigVersion,
     "dev.zio"            %% "zio-interop-reactivestreams" % "1.0.3.5-RC3",
     "ch.qos.logback"     % "logback-classic"              % "1.2.3",
+    "dev.zio"            %% "zio-logging"                 % zioLoggingVersion,
+    "dev.zio"            %% "zio-logging-slf4j"           % zioLoggingVersion,
     "com.h2database"     % "h2"                           % "1.4.200",
     "com.typesafe.akka"  %% "akka-http-testkit"           % akkaHttpVersion % Test,
     "com.typesafe.akka"  %% "akka-actor-testkit-typed"    % akkaVersion % Test,

@@ -12,11 +12,14 @@ import zio._
 import zio.blocking._
 import zio.test.Assertion._
 import zio.test._
+import zio.config.Config
 
 object ApiSpec extends ZioRouteTest {
 
   private val env =
-    (ZLayer.succeed(ApiConfig(8080)) ++ InMemoryItemRepository.test) >>> Api.live.passthrough ++ Blocking.live
+    (ZLayer.succeed(new Config.Service[ApiConfig] { def config = ApiConfig("localhost", 8080) }) ++
+      InMemoryItemRepository.test) >>>
+      Api.live.passthrough ++ Blocking.live
 
   private def apiRoutes: URIO[Api, Route]                          = ZIO.access[Api](a => Route.seal(a.get.routes))
   private def allItems: ZIO[ItemRepository, Exception, List[Item]] = ItemRepository.getAll.mapError(_.cause)
