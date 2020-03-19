@@ -75,7 +75,7 @@ object GraphQLApi extends GenericSchema[Any] {
               AkkaHttpAdapter.makeHttpService(interpreter)
             } ~
               path("graphiql") {
-                getFromResource("graphiql.html")
+                getFromResource("graphql/graphiql.html")
               }
         }
       )

@@ -16,7 +16,7 @@ object Boot extends App {
   val host = "0.0.0.0"
   val port = 8080
 
-  val program: ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi$endif$ with Has[ActorSystem], Throwable, Unit] = ZIO.effect {
+  val program: ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi $endif$with Has[ActorSystem], Throwable, Unit] = ZIO.effect {
     for {
       implicit0(system: ActorSystem) <- ZIO.access[Has[ActorSystem]](_.get[actor.ActorSystem])
       api                            <- ZIO.access[Api](_.get)
