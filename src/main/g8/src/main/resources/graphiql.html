@@ -111,7 +111,7 @@
         // When working locally, the example expects a GraphQL server at the path /graphql.
         // In a PR preview, it connects to the Star Wars API externally.
         // Change this to point wherever you host your GraphQL server.
-        const isDev = !window.location.hostname.match(/(^|\.)netlify\.com$|(^|\.)graphql\.org$/)
+        const isDev = !window.location.hostname.match(/(^|\.)netlify\.com\$|(^|\.)graphql\.org\$/)
         const api = isDev ? '/api/graphql' : 'https://swapi.graph.cool/'
         const token = localStorage.getItem('Authorization')
         return fetch(api, {
