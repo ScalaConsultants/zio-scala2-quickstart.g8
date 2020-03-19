@@ -1,9 +1,11 @@
-lazy val akkaHttpVersion = "10.1.11"
-lazy val akkaVersion     = "2.6.4"
-lazy val slickVersion    = "3.3.2"
-lazy val zioVersion      = "1.0.0-RC18-2"
+lazy val akkaHttpVersion   = "10.1.11"
+lazy val akkaVersion       = "2.6.4"
+lazy val slickVersion      = "3.3.2"
+lazy val zioVersion        = "1.0.0-RC18-2"
+lazy val zioLoggingVersion = "$zio_logging_version$"
+lazy val zioConfigVersion  = "$zio_config_version$"
 $if(add_caliban_endpoint.truthy)$
-lazy val calibanVersion  = "0.7.1"
+lazy val calibanVersion    = "0.7.1"
 $endif$
 
 lazy val root = (project in file(".")).settings(
@@ -22,16 +24,20 @@ lazy val root = (project in file(".")).settings(
     "com.typesafe.akka"     %% "akka-stream"                 % akkaVersion,
     "com.typesafe.slick"    %% "slick"                       % slickVersion,
     "dev.zio"               %% "zio"                         % zioVersion,
-    "dev.zio"               %% "zio-interop-reactivestreams" % "1.0.3.5-RC3",
+    "dev.zio"               %% "zio-config"                  % zioConfigVersion,
+    "dev.zio"            %% "zio-config-magnolia"         % zioConfigVersion,
+    "dev.zio"            %% "zio-config-typesafe"         % zioConfigVersion,
+    "dev.zio"            %% "zio-interop-reactivestreams" % "1.0.3.5-RC3",
     "ch.qos.logback"        % "logback-classic"              % "1.2.3",
+    "dev.zio"            %% "zio-logging"                 % zioLoggingVersion,
+    "dev.zio"            %% "zio-logging-slf4j"           % zioLoggingVersion,
     "com.h2database"        % "h2"                           % "1.4.200",
     $if(add_caliban_endpoint.truthy)$
     "com.github.ghostdogpr" %% "caliban"                     % calibanVersion,
     "com.github.ghostdogpr" %% "caliban-akka-http"           % calibanVersion,
     $endif$
     "com.typesafe.akka"     %% "akka-http-testkit"           % akkaHttpVersion % Test,
-    "com.typesafe.akka"     %% "akka-actor-testkit-typed"    % akkaVersion % Test,
-    "dev.zio"               %% "zio"                         % zioVersion % Test,
+    "com.typesafe.akka"     %% "akka-actor-testkit-typed"    % akkaVersion %  Test,
     "dev.zio"               %% "zio-test-sbt"                % zioVersion % Test
   ),
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
