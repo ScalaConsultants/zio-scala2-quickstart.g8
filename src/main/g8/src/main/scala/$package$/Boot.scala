@@ -1,7 +1,5 @@
 package $package$
 
-import java.io.File
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import $package$.api._
@@ -21,7 +19,7 @@ object Boot extends App {
   val program: ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi $endif$with Has[ActorSystem]with Config[ApiConfig], Throwable, Unit] = ZIO.effect {
     for {
       config                         <- config[ApiConfig]
-      implicit0(system: ActorSystem) <- ZIO.access[Has[ActorSystem]](_.get[actor.ActorSystem])
+      implicit0(system: ActorSystem) <- ZIO.access[Has[ActorSystem]](_.get[ActorSystem])
       api                            <- ZIO.access[Api](_.get)
       $if(add_caliban_endpoint.truthy)$
       graphQLApi                     <- ZIO.access[GraphQLApi](_.get)

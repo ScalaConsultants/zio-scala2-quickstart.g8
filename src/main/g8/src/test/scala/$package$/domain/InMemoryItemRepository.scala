@@ -36,6 +36,12 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
       val updated = if(newItems == items) None else Some(())
       updated -> newItems
     }
+
+  def getByName(name: String): IO[RepositoryError, List[Item]] =
+    getAll.map(_.filter(_.name == name))
+
+  def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] =
+    getAll.map(_.filter(_.price < price))
 }
 
 object InMemoryItemRepository{
