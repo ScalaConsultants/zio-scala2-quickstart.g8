@@ -1,0 +1,84 @@
+package $package$.api
+
+import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import caliban.GraphQL.graphQL
+import caliban.schema.Annotations.GQLDescription
+import caliban.schema.GenericSchema
+import caliban.wrappers.ApolloTracing.apolloTracing
+import caliban.wrappers.Wrappers._
+import caliban.{ AkkaHttpAdapter, CalibanError, GraphQL, RootResolver }
+import $package$.application.ApplicationService
+import $package$.domain._
+import zio.clock.Clock
+import zio.console.Console
+import zio.duration._
+import zio.{ Has, Runtime, Task, ZIO, ZLayer }
+
+import scala.language.postfixOps
+
+object GraphQLApi extends GenericSchema[Any] {
+
+  trait Service {
+    def routes: Route
+  }
+
+  implicit val runtime = Runtime.default
+
+  implicit val itemIdSchema    = gen[ItemId]
+  implicit val itemPriceSchema = gen[ItemPrice]
+  implicit val itemNameSchema  = gen[ItemName]
+  implicit val itemSchema      = gen[Item]
+
+  case class ItemName(name: String)
+  case class ItemPrice(price: BigDecimal)
+
+  case class Queries(
+    @GQLDescription("Find items by name")
+    item: ItemName => Task[List[Item]],
+    @GQLDescription("Find items cheaper than specified price")
+    cheaperThan: ItemPrice => Task[List[Item]]
+  )
+
+  def adaptError(e: DomainError): Throwable = e match {
+    case RepositoryError(cause) => cause
+    case ValidationError(msg)   => new Exception(msg)
+  }
+
+  case class Mutations(deleteItem: ItemId => ZIO[Any, Throwable, Unit])
+
+  def api(repository: ItemRepository): GraphQL[Console with Clock] =
+    graphQL(
+      RootResolver(
+        Queries(
+          args => ApplicationService.getItemByName(args.name).mapError(adaptError).provide(repository),
+          args => ApplicationService.getItemsCheaperThan(args.price).mapError(adaptError).provide(repository)
+        ),
+        Mutations(id => ApplicationService.deleteItem(id).provide(repository).mapError(e => new Throwable("")))
+      )
+    ) @@
+      maxFields(200) @@               // query analyzer that limit query fields
+      maxDepth(30) @@                 // query analyzer that limit query depth
+      timeout(3 seconds) @@           // wrapper that fails slow queries
+      printSlowQueries(500 millis) @@ // wrapper that logs slow queries
+      apolloTracing                   // wrapper for https://github.com/apollographql/apollo-tracing
+
+  val live: ZLayer[ItemRepository with Has[ActorSystem], CalibanError.ValidationError, GraphQLApi] =
+    ZLayer.fromFunctionM { env =>
+      implicit val system = env.get[ActorSystem]
+      implicit val ec     = system.dispatcher
+      api(env).interpreter.map(interpreter =>
+        new Service {
+          def routes: Route =
+            path("api" / "graphql") {
+              AkkaHttpAdapter.makeHttpService(interpreter)
+            } ~
+              path("graphiql") {
+                getFromResource("graphiql.html")
+              }
+        }
+      )
+    }
+
+}

@@ -4,7 +4,6 @@ lazy val slickVersion    = "3.3.2"
 lazy val zioVersion      = "1.0.0-RC18-2"
 $if(add_caliban_endpoint.truthy)$
 lazy val calibanVersion  = "0.7.1"
-$else$
 $endif$
 
 lazy val root = (project in file(".")).settings(
@@ -15,6 +14,7 @@ lazy val root = (project in file(".")).settings(
     )
   ),
   name := "$name$",
+  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= Seq(
     "com.typesafe.akka"     %% "akka-http"                   % akkaHttpVersion,
     "com.typesafe.akka"     %% "akka-http-spray-json"        % akkaHttpVersion,
@@ -28,7 +28,6 @@ lazy val root = (project in file(".")).settings(
     $if(add_caliban_endpoint.truthy)$
     "com.github.ghostdogpr" %% "caliban"                     % calibanVersion,
     "com.github.ghostdogpr" %% "caliban-akka-http"           % calibanVersion,
-    $else$
     $endif$
     "com.typesafe.akka"     %% "akka-http-testkit"           % akkaHttpVersion % Test,
     "com.typesafe.akka"     %% "akka-actor-testkit-typed"    % akkaVersion % Test,

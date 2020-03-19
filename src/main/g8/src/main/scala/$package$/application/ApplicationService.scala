@@ -5,6 +5,12 @@ import zio.ZIO
 
 object ApplicationService {
 
+  def getItemsCheaperThan(price: BigDecimal): ZIO[ItemRepository, DomainError, List[Item]] =
+    ZIO.accessM(_.get.getCheaperThan(price))
+
+  def getItemByName(name: String): ZIO[ItemRepository, DomainError, List[Item]] =
+    ZIO.accessM(_.get.getByName(name))
+
   def addItem(name: String, price: BigDecimal): ZIO[ItemRepository, DomainError, ItemId] =
     ZIO.accessM(_.get.add(name, price))
 

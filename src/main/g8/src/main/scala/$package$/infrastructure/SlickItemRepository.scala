@@ -54,10 +54,18 @@ object SlickItemRepository {
           }
         }
 
-        def getByName(name: String): IO[RepositoryError, Option[Item]] = {
+        def getByName(name: String): IO[RepositoryError, List[Item]] = {
           val query = items.filter(_.name === name).result
 
-          ZIO.fromDBIO(query).provide(dbProvider).map(_.headOption).refineOrDie {
+          ZIO.fromDBIO(query).provide(dbProvider).map(_.toList).refineOrDie {
+            case e: Exception => RepositoryError(e)
+          }
+        }
+
+        def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] = {
+          val query = items.filter(_.price < price).result
+
+          ZIO.fromDBIO(query).provide(dbProvider).map(_.toList).refineOrDie {
             case e: Exception => RepositoryError(e)
           }
         }
