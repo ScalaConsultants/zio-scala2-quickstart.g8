@@ -23,7 +23,7 @@ object Boot extends App {
       $if(add_caliban_endpoint.truthy)$
       graphQLApi                     <- ZIO.access[GraphQLApi](_.get)
       $endif$
-      routes = $if(add_caliban_endpoint.truthy)$concat(api.routes, graphQLApi.routes)$else$api.routes$endif$
+      routes                         = $if(add_caliban_endpoint.truthy)$concat(api.routes, graphQLApi.routes)$else$api.routes$endif$
       binding                        <- ZIO.fromFuture(_ => Http().bindAndHandle(routes, host, port))
       _                              <- putStrLn(s"Server online at http://\$host:\$port/\nPress RETURN to stop...")
       _                              <- getStrLn
