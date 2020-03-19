@@ -18,9 +18,7 @@ object DatabaseProvider {
   val live: ZLayer[Config[DbConfig], Throwable, DatabaseProvider] =
     ZLayer.fromServiceManaged { c: Config.Service[DbConfig] =>
       ZManaged
-        .make(ZIO.effect(Database.forURL(c.config.url, driver = c.config.driver)))(db =>
-          ZIO.effectTotal(db.close())
-        )
+        .make(ZIO.effect(Database.forConfig("", c.config.underlying)))(db => ZIO.effectTotal(db.close()))
         .map(d =>
           new DatabaseProvider.Service {
             val db: UIO[BasicBackend#DatabaseDef] = ZIO.effectTotal(d)
