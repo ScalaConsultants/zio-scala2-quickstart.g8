@@ -39,31 +39,30 @@ object Boot extends App {
 
   val loadConfig = ZIO.effect(ConfigFactory.load.resolve)
 
-  def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] =
-    loadConfig.flatMap { rawConfig =>
-      val logger = Slf4jLogger.make { (context, message) =>
-        val logFormat = "[correlation-id = %s] %s"
-        val correlationId = LogAnnotation.CorrelationId.render(
-          context.get(LogAnnotation.CorrelationId)
-        )
-        logFormat.format(correlationId, message)
-      }
+  def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] = loadConfig.flatMap { rawConfig =>
+    val logger = Slf4jLogger.make { (context, message) =>
+      val logFormat = "[correlation-id = %s] %s"
+      val correlationId = LogAnnotation.CorrelationId.render(
+        context.get(LogAnnotation.CorrelationId)
+      )
+      logFormat.format(correlationId, message)
+    }
 
-      val configLayer = TypesafeConfig.fromHocon(rawConfig, appConfigDesc)
+    val configLayer = TypesafeConfig.fromHocon(rawConfig, appConfigDesc)
 
-      // using raw config since it's recommended and the simplest to work with slick
-      val dbConfigLayer = ZLayer.fromEffect(ZIO.effect {
-        val dbc = DbConfig(rawConfig.getConfig("db"))
-        new Config.Service[DbConfig] { def config = dbc }
-      })
-      // narrowing down to the required part of the config to ensure separation of concerns
-      val apiConfigLayer = configLayer.map(c => Has(new Config.Service[ApiConfig] { def config = c.get.config.api }))
+    // using raw config since it's recommended and the simplest to work with slick
+    val dbConfigLayer = ZLayer.fromEffect(ZIO.effect {
+      val dbc = DbConfig(rawConfig.getConfig("db"))
+      new Config.Service[DbConfig] { def config = dbc }
+    })
+    // narrowing down to the required part of the config to ensure separation of concerns
+    val apiConfigLayer = configLayer.map(c => Has(new Config.Service[ApiConfig] { def config = c.get.config.api }))
 
-      val dbLayer = ((dbConfigLayer >>> DatabaseProvider.live) ++ logger) >>> SlickItemRepository.live
-      val api     = (apiConfigLayer ++ dbLayer) >>> Api.live
-      val liveEnv = Console.live ++ api ++ apiConfigLayer
+    val dbLayer = ((dbConfigLayer >>> DatabaseProvider.live) ++ logger) >>> SlickItemRepository.live
+    val api     = (apiConfigLayer ++ dbLayer) >>> Api.live
+    val liveEnv = Console.live ++ api ++ apiConfigLayer
 
-      program.provideLayer(liveEnv)
-    }.fold(_ => 1, _ => 0)
+    program.provideLayer(liveEnv)
+  }.fold(_ => 1, _ => 0)
 
 }
