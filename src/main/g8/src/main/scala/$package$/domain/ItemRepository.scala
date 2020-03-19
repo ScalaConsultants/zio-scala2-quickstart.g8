@@ -1,6 +1,6 @@
 package $package$.domain
 
-import zio.IO
+import zio.{ IO, ZIO }
 
 object ItemRepository {
 
@@ -19,4 +19,7 @@ object ItemRepository {
     def update(id: ItemId, name: String, price: BigDecimal): IO[RepositoryError, Option[Unit]]
   }
 
+  val getAll: ZIO[ItemRepository, RepositoryError, List[Item]] = ZIO.accessM[ItemRepository](_.get.getAll)
+  def add(name: String, price: BigDecimal): ZIO[ItemRepository, RepositoryError, ItemId] =
+    ZIO.accessM[ItemRepository](_.get.add(name, price))
 }
