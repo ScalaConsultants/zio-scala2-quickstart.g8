@@ -1,4 +1,4 @@
-##zio-akka-quickstart
+## zio-akka-quickstart
 
 A [Giter8][g8] template for a basic Scala application build using ZIO, Akka HTTP and Slick!
 
