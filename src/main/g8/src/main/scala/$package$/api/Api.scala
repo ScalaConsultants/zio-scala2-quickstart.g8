@@ -8,15 +8,18 @@ import akka.http.scaladsl.server.{ Directives, Route }
 import $package$.application.ApplicationService
 import $package$.domain._
 import $package$.interop.akka._
-import spray.json.{ DefaultJsonProtocol, JsNumber, JsObject, JsValue, JsonFormat, RootJsonFormat, deserializationError }
-import zio.ZLayer
+import com.typesafe.config
+import spray.json.{ deserializationError, DefaultJsonProtocol, JsNumber, JsObject, JsValue, JsonFormat, RootJsonFormat }
+import zio.{ Has, ZLayer }
+import zio.Runtime
+import zio.internal.Platform
 import zio.config.Config
 import zio.config.magnolia.ConfigDescriptorProvider.description
 
 object Api {
 
-  final case class AppConfig(api: ApiConfig, db: DbConfig)
-  final case class DbConfig(url: String, driver: String)
+  final case class AppConfig(api: ApiConfig)
+  final case class DbConfig(underlying: config.Config)
   final case class ApiConfig(host: String, port: Int)
   val appConfigDesc = description[AppConfig]
 

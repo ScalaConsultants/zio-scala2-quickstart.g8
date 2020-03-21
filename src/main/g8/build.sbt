@@ -19,6 +19,7 @@ lazy val root = (project in file(".")).settings(
     "com.typesafe.akka"  %% "akka-actor-typed"            % akkaVersion,
     "com.typesafe.akka"  %% "akka-stream"                 % akkaVersion,
     "com.typesafe.slick" %% "slick"                       % slickVersion,
+    "com.typesafe.slick" %% "slick-hikaricp"              % slickVersion,
     "dev.zio"            %% "zio"                         % zioVersion,
     "dev.zio"            %% "zio-config"                  % zioConfigVersion,
     "dev.zio"            %% "zio-config-magnolia"         % zioConfigVersion,
