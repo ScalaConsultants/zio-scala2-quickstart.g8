@@ -75,7 +75,7 @@ object Api {
                     .provide(env)
                     .map { id =>
                       complete {
-                        Item(Some(id), req.name, req.price)
+                        Item(id, req.name, req.price)
                       }
                     }
                 }
