@@ -36,8 +36,12 @@ object ApiSpec extends ZioRouteTest {
           resultCheck <- effectBlocking(request ~> routes ~> check {
                           // Here and in other tests we have to evaluate response on the spot before passing anything to `assert`.
                           // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
-                          val r = response
-                          assert(r.status)(equalTo(StatusCodes.Created))
+                          val theStatus = status
+                          val theCT     = contentType
+                          val theBody   = entityAs[Item]
+                          assert(theStatus)(equalTo(StatusCodes.OK)) &&
+                          assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
+                          assert(theBody)(equalTo(Item(Some(ItemId(0)), "name", 100.0)))
                         })
           contentsCheck <- assertM(allItems)(equalTo(List(Item(Some(ItemId(0)), "name", 100.0))))
         } yield resultCheck && contentsCheck
@@ -68,7 +72,6 @@ object ApiSpec extends ZioRouteTest {
                           assert(theStatus)(equalTo(StatusCodes.OK)) &&
                           assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
                           assert(theBody)(hasSameElements(items))
-
                         })
           contentsCheck <- assertM(allItems)(hasSameElements(items))
         } yield resultCheck && contentsCheck
