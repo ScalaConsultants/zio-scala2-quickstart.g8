@@ -39,7 +39,7 @@ object Api {
         case _           => deserializationError("Number expected")
       }
     }
-    implicit val itemFormat: RootJsonFormat[Item]                           = jsonFormat3(Item)
+    implicit val itemFormat: RootJsonFormat[Item]                           = jsonFormat3(Item.apply)
     implicit val createItemRequestFormat: RootJsonFormat[CreateItemRequest] = jsonFormat2(CreateItemRequest)
     implicit val updateItemRequestFormat: RootJsonFormat[UpdateItemRequest] = jsonFormat2(UpdateItemRequest)
     implicit val partialUpdateItemRequestFormat: RootJsonFormat[PartialUpdateItemRequest] = jsonFormat2(

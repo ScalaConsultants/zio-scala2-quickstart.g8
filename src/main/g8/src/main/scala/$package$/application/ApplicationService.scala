@@ -6,7 +6,7 @@ import zio.ZIO
 object ApplicationService {
 
   def addItem(name: String, price: BigDecimal): ZIO[ItemRepository, DomainError, ItemId] =
-    ZIO.accessM(_.get.add(name, price))
+    ZIO.accessM(_.get.add(ItemData(name, price)))
 
   def deleteItem(itemId: ItemId): ZIO[ItemRepository, DomainError, Unit] =
     ZIO.accessM(_.get.delete(itemId))
@@ -26,7 +26,7 @@ object ApplicationService {
       item <- ZIO.accessM[ItemRepository](_.get.getById(itemId)).some
       _ <- ZIO
             .accessM[ItemRepository](
-              _.get.update(itemId, name.getOrElse(item.name), price.getOrElse(item.price))
+              _.get.update(itemId, ItemData(name.getOrElse(item.name), price.getOrElse(item.price)))
             )
             .mapError(Some(_))
     } yield ()).optional
@@ -36,6 +36,6 @@ object ApplicationService {
     name: String,
     price: BigDecimal
   ): ZIO[ItemRepository, DomainError, Option[Unit]] =
-    ZIO.accessM(_.get.update(itemId, name, price))
+    ZIO.accessM(_.get.update(itemId, ItemData(name, price)))
 
 }

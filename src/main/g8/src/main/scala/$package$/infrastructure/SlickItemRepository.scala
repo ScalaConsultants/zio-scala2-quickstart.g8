@@ -18,10 +18,10 @@ object SlickItemRepository {
 
       val service: ItemRepository.Service = new ItemRepository.Service {
 
-        def add(name: String, price: BigDecimal): IO[RepositoryError, ItemId] = {
-          val insert = (items returning items.map(_.id)) += Item(None, name, price)
+        def add(data: ItemData): IO[RepositoryError, ItemId] = {
+          val insert = (items returning items.map(_.id)) += Item.withData(ItemId(0), data)
 
-          logInfo(s"Adding item with name = \$name, price = \$price") *>
+          logInfo(s"Adding item \$data") *>
           ZIO
             .fromDBIO(insert)
             .refineOrDie {
@@ -33,7 +33,7 @@ object SlickItemRepository {
         def delete(id: ItemId): IO[RepositoryError, Unit] = {
           val delete = items.filter(_.id === id).delete
 
-          logInfo(s"Adding item \${id.value}") *>
+          logInfo(s"Deleting item \${id.value}") *>
           ZIO.fromDBIO(delete).unit.refineOrDie {
             case e: Exception => RepositoryError(e)
           }
@@ -68,13 +68,13 @@ object SlickItemRepository {
           }
         }
 
-        def update(id: ItemId, name: String, price: BigDecimal): IO[RepositoryError, Option[Unit]] = {
+        def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]] = {
           val q      = items.filter(_.id === id).map(item => (item.name, item.price))
-          val update = q.update((name, price))
+          val update = q.update((data.name, data.price))
 
           val foundF = (n: Int) => if (n > 0) Some(()) else None
 
-          logInfo(s"Updating item \${id.value} to name = \$name, price = \$price") *>
+          logInfo(s"Updating item \${id.value} to \$data") *>
           ZIO.fromDBIO(update).map(foundF).refineOrDie {
             case e: Exception => RepositoryError(e)
           }
