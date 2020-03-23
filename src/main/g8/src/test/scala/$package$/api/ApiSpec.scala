@@ -9,7 +9,7 @@ import $package$.application.ApplicationService
 import $package$.config.ApiConfig
 import $package$.domain._
 import $package$.interop.akka.ZioRouteTest
-import spray.json.JsObject
+import play.api.libs.json.JsObject
 import zio._
 import zio.blocking._
 import zio.test.Assertion._
