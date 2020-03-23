@@ -1,68 +1,66 @@
 package $package$
 
-import java.io.File
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import $package$.api.Api
-import $package$.api.Api.{ appConfigDesc, ApiConfig, DbConfig }
+import $package$.config.{ ApiConfig, AppConfig }
 import $package$.infrastructure._
-import $package$.interop.slick.DatabaseProvider
+import $package$.interop.slick.{ DatabaseConfig, DatabaseProvider }
 import com.typesafe.config.ConfigFactory
 import zio.console._
 import zio.logging._
 import zio.logging.slf4j._
-import zio.{ App, Has, ZIO, ZLayer }
+import zio.{ App, Has, TaskLayer, ULayer, ZIO, ZLayer, ZManaged }
 import zio.config.{ config, Config }
 import zio.config.typesafe.TypesafeConfig
 
-import scala.concurrent.ExecutionContext
-
 object Boot extends App {
 
-  val program: ZIO[Console with Api with Config[ApiConfig], Throwable, Unit] = ZIO.effect {
-
-    // todo: cleaner to make it a ZManaged module
-    implicit val system: ActorSystem = ActorSystem("zio-example-system")
-
-    val ec: ExecutionContext = system.dispatcher
+  val program: ZIO[Console with Api with Has[ActorSystem] with Config[ApiConfig], Throwable, Unit] = ZIO.effect {
 
     for {
-      config  <- config[ApiConfig]
-      binding <- ZIO.fromFunctionM { api: Api => ZIO.fromFuture(_ => Http().bindAndHandle(api.get.routes, config.host, config.port)) }
-      _       <- putStrLn(s"Server online at http://\${config.host}:\${config.port}/\nPress RETURN to stop...")
-      _       <- getStrLn
-      _       <- ZIO.fromFuture(_ => binding.unbind())
-      _       <- ZIO.fromFuture(_ => system.terminate())
+      cfg                            <- config[ApiConfig]
+      implicit0(system: ActorSystem) <- ZIO.access[Has[ActorSystem]](_.get[ActorSystem])
+      api                            <- ZIO.access[Api](_.get)
+      binding                        <- ZIO.fromFuture(_ => Http().bindAndHandle(api.routes, cfg.host, cfg.port))
+      _                              <- putStrLn(s"Server online at http://\${cfg.host}:\${cfg.port}/\nPress RETURN to stop...")
+      _                              <- getStrLn
+      _                              <- ZIO.fromFuture(_ => binding.unbind())
+      _                              <- ZIO.fromFuture(_ => system.terminate())
     } yield ()
   }.flatten
 
   val loadConfig = ZIO.effect(ConfigFactory.load.resolve)
 
-  def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] = loadConfig.flatMap { rawConfig =>
-    val logger = Slf4jLogger.make { (context, message) =>
-      val logFormat = "[correlation-id = %s] %s"
-      val correlationId = LogAnnotation.CorrelationId.render(
-        context.get(LogAnnotation.CorrelationId)
-      )
-      logFormat.format(correlationId, message)
-    }
+  val loggingLayer: ULayer[Logging] = Slf4jLogger.make { (context, message) =>
+    val logFormat = "[correlation-id = %s] %s"
+    val correlationId = LogAnnotation.CorrelationId.render(
+      context.get(LogAnnotation.CorrelationId)
+    )
+    logFormat.format(correlationId, message)
+  }
 
-    val configLayer = TypesafeConfig.fromHocon(rawConfig, appConfigDesc)
+  val actorSystemLayer: TaskLayer[Has[ActorSystem]] = ZLayer.fromManaged(
+    ZManaged.make(ZIO.effect(ActorSystem("zio-example-system")))(s => ZIO.fromFuture(_ => s.terminate()).either)
+  )
 
-    // using raw config since it's recommended and the simplest to work with slick
-    val dbConfigLayer = ZLayer.fromEffect(ZIO.effect {
-      val dbc = DbConfig(rawConfig.getConfig("db"))
-      new Config.Service[DbConfig] { def config = dbc }
-    })
-    // narrowing down to the required part of the config to ensure separation of concerns
-    val apiConfigLayer = configLayer.map(c => Has(new Config.Service[ApiConfig] { def config = c.get.config.api }))
+  def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] =
+    loadConfig.flatMap { rawConfig =>
+      val configLayer = TypesafeConfig.fromHocon(rawConfig, AppConfig.description)
 
-    val dbLayer = ((dbConfigLayer >>> DatabaseProvider.live) ++ logger) >>> SlickItemRepository.live
-    val api     = (apiConfigLayer ++ dbLayer) >>> Api.live
-    val liveEnv = Console.live ++ api ++ apiConfigLayer
+      // using raw config since it's recommended and the simplest to work with slick
+      val dbConfigLayer = ZLayer.fromEffect(ZIO.effect {
+        val dbc = DatabaseConfig(rawConfig.getConfig("db"))
+        new Config.Service[DatabaseConfig] { def config = dbc }
+      })
+      // narrowing down to the required part of the config to ensure separation of concerns
+      val apiConfigLayer = configLayer.map(c => Has(new Config.Service[ApiConfig] { def config = c.get.config.api }))
 
-    program.provideLayer(liveEnv)
-  }.fold(_ => 1, _ => 0)
+      val dbLayer = ((dbConfigLayer >>> DatabaseProvider.live) ++ loggingLayer) >>> SlickItemRepository.live
+      val api     = (apiConfigLayer ++ dbLayer) >>> Api.live
+      val liveEnv = actorSystemLayer ++ Console.live ++ api ++ apiConfigLayer
+
+      program.provideLayer(liveEnv)
+    }.fold(_ => 1, _ => 0)
 
 }

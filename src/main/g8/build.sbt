@@ -13,6 +13,7 @@ lazy val root = (project in file(".")).settings(
     )
   ),
   name := "$name$",
+  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= Seq(
     "com.typesafe.akka"  %% "akka-http"                   % akkaHttpVersion,
     "com.typesafe.akka"  %% "akka-http-spray-json"        % akkaHttpVersion,
