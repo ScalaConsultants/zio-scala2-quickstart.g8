@@ -42,7 +42,7 @@ object ApiSpec extends ZioRouteTest {
                           val theBody   = entityAs[Item]
                           assert(theStatus)(equalTo(StatusCodes.OK)) &&
                           assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
-                          assert(theBody)(equalTo(Item(Some(ItemId(0)), "name", 100.0)))
+                          assert(theBody)(equalTo(Item(ItemId(0), "name", 100.0)))
                         })
           contentsCheck <- assertM(allItems)(equalTo(List(Item(ItemId(0), "name", 100.0))))
         } yield resultCheck && contentsCheck
