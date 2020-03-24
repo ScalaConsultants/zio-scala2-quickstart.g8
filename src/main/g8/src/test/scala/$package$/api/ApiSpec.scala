@@ -3,9 +3,10 @@ package $package$.api
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
-import $package$.api.Api.JsonSupport._
+import $package$.api.JsonSupport._
 import $package$.api.Api._
 import $package$.application.ApplicationService
+import $package$.config.ApiConfig
 import $package$.domain._
 import $package$.interop.akka.ZioRouteTest
 import spray.json.JsObject

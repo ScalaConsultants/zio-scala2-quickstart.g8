@@ -41,7 +41,7 @@ trait ZioSupport extends BootstrapRuntime { self =>
     val p = Promise[RouteResult]()
 
     val f = z.fold(
-      e => (ctx: RequestContext) => Future.successful(Complete(implicitly[ErrorMapper[E]].toHttpResponse(e))),
+      e => (_: RequestContext) => Future.successful(Complete(implicitly[ErrorMapper[E]].toHttpResponse(e))),
       a => a
     )
 
