@@ -16,7 +16,7 @@ lazy val root = (project in file(".")).settings(
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= Seq(
     "com.typesafe.akka"  %% "akka-http"                   % akkaHttpVersion,
-    "com.typesafe.akka"  %% "akka-http-spray-json"        % akkaHttpVersion,
+    "de.heikoseeberger"  %% "akka-http-play-json"         % "1.31.0",
     "com.typesafe.akka"  %% "akka-actor-typed"            % akkaVersion,
     "com.typesafe.akka"  %% "akka-stream"                 % akkaVersion,
     "com.typesafe.slick" %% "slick"                       % slickVersion,

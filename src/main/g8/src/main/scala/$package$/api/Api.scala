@@ -8,7 +8,7 @@ import $package$.application.ApplicationService
 import $package$.config.ApiConfig
 import $package$.domain._
 import $package$.interop.akka._
-import spray.json.JsObject
+import play.api.libs.json.JsObject
 import zio.ZLayer
 import zio.config.Config
 
