@@ -10,7 +10,7 @@ final case class UpdateItemRequest(name: String, price: BigDecimal)
 final case class PartialUpdateItemRequest(name: Option[String], price: Option[BigDecimal])
 
 trait JsonSupport extends PlayJsonSupport {
-  implicit val itemIdFormat                   = implicitly[Format[Long]].inmap[ItemId](ItemId, _.value)
+  implicit val itemIdFormat                   = Json.valueFormat[ItemId]
   implicit val itemFormat                     = Json.format[Item]
   implicit val createItemRequestFormat        = Json.format[CreateItemRequest]
   implicit val updateItemRequestFormat        = Json.format[UpdateItemRequest]
