@@ -25,7 +25,7 @@ lazy val root = (project in file(".")).settings(
     "dev.zio"            %% "zio-config"                  % zioConfigVersion,
     "dev.zio"            %% "zio-config-magnolia"         % zioConfigVersion,
     "dev.zio"            %% "zio-config-typesafe"         % zioConfigVersion,
-    "dev.zio"            %% "zio-interop-reactivestreams" % "1.0.3.5-RC3",
+    "dev.zio"            %% "zio-interop-reactivestreams" % "1.0.3.5-RC6",
     "ch.qos.logback"     % "logback-classic"              % "1.2.3",
     "dev.zio"            %% "zio-logging"                 % zioLoggingVersion,
     "dev.zio"            %% "zio-logging-slf4j"           % zioLoggingVersion,
