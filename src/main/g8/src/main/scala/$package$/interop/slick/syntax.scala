@@ -2,7 +2,7 @@ package $package$.interop.slick
 
 import slick.dbio.{ DBIO, StreamingDBIO }
 import zio.ZIO
-import zio.interop.reactiveStreams._
+import zio.interop.reactivestreams._
 import zio.stream.ZStream
 
 object syntax {
