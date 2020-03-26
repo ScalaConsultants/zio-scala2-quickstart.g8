@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import caliban.GraphQL.graphQL
+import caliban.interop.play.PlayJsonBackend
 import caliban.schema.Annotations.GQLDescription
 import caliban.schema.GenericSchema
 import caliban.wrappers.ApolloTracing.apolloTracing
@@ -26,7 +27,6 @@ object GraphQLApi extends GenericSchema[Any] {
 
   implicit val runtime = Runtime.default
 
-  implicit val itemIdSchema    = gen[ItemId]
   implicit val itemPriceSchema = gen[ItemPrice]
   implicit val itemNameSchema  = gen[ItemName]
   implicit val itemSchema      = gen[Item]
@@ -68,11 +68,12 @@ object GraphQLApi extends GenericSchema[Any] {
     ZLayer.fromFunctionM { env =>
       implicit val system = env.get[ActorSystem]
       implicit val ec     = system.dispatcher
+      val adapter = AkkaHttpAdapter(new PlayJsonBackend)
       api(env).interpreter.map(interpreter =>
         new Service {
           def routes: Route =
             path("api" / "graphql") {
-              AkkaHttpAdapter.makeHttpService(interpreter)
+              adapter.makeHttpService(interpreter)
             } ~
               path("graphiql") {
                 getFromResource("graphql/graphiql.html")

@@ -18,7 +18,7 @@ import akka.http.scaladsl.server.RouteConcatenation.concat
 
 object Boot extends App {
 
-  val program: ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi $endif$with Has[ActorSystem]with Has[ActorSystem] withConfig[ApiConfig], Throwable, Unit] = ZIO.effect {
+  val program: ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi $endif$with Has[ActorSystem] with Has[ActorSystem] with Config[ApiConfig], Throwable, Unit] = ZIO.effect {
     for {
       cfg                            <- config[ApiConfig]
       implicit0(system: ActorSystem) <- ZIO.access[Has[ActorSystem]](_.get[ActorSystem])
