@@ -62,10 +62,10 @@ final class SlickItemRepository(env: DatabaseProvider with Logging) extends Item
           }
         }
 
-        def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] = {
-          val query = items.filter(_.price < price).result
+  def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] = {
+    val query = items.filter(_.price < price).result
 
-          ZIO.fromDBIO(query).provide(env).map(_.toList).refineOrDie {
+    ZIO.fromDBIO(query).provide(env).map(_.toList).refineOrDie {
       case e: Exception => RepositoryError(e)
     }
   }

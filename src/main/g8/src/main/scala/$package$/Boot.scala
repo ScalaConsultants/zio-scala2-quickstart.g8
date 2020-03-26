@@ -43,9 +43,9 @@ object Boot extends App {
     val loggingLayer: ULayer[Logging] = Slf4jLogger.make { (context, message) =>
     val logFormat = "[correlation-id = %s] %s"
     val correlationId = LogAnnotation.CorrelationId.render(
-       context.get(LogAnnotation.CorrelationId)
-     )
-     logFormat.format(correlationId, message)
+      context.get(LogAnnotation.CorrelationId)
+    )
+    logFormat.format(correlationId, message)
    }
 
   val actorSystemLayer: TaskLayer[Has[ActorSystem]] = ZLayer.fromManaged(
