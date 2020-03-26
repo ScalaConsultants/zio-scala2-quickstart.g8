@@ -1,12 +1,12 @@
 package $package$.domain
 
-import zio.{ IO, ZIO }
+import zio.IO
 
 object ItemRepository {
 
   trait Service {
 
-    def add(name: String, price: BigDecimal): IO[RepositoryError, ItemId]
+    def add(data: ItemData): IO[RepositoryError, ItemId]
 
     def delete(id: ItemId): IO[RepositoryError, Unit]
 
@@ -20,10 +20,6 @@ object ItemRepository {
 
     def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]]
 
-    def update(id: ItemId, name: String, price: BigDecimal): IO[RepositoryError, Option[Unit]]
+    def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]]
   }
-
-  val getAll: ZIO[ItemRepository, RepositoryError, List[Item]] = ZIO.accessM[ItemRepository](_.get.getAll)
-  def add(name: String, price: BigDecimal): ZIO[ItemRepository, RepositoryError, ItemId] =
-    ZIO.accessM[ItemRepository](_.get.add(name, price))
 }

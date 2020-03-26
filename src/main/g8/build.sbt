@@ -5,7 +5,7 @@ lazy val zioVersion        = "1.0.0-RC18-2"
 lazy val zioLoggingVersion = "0.2.4"
 lazy val zioConfigVersion  = "1.0.0-RC13"
 $if(add_caliban_endpoint.truthy)$
-lazy val calibanVersion    = "0.7.1"
+lazy val calibanVersion    = "0.7.3"
 $endif$
 
 lazy val root = (project in file(".")).settings(
@@ -19,18 +19,19 @@ lazy val root = (project in file(".")).settings(
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= Seq(
     "com.typesafe.akka"     %% "akka-http"                   % akkaHttpVersion,
-    "com.typesafe.akka"     %% "akka-http-spray-json"        % akkaHttpVersion,
+    "de.heikoseeberger"     %% "akka-http-play-json"         % "1.31.0",
     "com.typesafe.akka"     %% "akka-actor-typed"            % akkaVersion,
     "com.typesafe.akka"     %% "akka-stream"                 % akkaVersion,
     "com.typesafe.slick"    %% "slick"                       % slickVersion,
+    "com.typesafe.slick"    %% "slick-hikaricp"              % slickVersion,
     "dev.zio"               %% "zio"                         % zioVersion,
     "dev.zio"               %% "zio-config"                  % zioConfigVersion,
-    "dev.zio"            %% "zio-config-magnolia"         % zioConfigVersion,
-    "dev.zio"            %% "zio-config-typesafe"         % zioConfigVersion,
-    "dev.zio"            %% "zio-interop-reactivestreams" % "1.0.3.5-RC3",
+    "dev.zio"               %% "zio-config-magnolia"         % zioConfigVersion,
+    "dev.zio"               %% "zio-config-typesafe"         % zioConfigVersion,
+    "dev.zio"               %% "zio-interop-reactivestreams" % "1.0.3.5-RC6",
     "ch.qos.logback"        % "logback-classic"              % "1.2.3",
-    "dev.zio"            %% "zio-logging"                 % zioLoggingVersion,
-    "dev.zio"            %% "zio-logging-slf4j"           % zioLoggingVersion,
+    "dev.zio"               %% "zio-logging"                 % zioLoggingVersion,
+    "dev.zio"               %% "zio-logging-slf4j"           % zioLoggingVersion,
     "com.h2database"        % "h2"                           % "1.4.200",
     $if(add_caliban_endpoint.truthy)$
     "com.github.ghostdogpr" %% "caliban"                     % calibanVersion,

@@ -3,67 +3,61 @@ package $package$.infrastructure
 import $package$.domain._
 import $package$.infrastructure.EntityIdMappers._
 import $package$.infrastructure.tables.ItemsTable
-import $package$.interop.slick.dbio._
+import $package$.interop.slick.syntax._
 import $package$.interop.slick.DatabaseProvider
 import slick.jdbc.H2Profile.api._
 import zio.logging._
 import zio.{ IO, ZIO, ZLayer }
 
-object SlickItemRepository {
+final class SlickItemRepository(env: DatabaseProvider with Logging) extends ItemRepository.Service {
+  val items = ItemsTable.table
 
-  val live: ZLayer[DatabaseProvider with Logging, Throwable, ItemRepository] =
-    ZLayer.fromFunctionM { env =>
-      val items      = ItemsTable.table
-      val initialize = ZIO.fromDBIO(items.schema.createIfNotExists)
+  def add(data: ItemData): IO[RepositoryError, ItemId] = {
+    val insert = (items returning items.map(_.id)) += Item.withData(ItemId(0), data)
 
-      val service: ItemRepository.Service = new ItemRepository.Service {
+    logInfo(s"Adding item \$data") *>
+    ZIO
+      .fromDBIO(insert)
+      .refineOrDie {
+        case e: Exception => RepositoryError(e)
+      }
 
-        def add(name: String, price: BigDecimal): IO[RepositoryError, ItemId] = {
-          val insert = (items returning items.map(_.id)) += Item(None, name, price)
+  }.provide(env)
 
-          logInfo(s"Adding item with name = \$name, price = \$price") *>
-          ZIO
-            .fromDBIO(insert)
-            .refineOrDie {
-              case e: Exception => RepositoryError(e)
-            }
+  def delete(id: ItemId): IO[RepositoryError, Unit] = {
+    val delete = items.filter(_.id === id).delete
 
-        }.provide(env)
+    logInfo(s"Deleting item \${id.value}") *>
+    ZIO.fromDBIO(delete).unit.refineOrDie {
+      case e: Exception => RepositoryError(e)
+    }
+  }.provide(env)
 
-        def delete(id: ItemId): IO[RepositoryError, Unit] = {
-          val delete = items.filter(_.id === id).delete
+  val getAll: IO[RepositoryError, List[Item]] =
+    ZIO.fromDBIO(items.result).provide(env).map(_.toList).refineOrDie {
+      case e: Exception => RepositoryError(e)
+    }
 
-          logInfo(s"Adding item \${id.value}") *>
-          ZIO.fromDBIO(delete).unit.refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }.provide(env)
+  def getById(id: ItemId): IO[RepositoryError, Option[Item]] = {
+    val query = items.filter(_.id === id).result
 
-        val getAll: IO[RepositoryError, List[Item]] =
-          ZIO.fromDBIO(items.result).provide(env).map(_.toList).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
+    ZIO.fromDBIO(query).provide(env).map(_.headOption).refineOrDie {
+      case e: Exception => RepositoryError(e)
+    }
+  }
 
-        def getById(id: ItemId): IO[RepositoryError, Option[Item]] = {
-          val query = items.filter(_.id === id).result
+  def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]] = {
+    val query = items.filter(_.id inSet ids).result
 
-          ZIO.fromDBIO(query).provide(env).map(_.headOption).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }
+    ZIO.fromDBIO(query).provide(env).map(_.toList).refineOrDie {
+      case e: Exception => RepositoryError(e)
+    }
+  }
 
-        def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]] = {
-          val query = items.filter(_.id inSet ids).result
+  def getByName(name: String): IO[RepositoryError, List[Item]] = {
+    val query = items.filter(_.name === name).result
 
-          ZIO.fromDBIO(query).provide(env).map(_.toList).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }
-
-        def getByName(name: String): IO[RepositoryError, List[Item]] = {
-          val query = items.filter(_.name === name).result
-
-          ZIO.fromDBIO(query).provide(env).map(_.toList).refineOrDie {
+    ZIO.fromDBIO(query).provide(env).map(_.toList).refineOrDie {
             case e: Exception => RepositoryError(e)
           }
         }
@@ -72,23 +66,29 @@ object SlickItemRepository {
           val query = items.filter(_.price < price).result
 
           ZIO.fromDBIO(query).provide(env).map(_.toList).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }
+      case e: Exception => RepositoryError(e)
+    }
+  }
 
-        def update(id: ItemId, name: String, price: BigDecimal): IO[RepositoryError, Option[Unit]] = {
-          val q      = items.filter(_.id === id).map(item => (item.name, item.price))
-          val update = q.update((name, price))
+  def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]] = {
+    val q      = items.filter(_.id === id).map(item => (item.name, item.price))
+    val update = q.update((data.name, data.price))
 
-          val foundF = (n: Int) => if (n > 0) Some(()) else None
+    val foundF = (n: Int) => if (n > 0) Some(()) else None
 
-          logInfo(s"Updating item \${id.value} to name = \$name, price = \$price") *>
-          ZIO.fromDBIO(update).map(foundF).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }.provide(env)
-      }
+    logInfo(s"Updating item \${id.value} to \$data") *>
+    ZIO.fromDBIO(update).map(foundF).refineOrDie {
+      case e: Exception => RepositoryError(e)
+    }
+  }.provide(env)
+}
 
-      initialize.provide(env).as(service)
+object SlickItemRepository {
+
+  val live: ZLayer[DatabaseProvider with Logging, Throwable, ItemRepository] =
+    ZLayer.fromFunctionM { env =>
+      val initialize = ZIO.fromDBIO(ItemsTable.table.schema.createIfNotExists)
+
+      initialize.provide(env).as(new SlickItemRepository(env))
     }
 }
