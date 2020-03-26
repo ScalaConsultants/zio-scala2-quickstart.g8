@@ -1,6 +1,7 @@
 package $package$.domain
 
 import zio.IO
+import zio.stream.ZStream
 
 object ItemRepository {
 
@@ -21,5 +22,7 @@ object ItemRepository {
     def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]]
 
     def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]]
+
+    def deletedEvents: ZStream[Any, Nothing, ItemId]
   }
 }

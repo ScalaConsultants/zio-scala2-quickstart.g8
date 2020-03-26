@@ -2,6 +2,7 @@ package $package$.application
 
 import $package$.domain._
 import zio.ZIO
+import zio.stream.ZStream
 
 object ApplicationService {
 
@@ -44,4 +45,6 @@ object ApplicationService {
   ): ZIO[ItemRepository, DomainError, Option[Unit]] =
     ZIO.accessM(_.get.update(itemId, ItemData(name, price)))
 
+  def deletedEvents: ZStream[ItemRepository, Nothing, ItemId] =
+    ZStream.accessStream(_.get.deletedEvents)
 }

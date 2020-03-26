@@ -1,6 +1,7 @@
 package $package$.domain
 
 import zio._
+import zio.stream.ZStream
 
 final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemRepository.Service {
   def add(data: ItemData): IO[RepositoryError, ItemId] =
@@ -42,6 +43,9 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
 
   def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] =
     getAll.map(_.filter(_.price < price))
+
+  // this is enough for tests we have so far
+  def deletedEvents: ZStream[Any, Nothing, ItemId] = ZStream.empty
 }
 
 object InMemoryItemRepository{
