@@ -1,4 +1,4 @@
-package $package$.api
+package $package$.api.graphql
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._

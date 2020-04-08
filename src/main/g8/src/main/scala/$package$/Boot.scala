@@ -4,6 +4,9 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import $package$.api._
+$if(add_caliban_endpoint.truthy)$
+import $package$.api.graphql._
+$endif$
 import $package$.config.{ ApiConfig, AppConfig }
 import $package$.infrastructure._
 import $package$.interop.slick.{ DatabaseConfig, DatabaseProvider }
@@ -20,8 +23,7 @@ import zio.clock.Clock
 
 object Boot extends App {
 
-  val program: ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi $endif$with Has[ActorSystem] with Config[ApiConfig], Throwable, Unit] = ZIO.effect {
-
+  val program: ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi $endif$with Has[ActorSystem] with Config[ApiConfig], Throwable, Unit] =
     for {
       cfg                            <- config[ApiConfig]
       implicit0(system: ActorSystem) <- ZIO.access[Has[ActorSystem]](_.get[ActorSystem])
@@ -30,16 +32,20 @@ object Boot extends App {
       graphQLApi                     <- ZIO.access[GraphQLApi](_.get)
       $endif$
       routes                         = $if(add_caliban_endpoint.truthy)$concat(api.routes, graphQLApi.routes)$else$api.routes$endif$
-      _ <- bindAndHandle(routes, cfg.host, cfg.port).use { binding =>
-                 for {
-                   _ <- putStrLn(
-                         s"Server online at http://\${cfg.host}:\${cfg.port}/\nPress RETURN to stop..."
-                       )
-                   _ <- getStrLn
-                 } yield ()
-               }
+      _                              <- bindAndHandle(routes, cfg.host, cfg.port).use { binding =>
+                                        for {
+                                          _ <- putStrLn(s"Server online at http://\${cfg.host}:\${cfg.port}/\nPress RETURN to stop...")
+                                          _ <- getStrLn
+                                        } yield ()
+                                     }
     } yield ()
-  }.flatten
+
+  def bindAndHandle(routes: Route, host: String, port: Int)(
+    implicit system: ActorSystem
+  ): ZManaged[Any, Throwable, Http.ServerBinding] =
+    ZManaged.make(ZIO.fromFuture(_ => Http().bindAndHandle(routes, host, port)))(b =>
+      ZIO.fromFuture(_ => b.unbind()).orDie
+    )
 
   val loadConfig = ZIO.effect(ConfigFactory.load.resolve)
 
