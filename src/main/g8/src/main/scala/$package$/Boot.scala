@@ -2,6 +2,7 @@ package $package$
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.Route
 import $package$.api._
 import $package$.config.{ ApiConfig, AppConfig }
 import $package$.infrastructure._
@@ -19,23 +20,26 @@ import zio.clock.Clock
 
 object Boot extends App {
 
-  val program
-    : ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi $endif$with Has[ActorSystem] with Has[ActorSystem] with Config[ApiConfig], Throwable, Unit] =
-    ZIO.effect {
-      for {
-        cfg                            <- config[ApiConfig]
-        implicit0(system: ActorSystem) <- ZIO.access[Has[ActorSystem]](_.get[ActorSystem])
-        api                            <- ZIO.access[Api](_.get)
-        $if(add_caliban_endpoint.truthy)$
-        graphQLApi                     <- ZIO.access[GraphQLApi](_.get)
-        $endif$
-        routes                         = $if(add_caliban_endpoint.truthy)$concat(api.routes, graphQLApi.routes)$else$api.routes$endif$
-        binding                        <- ZIO.fromFuture(_ => Http().bindAndHandle(routes, cfg.host, cfg.port))
-        _                              <- putStrLn(s"Server online at http://\${cfg.host}:\${cfg.port}/\nPress RETURN to stop...")
-        _                              <- getStrLn
-        _                              <- ZIO.fromFuture(_ => binding.unbind())
-      } yield ()
-    }.flatten
+  val program: ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi $endif$with Has[ActorSystem] with Config[ApiConfig], Throwable, Unit] = ZIO.effect {
+
+    for {
+      cfg                            <- config[ApiConfig]
+      implicit0(system: ActorSystem) <- ZIO.access[Has[ActorSystem]](_.get[ActorSystem])
+      api                            <- ZIO.access[Api](_.get)
+      $if(add_caliban_endpoint.truthy)$
+      graphQLApi                     <- ZIO.access[GraphQLApi](_.get)
+      $endif$
+      routes                         = $if(add_caliban_endpoint.truthy)$concat(api.routes, graphQLApi.routes)$else$api.routes$endif$
+      _ <- bindAndHandle(routes, cfg.host, cfg.port).use { binding =>
+                 for {
+                   _ <- putStrLn(
+                         s"Server online at http://\${cfg.host}:\${cfg.port}/\nPress RETURN to stop..."
+                       )
+                   _ <- getStrLn
+                 } yield ()
+               }
+    } yield ()
+  }.flatten
 
   val loadConfig = ZIO.effect(ConfigFactory.load.resolve)
 
