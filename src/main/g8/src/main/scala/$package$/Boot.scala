@@ -50,7 +50,7 @@ object Boot extends App {
   val loadConfig = ZIO.effect(ConfigFactory.load.resolve)
 
   val actorSystem = ZLayer.fromManaged(
-    ZManaged.make(ZIO.effect(ActorSystem("zio-example-system")))(s => ZIO.fromFuture(_ => s.terminate()).either)
+    ZManaged.make(ZIO.effect(ActorSystem("$name$-system")))(s => ZIO.fromFuture(_ => s.terminate()).either)
   )
 
   val loggingLayer: ULayer[Logging] = Slf4jLogger.make { (context, message) =>
