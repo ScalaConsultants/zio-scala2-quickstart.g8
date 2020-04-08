@@ -10,6 +10,7 @@ import caliban.schema.GenericSchema
 import caliban.wrappers.ApolloTracing.apolloTracing
 import caliban.wrappers.Wrappers._
 import caliban.{ AkkaHttpAdapter, CalibanError, GraphQL, RootResolver }
+import $package$.api._
 import $package$.application.ApplicationService
 import $package$.domain._
 import zio.clock.Clock
