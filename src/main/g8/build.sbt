@@ -2,8 +2,8 @@ lazy val akkaHttpVersion   = "10.1.11"
 lazy val akkaVersion       = "2.6.4"
 lazy val slickVersion      = "3.3.2"
 lazy val zioVersion        = "1.0.0-RC18-2"
-lazy val zioLoggingVersion = "0.2.4"
 lazy val zioConfigVersion  = "1.0.0-RC13"
+lazy val zioLoggingVersion = "0.2.7"
 
 lazy val root = (project in file(".")).settings(
   inThisBuild(
