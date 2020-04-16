@@ -34,7 +34,7 @@ object GraphQLApi extends GenericSchema[Any] {
 
   case class ItemName(name: String)
   case class ItemPrice(price: BigDecimal)
-  case class ItemInput(name: String, price:BigDecimal)
+  case class ItemInput(name: String, price: BigDecimal)
 
   case class Queries(
     @GQLDescription("Find items by name")
