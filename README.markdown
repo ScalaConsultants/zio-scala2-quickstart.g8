@@ -54,11 +54,18 @@ This sample app has several key components:
 
 Additional libraries used:
 
-* `spray-json` for JSON processing.
+* `play-json` for JSON processing.
 * `zio-logging` for logging.
 * `zio-config` for typesafe configuration.
 * `zio-test` for testing.
 
+###GraphQL
+
+During initialization step, there is a possibility to add GraphQL endpoint managed by Caliban library. 
+It adds two endpoints to the api: `/api/graphql` which is responsible for GraphQL queries and `/graphiql` with simple 
+GraphiQL console to play with the API.
+
+To try out this feature open the browser http://localhost:8080/graphiql
 
 Template license
 ----------------

@@ -34,12 +34,17 @@ object GraphQLApi extends GenericSchema[Any] {
 
   case class ItemName(name: String)
   case class ItemPrice(price: BigDecimal)
+  case class ItemInput(name: String, price: BigDecimal)
 
   case class Queries(
     @GQLDescription("Find items by name")
-    item: ItemName => Task[List[Item]],
+    itemByName: ItemName => Task[List[Item]],
     @GQLDescription("Find items cheaper than specified price")
-    cheaperThan: ItemPrice => Task[List[Item]]
+    cheaperThan: ItemPrice => Task[List[Item]],
+    @GQLDescription("Get all items")
+    allItems: Task[List[Item]],
+    @GQLDescription("Get item by ID")
+    item: ItemId => Task[Option[Item]]
   )
 
   def adaptError(e: DomainError): Throwable = e match {
@@ -47,16 +52,22 @@ object GraphQLApi extends GenericSchema[Any] {
     case ValidationError(msg)   => new Exception(msg)
   }
 
-  case class Mutations(deleteItem: ItemId => ZIO[Any, Throwable, Unit])
+  case class Mutations(
+    addItem: ItemInput => Task[ItemId],
+    deleteItem: ItemId => Task[Unit])
 
   def api(repository: ItemRepository): GraphQL[Console with Clock] =
     graphQL(
       RootResolver(
         Queries(
           args => ApplicationService.getItemByName(args.name).mapError(adaptError).provide(repository),
-          args => ApplicationService.getItemsCheaperThan(args.price).mapError(adaptError).provide(repository)
+          args => ApplicationService.getItemsCheaperThan(args.price).mapError(adaptError).provide(repository),
+          ApplicationService.getItems.mapError(adaptError).provide(repository),
+          id => ApplicationService.getItem(id).mapError(adaptError).provide(repository)
         ),
-        Mutations(id => ApplicationService.deleteItem(id).provide(repository).mapError(e => new Throwable("")))
+        Mutations(
+          item => ApplicationService.addItem(item.name, item.price).mapError(_.asThrowable).provide(repository),
+          id => ApplicationService.deleteItem(id).mapError(e => new Throwable(""))).provide(repository)
       )
     ) @@
       maxFields(200) @@               // query analyzer that limit query fields
