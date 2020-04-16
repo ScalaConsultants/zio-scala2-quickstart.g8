@@ -61,7 +61,7 @@ Additional libraries used:
 
 ###GraphQL
 
-During an initialization step, there is a possibility to add GraphQL endpoint managed by Caliban library. 
+During initialization step, there is a possibility to add GraphQL endpoint managed by Caliban library. 
 It add two endpoints to the api: `/api/graphql` which is responsible for GraphQL queries and `/graphiql` with simple 
 GraphiQL console to play with an API.
 
