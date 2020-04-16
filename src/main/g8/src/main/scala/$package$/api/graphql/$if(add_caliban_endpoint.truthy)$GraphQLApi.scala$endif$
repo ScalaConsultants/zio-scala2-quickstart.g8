@@ -67,7 +67,7 @@ object GraphQLApi extends GenericSchema[Any] {
         ),
         Mutations(
           item => ApplicationService.addItem(item.name, item.price).mapError(_.asThrowable).provide(repository),
-          id => ApplicationService.deleteItem(id).provide(repository).mapError(e => new Throwable("")))
+          id => ApplicationService.deleteItem(id).mapError(e => new Throwable(""))).provide(repository)
       )
     ) @@
       maxFields(200) @@               // query analyzer that limit query fields
