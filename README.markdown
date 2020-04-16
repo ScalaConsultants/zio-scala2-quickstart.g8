@@ -65,7 +65,7 @@ During initialization step, there is a possibility to add GraphQL endpoint manag
 It adds two endpoints to the api: `/api/graphql` which is responsible for GraphQL queries and `/graphiql` with simple 
 GraphiQL console to play with the API.
 
-To try out that feature open the browser http://localhost:8080/graphiql
+To try out this feature open the browser http://localhost:8080/graphiql
 
 Template license
 ----------------
