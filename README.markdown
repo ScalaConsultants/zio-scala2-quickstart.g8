@@ -62,7 +62,7 @@ Additional libraries used:
 ###GraphQL
 
 During initialization step, there is a possibility to add GraphQL endpoint managed by Caliban library. 
-It add two endpoints to the api: `/api/graphql` which is responsible for GraphQL queries and `/graphiql` with simple 
+It adds two endpoints to the api: `/api/graphql` which is responsible for GraphQL queries and `/graphiql` with simple 
 GraphiQL console to play with an API.
 
 To try out that feature open the browser http://localhost:8080/graphiql
