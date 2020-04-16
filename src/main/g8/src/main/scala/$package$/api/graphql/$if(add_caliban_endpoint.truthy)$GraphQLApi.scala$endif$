@@ -53,8 +53,8 @@ object GraphQLApi extends GenericSchema[Any] {
   }
 
   case class Mutations(
-    addItem: ItemInput => ZIO[Any, Throwable, ItemId],
-    deleteItem: ItemId => ZIO[Any, Throwable, Unit])
+    addItem: ItemInput => Task[ItemId],
+    deleteItem: ItemId => Task[Unit])
 
   def api(repository: ItemRepository): GraphQL[Console with Clock] =
     graphQL(
