@@ -1,3 +1,5 @@
+![Scala CI](https://github.com/ScalaConsultants/zio-akka-quickstart.g8/workflows/Scala%20CI/badge.svg)
+
 ## zio-akka-quickstart
 
 A [Giter8][g8] template for a basic Scala application build using ZIO, Akka HTTP and Slick!
