@@ -15,7 +15,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging) extends Item
   def add(data: ItemData): IO[RepositoryError, ItemId] = {
     val insert = (items returning items.map(_.id)) += Item.withData(ItemId(0), data)
 
-    logInfo(s"Adding item \$data") *>
+    log.info(s"Adding item \$data") *>
     ZIO
       .fromDBIO(insert)
       .refineOrDie {
@@ -27,7 +27,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging) extends Item
   def delete(id: ItemId): IO[RepositoryError, Unit] = {
     val delete = items.filter(_.id === id).delete
 
-    logInfo(s"Deleting item \${id.value}") *>
+    log.info(s"Deleting item \${id.value}") *>
     ZIO.fromDBIO(delete).unit.refineOrDie {
       case e: Exception => RepositoryError(e)
     }
@@ -68,7 +68,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging) extends Item
 
     val foundF = (n: Int) => if (n > 0) Some(()) else None
 
-    logInfo(s"Updating item \${id.value} to \$data") *>
+    log.info(s"Updating item \${id.value} to \$data") *>
     ZIO.fromDBIO(update).map(foundF).refineOrDie {
       case e: Exception => RepositoryError(e)
     }
