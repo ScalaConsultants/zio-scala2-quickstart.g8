@@ -47,27 +47,27 @@ object GraphQLApi extends GenericSchema[Any] {
     item: ItemId => Task[Option[Item]]
   )
 
-  def adaptError(e: DomainError): Throwable = e match {
-    case RepositoryError(cause) => cause
-    case ValidationError(msg)   => new Exception(msg)
-  }
-
   case class Mutations(
     addItem: ItemInput => Task[ItemId],
     deleteItem: ItemId => Task[Unit])
 
-  def api(repository: ItemRepository): GraphQL[Console with Clock] =
+  def api(repository: ItemRepository): GraphQL[Console with Clock] = {
+
+    def runService[A](f: ZIO[ItemRepository, DomainError, A]): Task[A] =
+      f.provide(repository).mapError(_.asThrowable)
+
     graphQL(
       RootResolver(
         Queries(
-          args => ApplicationService.getItemByName(args.name).mapError(adaptError).provide(repository),
-          args => ApplicationService.getItemsCheaperThan(args.price).mapError(adaptError).provide(repository),
-          ApplicationService.getItems.mapError(adaptError).provide(repository),
-          id => ApplicationService.getItem(id).mapError(adaptError).provide(repository)
+          args => runService(ApplicationService.getItemByName(args.name)),
+          args => runService(ApplicationService.getItemsCheaperThan(args.price)),
+          runService(ApplicationService.getItems),
+          id => runService(ApplicationService.getItem(id))
         ),
         Mutations(
-          item => ApplicationService.addItem(item.name, item.price).mapError(_.asThrowable).provide(repository),
-          id => ApplicationService.deleteItem(id).mapError(e => new Throwable(""))).provide(repository)
+          item => runService(ApplicationService.addItem(item.name, item.price)),
+          id => runService(ApplicationService.deleteItem(id))
+        )
       )
     ) @@
       maxFields(200) @@               // query analyzer that limit query fields
@@ -75,6 +75,7 @@ object GraphQLApi extends GenericSchema[Any] {
       timeout(3 seconds) @@           // wrapper that fails slow queries
       printSlowQueries(500 millis) @@ // wrapper that logs slow queries
       apolloTracing                   // wrapper for https://github.com/apollographql/apollo-tracing
+  }
 
   val live: ZLayer[ItemRepository with Has[ActorSystem], CalibanError.ValidationError, GraphQLApi] =
     ZLayer.fromFunctionM { env =>
