@@ -4,7 +4,6 @@ import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
 import $package$.api.JsonSupport._
-import $package$.api.Api._
 import $package$.application.ApplicationService
 import $package$.config.ApiConfig
 import $package$.domain._
@@ -14,12 +13,11 @@ import zio._
 import zio.blocking._
 import zio.test.Assertion._
 import zio.test._
-import zio.config.Config
 
 object ApiSpec extends ZioRouteTest {
 
   private val env =
-    (ZLayer.succeed(new Config.Service[ApiConfig] { def config = ApiConfig("localhost", 8080) }) ++
+    (ZLayer.succeed(ApiConfig("localhost", 8080)) ++
       InMemoryItemRepository.test) >>>
       Api.live.passthrough ++ Blocking.live
 

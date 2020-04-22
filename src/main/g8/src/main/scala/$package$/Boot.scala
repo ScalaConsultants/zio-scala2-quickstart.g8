@@ -3,22 +3,22 @@ package $package$
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.RouteConcatenation.concat
+import com.typesafe.config.ConfigFactory
 import $package$.api._
 $if(add_caliban_endpoint.truthy)$
 import $package$.api.graphql._
 $endif$
 import $package$.config.{ ApiConfig, AppConfig }
 import $package$.infrastructure._
-import $package$.interop.slick.{ DatabaseConfig, DatabaseProvider }
-import com.typesafe.config.ConfigFactory
+import $package$.interop.slick.DatabaseProvider
+import zio.config.typesafe.TypesafeConfig
+import zio.config.{ config, Config }
 import zio.console._
 import zio.{ App, Has, ZIO, ZLayer, ZManaged }
 import zio.logging._
 import zio.logging.slf4j._
 import zio.{ App, Has, TaskLayer, ULayer, ZIO, ZLayer, ZManaged }
-import zio.config.{ Config, config }
-import zio.config.typesafe.TypesafeConfig
-import akka.http.scaladsl.server.RouteConcatenation.concat
 import zio.clock.Clock
 
 object Boot extends App {
@@ -67,15 +67,17 @@ object Boot extends App {
 
   def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] =
     loadConfig.flatMap { rawConfig =>
-      val configLayer = TypesafeConfig.fromHocon(rawConfig, AppConfig.description)
+      val configLayer = TypesafeConfig.fromTypesafeConfig(rawConfig, AppConfig.descriptor)
 
       // using raw config since it's recommended and the simplest to work with slick
-      val dbConfigLayer = ZLayer.fromEffect(ZIO.effect {
-        val dbc = DatabaseConfig(rawConfig.getConfig("db"))
-        new Config.Service[DatabaseConfig] { def config = dbc }
-      })
+      val dbConfigLayer = ZLayer.fromEffect {
+        ZIO.effect {
+          rawConfig.getConfig("db")
+        }
+      }
+
       // narrowing down to the required part of the config to ensure separation of concerns
-      val apiConfigLayer = configLayer.map(c => Has(new Config.Service[ApiConfig] { def config = c.get.config.api }))
+      val apiConfigLayer = configLayer.map(c => Has(c.get.api))
 
       val dbLayer    = ((dbConfigLayer >>> DatabaseProvider.live) ++ loggingLayer) >>> SlickItemRepository.live
       val api        = (apiConfigLayer ++ dbLayer) >>> Api.live
