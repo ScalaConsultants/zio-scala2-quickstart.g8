@@ -34,6 +34,8 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
       .fromDBIO(delete)
       $if(add_caliban_endpoint.truthy)$
       .flatMap(deletedCount => ZIO.when(deletedCount > 0)(publishDeletedEvents(id)))
+      $else$
+      .unit
       $endif$
       .refineOrDie {
         case e: Exception => RepositoryError(e)
