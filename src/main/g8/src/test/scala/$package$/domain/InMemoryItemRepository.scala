@@ -38,6 +38,7 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
       updated -> newItems
     }
 
+  $if(add_caliban_endpoint.truthy)$
   def getByName(name: String): IO[RepositoryError, List[Item]] =
     getAll.map(_.filter(_.name == name))
 
@@ -46,6 +47,7 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
 
   // this is enough for tests we have so far
   def deletedEvents: ZStream[Any, Nothing, ItemId] = ZStream.empty
+  $endif$
 }
 
 object InMemoryItemRepository{

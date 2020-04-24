@@ -32,7 +32,9 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
     log.info(s"Deleting item \${id.value}") *>
     ZIO
       .fromDBIO(delete)
+      $if(add_caliban_endpoint.truthy)$
       .flatMap(deletedCount => ZIO.when(deletedCount > 0)(publishDeletedEvents(id)))
+      $endif$
       .refineOrDie {
         case e: Exception => RepositoryError(e)
       }
@@ -59,6 +61,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
     }
   }
 
+  $if(add_caliban_endpoint.truthy)$
   def getByName(name: String): IO[RepositoryError, List[Item]] = {
     val query = items.filter(_.name === name).result
 
@@ -74,6 +77,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
       case e: Exception => RepositoryError(e)
     }
   }
+  $endif$
 
   def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]] = {
     val q      = items.filter(_.id === id).map(item => (item.name, item.price))
@@ -87,6 +91,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
     }
   }.provide(env)
 
+  $if(add_caliban_endpoint.truthy)$
   def deletedEvents: ZStream[Any, Nothing, ItemId] = ZStream.unwrap {
     for {
       queue <- Queue.unbounded[ItemId]
@@ -107,6 +112,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
             )
         )
       )
+  $endif$
 }
 
 object SlickItemRepository {

@@ -15,14 +15,18 @@ object ItemRepository {
 
     def getById(id: ItemId): IO[RepositoryError, Option[Item]]
 
+    $if(add_caliban_endpoint.truthy)$
     def getByName(name: String): IO[RepositoryError, List[Item]]
 
     def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]]
+    $endif$
 
     def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]]
 
     def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]]
 
+    $if(add_caliban_endpoint.truthy)$
     def deletedEvents: ZStream[Any, Nothing, ItemId]
+    $endif$
   }
 }

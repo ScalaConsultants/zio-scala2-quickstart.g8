@@ -6,11 +6,13 @@ import zio.stream.ZStream
 
 object ApplicationService {
 
+  $if(add_caliban_endpoint.truthy)$
   def getItemsCheaperThan(price: BigDecimal): ZIO[ItemRepository, DomainError, List[Item]] =
     ZIO.accessM(_.get.getCheaperThan(price))
 
   def getItemByName(name: String): ZIO[ItemRepository, DomainError, List[Item]] =
     ZIO.accessM(_.get.getByName(name))
+  $endif$
 
   def addItem(name: String, price: BigDecimal): ZIO[ItemRepository, DomainError, ItemId] =
     ZIO.accessM(_.get.add(ItemData(name, price)))
@@ -45,6 +47,8 @@ object ApplicationService {
   ): ZIO[ItemRepository, DomainError, Option[Unit]] =
     ZIO.accessM(_.get.update(itemId, ItemData(name, price)))
 
+  $if(add_caliban_endpoint.truthy)$
   def deletedEvents: ZStream[ItemRepository, Nothing, ItemId] =
     ZStream.accessStream(_.get.deletedEvents)
+  $endif$
 }
