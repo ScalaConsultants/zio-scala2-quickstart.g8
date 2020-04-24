@@ -1,0 +1,98 @@
+package $package$.api.graphql
+
+import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import caliban.GraphQL.graphQL
+import caliban.interop.play.PlayJsonBackend
+import caliban.schema.Annotations.GQLDescription
+import caliban.schema.GenericSchema
+import caliban.wrappers.ApolloTracing.apolloTracing
+import caliban.wrappers.Wrappers._
+import caliban.{ AkkaHttpAdapter, CalibanError, GraphQL, RootResolver }
+import $package$.api._
+import $package$.application.ApplicationService
+import $package$.domain._
+import zio.clock.Clock
+import zio.console.Console
+import zio.duration._
+import zio.{ Has, Runtime, Task, ZIO, ZLayer }
+
+import scala.language.postfixOps
+
+object GraphQLApi extends GenericSchema[Any] {
+
+  trait Service {
+    def routes: Route
+  }
+
+  implicit val runtime = Runtime.default
+
+  implicit val itemPriceSchema = gen[ItemPrice]
+  implicit val itemNameSchema  = gen[ItemName]
+  implicit val itemSchema      = gen[Item]
+
+  case class ItemName(name: String)
+  case class ItemPrice(price: BigDecimal)
+  case class ItemInput(name: String, price: BigDecimal)
+
+  case class Queries(
+    @GQLDescription("Find items by name")
+    itemByName: ItemName => Task[List[Item]],
+    @GQLDescription("Find items cheaper than specified price")
+    cheaperThan: ItemPrice => Task[List[Item]],
+    @GQLDescription("Get all items")
+    allItems: Task[List[Item]],
+    @GQLDescription("Get item by ID")
+    item: ItemId => Task[Option[Item]]
+  )
+
+  case class Mutations(
+    addItem: ItemInput => Task[ItemId],
+    deleteItem: ItemId => Task[Unit])
+
+  def api(repository: ItemRepository): GraphQL[Console with Clock] = {
+
+    def runService[A](f: ZIO[ItemRepository, DomainError, A]): Task[A] =
+      f.provide(repository).mapError(_.asThrowable)
+
+    graphQL(
+      RootResolver(
+        Queries(
+          args => runService(ApplicationService.getItemByName(args.name)),
+          args => runService(ApplicationService.getItemsCheaperThan(args.price)),
+          runService(ApplicationService.getItems),
+          id => runService(ApplicationService.getItem(id))
+        ),
+        Mutations(
+          item => runService(ApplicationService.addItem(item.name, item.price)),
+          id => runService(ApplicationService.deleteItem(id))
+        )
+      )
+    ) @@
+      maxFields(200) @@               // query analyzer that limit query fields
+      maxDepth(30) @@                 // query analyzer that limit query depth
+      timeout(3 seconds) @@           // wrapper that fails slow queries
+      printSlowQueries(500 millis) @@ // wrapper that logs slow queries
+      apolloTracing                   // wrapper for https://github.com/apollographql/apollo-tracing
+  }
+
+  val live: ZLayer[ItemRepository with Has[ActorSystem], CalibanError.ValidationError, GraphQLApi] =
+    ZLayer.fromFunctionM { env =>
+      implicit val system = env.get[ActorSystem]
+      implicit val ec     = system.dispatcher
+      val adapter = AkkaHttpAdapter(new PlayJsonBackend)
+      api(env).interpreter.map(interpreter =>
+        new Service {
+          def routes: Route =
+            path("api" / "graphql") {
+              adapter.makeHttpService(interpreter)
+            } ~
+              path("graphiql") {
+                getFromResource("graphql/graphiql.html")
+              }
+        }
+      )
+    }
+
+}

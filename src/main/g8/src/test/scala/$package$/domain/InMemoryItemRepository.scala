@@ -1,6 +1,7 @@
 package $package$.domain
 
 import zio._
+import zio.stream.ZStream
 
 final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemRepository.Service {
   def add(data: ItemData): IO[RepositoryError, ItemId] =
@@ -36,6 +37,17 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
       val updated = if(newItems == items) None else Some(())
       updated -> newItems
     }
+
+  $if(add_caliban_endpoint.truthy)$
+  def getByName(name: String): IO[RepositoryError, List[Item]] =
+    getAll.map(_.filter(_.name == name))
+
+  def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] =
+    getAll.map(_.filter(_.price < price))
+
+  // this is enough for tests we have so far
+  def deletedEvents: ZStream[Any, Nothing, ItemId] = ZStream.empty
+  $endif$
 }
 
 object InMemoryItemRepository{
