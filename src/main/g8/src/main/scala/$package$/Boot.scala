@@ -12,6 +12,7 @@ $endif$
 import $package$.config.{ ApiConfig, AppConfig }
 import $package$.infrastructure._
 import $package$.interop.slick.DatabaseProvider
+import $package$.server.HttpServer
 import zio.config.typesafe.TypesafeConfig
 import zio.config.{ config, Config }
 import zio.console._
@@ -23,22 +24,15 @@ import zio.clock.Clock
 
 object Boot extends App {
 
-  val program: ZIO[Console with Api $if(add_caliban_endpoint.truthy)$with GraphQLApi $endif$with Has[ActorSystem] with Config[ApiConfig], Throwable, Unit] =
-    for {
-      cfg                            <- config[ApiConfig]
-      implicit0(system: ActorSystem) <- ZIO.access[Has[ActorSystem]](_.get[ActorSystem])
-      api                            <- ZIO.access[Api](_.get)
-      $if(add_caliban_endpoint.truthy)$
-      graphQLApi                     <- ZIO.access[GraphQLApi](_.get)
-      $endif$
-      routes                         = $if(add_caliban_endpoint.truthy)$concat(api.routes, graphQLApi.routes)$else$api.routes$endif$
-      _                              <- bindAndHandle(routes, cfg.host, cfg.port).use { binding =>
-                                        for {
-                                          _ <- putStrLn(s"Server online at http://\${cfg.host}:\${cfg.port}/\nPress RETURN to stop...")
-                                          _ <- getStrLn
-                                        } yield ()
-                                     }
-    } yield ()
+  val program: ZIO[HttpServer with Console, Throwable, Unit] =
+    HttpServer.start.use { binding =>
+      for {
+        _ <- putStrLn(
+              s"Server online. Press RETURN to stop..."
+            )
+        _ <- getStrLn
+      } yield ()
+    }
 
   def bindAndHandle(routes: Route, host: String, port: Int)(
     implicit system: ActorSystem
@@ -84,7 +78,8 @@ object Boot extends App {
       $if(add_caliban_endpoint.truthy)$
       val graphQLApi = (dbLayer ++ actorSystem ++ Console.live ++ Clock.live) >>> GraphQLApi.live
       $endif$
-      val liveEnv = actorSystemLayer ++ Console.live ++ api ++ apiConfigLayer$if(add_caliban_endpoint.truthy)$ ++ graphQLApi$endif$
+      val httpServer = (actorSystem ++ apiConfigLayer ++ api$if(add_caliban_endpoint.truthy)$ ++ graphQLApi$endif$) >>> HttpServer.live
+      val liveEnv = Console.live ++ httpServer
 
       program.provideLayer(liveEnv)
     }.fold(_ => 1, _ => 0)
