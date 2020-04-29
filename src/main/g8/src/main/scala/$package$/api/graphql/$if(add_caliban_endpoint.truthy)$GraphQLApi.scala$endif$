@@ -16,7 +16,7 @@ import $package$.domain._
 import zio.clock.Clock
 import zio.console.Console
 import zio.duration._
-import zio.{ Has, Runtime, Task, ZIO, ZLayer }
+import zio._
 
 import scala.language.postfixOps
 
@@ -95,4 +95,6 @@ object GraphQLApi extends GenericSchema[Any] {
       )
     }
 
+  // accessors
+  val routes: URIO[GraphQLApi, Route] = ZIO.access[GraphQLApi](a => Route.seal(a.get.routes))
 }
