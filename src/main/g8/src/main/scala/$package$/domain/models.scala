@@ -1,10 +1,10 @@
-package $package$.domain
+package com.example.domain
 
-case class ItemId(value: Long) extends AnyVal
+final case class ItemId(value: Long) extends AnyVal
 
-case class ItemData(name: String, price: BigDecimal)
+final case class ItemData(name: String, price: BigDecimal)
 
-case class Item(id: ItemId, name: String, price: BigDecimal) {
+final case class Item(id: ItemId, name: String, price: BigDecimal) {
   def data: ItemData =
     ItemData(name, price)
 }
