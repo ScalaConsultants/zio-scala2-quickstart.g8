@@ -5,7 +5,7 @@ lazy val zioVersion        = "1.0.0-RC18-2"
 lazy val zioLoggingVersion = "0.2.7"
 lazy val zioConfigVersion  = "1.0.0-RC16-1"
 $if(add_caliban_endpoint.truthy)$
-lazy val calibanVersion    = "0.7.3"
+lazy val calibanVersion    = "0.7.6"
 $endif$
 
 lazy val root = (project in file(".")).settings(
