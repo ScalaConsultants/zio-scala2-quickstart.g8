@@ -9,7 +9,7 @@ import $package$.config.ApiConfig
 import $package$.domain._
 import $package$.interop.akka._
 import play.api.libs.json.JsObject
-import zio.ZLayer
+import zio._
 import zio.config.Config
 
 object Api {
@@ -89,4 +89,6 @@ object Api {
     }
   )
 
+  // accessors
+  val routes: URIO[Api, Route] = ZIO.access[Api](a => Route.seal(a.get.routes))
 }

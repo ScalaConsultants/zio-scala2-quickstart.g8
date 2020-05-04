@@ -2,7 +2,6 @@ package $package$.api
 
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Route
 import $package$.api.JsonSupport._
 import $package$.application.ApplicationService
 import $package$.config.ApiConfig
@@ -21,7 +20,6 @@ object ApiSpec extends ZioRouteTest {
       InMemoryItemRepository.test) >>>
       Api.live.passthrough ++ Blocking.live
 
-  private def apiRoutes: URIO[Api, Route]                          = ZIO.access[Api](a => Route.seal(a.get.routes))
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
 
   private val specs: Spec[ItemRepository with Blocking with Api, TestFailure[Throwable], TestSuccess] =
@@ -30,7 +28,7 @@ object ApiSpec extends ZioRouteTest {
         val item = CreateItemRequest("name", 100.0)
 
         for {
-          routes  <- apiRoutes
+          routes  <- Api.routes
           entity  <- ZIO.fromFuture(_ => Marshal(item).to[MessageEntity])
           request = Post("/items").withEntity(entity)
           resultCheck <- effectBlocking(request ~> routes ~> check {
@@ -49,7 +47,7 @@ object ApiSpec extends ZioRouteTest {
       testM("Not allow malformed json on POST to '/items'") {
         val item = JsObject.empty
         for {
-          routes  <- apiRoutes
+          routes  <- Api.routes
           entity  <- ZIO.fromFuture(_ => Marshal(item).to[MessageEntity])
           request = Post("/items").withEntity(entity)
           resultCheck <- effectBlocking(request ~> routes ~> check {
@@ -64,7 +62,7 @@ object ApiSpec extends ZioRouteTest {
 
         for {
           _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-          routes <- apiRoutes
+          routes <- Api.routes
           resultCheck <- effectBlocking(Get("/items") ~> routes ~> check {
                           val theStatus = status
                           val theCT     = contentType
@@ -81,7 +79,7 @@ object ApiSpec extends ZioRouteTest {
 
         for {
           _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-          routes <- apiRoutes
+          routes <- Api.routes
           resultCheck <- effectBlocking(Delete("/items/1") ~> routes ~> check {
                           val s = status
                           assert(s)(equalTo(StatusCodes.OK))
