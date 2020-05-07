@@ -9,6 +9,8 @@ import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json._
 import zio._
 import zio.blocking._
+import zio.clock.Clock
+import zio.logging.Logging
 import zio.test.Assertion._
 import zio.test._
 
@@ -208,7 +210,8 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
     ZManaged.make(ZIO.effect(system).orDie)(s => ZIO.fromFuture(_ => s.terminate()).either)
   }
 
-  private val env: ULayer[GraphQLApi] = (InMemoryItemRepository.test ++ systemLayer) >>> GraphQLApi.live.orDie
+  private val env: ULayer[GraphQLApi] =
+    (InMemoryItemRepository.test ++ systemLayer ++ Clock.live ++ Logging.ignore) >>> GraphQLApi.live.orDie
 
   private def sendQueryAndCheckResult(query: String)(
     assertion: (StatusCode, ContentType, JsObject) => TestResult

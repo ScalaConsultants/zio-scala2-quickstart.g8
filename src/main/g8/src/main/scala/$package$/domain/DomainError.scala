@@ -1,4 +1,4 @@
-package $package$.domain
+package com.example.domain
 
 sealed trait DomainError {
   def asThrowable: Throwable = this match {
@@ -6,5 +6,5 @@ sealed trait DomainError {
     case ValidationError(msg)   => new Throwable(msg)
   }
 }
-case class RepositoryError(cause: Exception) extends DomainError
-case class ValidationError(msg: String)      extends DomainError
+final case class RepositoryError(cause: Exception) extends DomainError
+final case class ValidationError(msg: String)      extends DomainError
