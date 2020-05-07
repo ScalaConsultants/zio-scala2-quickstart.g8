@@ -82,17 +82,16 @@ object GraphQLApi extends GenericSchema[ItemRepository] {
 
   val live =
     ZLayer.fromServicesM[
-      Clock.Service,
       Logger[String],
       ItemRepository.Service,
       ActorSystem,
       Clock with Logging,
       CalibanError.ValidationError,
       GraphQLApi.Service
-    ] { (clockService, logger, itemRepositoryService, actorSystem) =>
+    ] { (logger, itemRepositoryService, actorSystem) =>
       implicit val system  = actorSystem
       implicit val ec      = system.dispatcher
-      implicit val runtime = Runtime(Has(clockService) ++ Has(logger) ++ Has(itemRepositoryService), Platform.default)
+      implicit val runtime = Runtime.default.map(_ ++ Has(logger) ++ Has(itemRepositoryService))
       val adapter          = AkkaHttpAdapter(new PlayJsonBackend)
       api.interpreter.map { interpreter =>
         new Service {
@@ -100,9 +99,9 @@ object GraphQLApi extends GenericSchema[ItemRepository] {
             path("api" / "graphql") {
               adapter.makeHttpService(interpreter)
             } ~
-              path("graphiql") {
-                getFromResource("graphql/graphiql.html")
-              }
+            path("graphiql") {
+              getFromResource("graphql/graphiql.html")
+            }
         }
       }
     }

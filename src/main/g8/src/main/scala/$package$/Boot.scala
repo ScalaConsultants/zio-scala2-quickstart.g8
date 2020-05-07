@@ -39,7 +39,7 @@ object Boot extends App {
     val apiConfigLayer = configLayer.map(c => Has(c.get.api))
 
     val actorSystemLayer: TaskLayer[Has[ActorSystem]] = ZLayer.fromManaged {
-      ZManaged.make(ZIO(ActorSystem("zio-akka-quickstart-system")))(s => ZIO.fromFuture(_ => s.terminate()).either)
+      ZManaged.make(ZIO(ActorSystem("$name$-system")))(s => ZIO.fromFuture(_ => s.terminate()).either)
     }
 
     val loggingLayer: ULayer[Logging] = Slf4jLogger.make { (context, message) =>
