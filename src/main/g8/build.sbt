@@ -3,7 +3,7 @@ lazy val akkaVersion       = "2.6.4"
 lazy val slickVersion      = "3.3.2"
 lazy val zioVersion        = "1.0.0-RC18-2"
 lazy val zioLoggingVersion = "0.2.7"
-lazy val zioConfigVersion  = "1.0.0-RC16-1"
+lazy val zioConfigVersion  = "1.0.0-RC17"
 $if(add_caliban_endpoint.truthy)$
 lazy val calibanVersion    = "0.7.6"
 $endif$
