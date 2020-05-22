@@ -64,9 +64,9 @@ object Boot extends App {
     $endif$
 
     val routesLayer: ZLayer[Api$if(add_caliban_endpoint.truthy)$ with GraphQLApi$endif$, Nothing, Has[Route]] =
-    ZLayer.fromServices[Api.Service$if(add_caliban_endpoint.truthy)$, api.graphql.GraphQLApi.Service$endif$, Route]{ (api$if(add_caliban_endpoint.truthy) $, gApi$endif$)=>
-      api.routes$if(add_caliban_endpoint.truthy)$ ~ gApi.routes$endif$
-    }
+      ZLayer.fromServices[Api.Service$if(add_caliban_endpoint.truthy)$, api.graphql.GraphQLApi.Service$endif$, Route]{ (api$if(add_caliban_endpoint.truthy) $, gApi$endif$)=>
+        api.routes$if(add_caliban_endpoint.truthy)$ ~ gApi.routes$endif$
+      }
 
     (actorSystemLayer ++ apiConfigLayer ++ (apiLayer $if(add_caliban_endpoint.truthy)$ ++ graphQLApiLayer$endif$ >>> routesLayer)) >>> HttpServer.live
   }
