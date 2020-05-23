@@ -8,8 +8,8 @@ $endif$
 import $package$.config.AppConfig
 import $package$.domain.ItemRepository
 import $package$.infrastructure._
-import $package$.interop.slick.DatabaseProvider
-import $package$.server.HttpServer
+import slick.interop.zio.DatabaseProvider
+import akka.http.scaladsl.server.Route
 import com.typesafe.config.{ Config, ConfigFactory }
 import zio.clock.Clock
 import zio.config.typesafe.TypesafeConfig
@@ -17,6 +17,8 @@ import zio.console._
 import zio.logging._
 import zio.logging.slf4j._
 import zio._
+import akka.http.interop._
+import akka.http.scaladsl.server.RouteConcatenation._
 
 object Boot extends App {
 
@@ -34,6 +36,7 @@ object Boot extends App {
 
     // using raw config since it's recommended and the simplest to work with slick
     val dbConfigLayer = ZLayer.fromEffect(ZIO(rawConfig.getConfig("db")))
+    val dbBackendLayer = ZLayer.succeed(slick.jdbc.H2Profile.backend)
 
     // narrowing down to the required part of the config to ensure separation of concerns
     val apiConfigLayer = configLayer.map(c => Has(c.get.api))
@@ -51,7 +54,7 @@ object Boot extends App {
     }
 
     val dbLayer: TaskLayer[ItemRepository] =
-      ((dbConfigLayer >>> DatabaseProvider.live) ++ loggingLayer) >>> SlickItemRepository.live
+      (((dbConfigLayer ++ dbBackendLayer) >>> DatabaseProvider.live) ++ loggingLayer) >>> SlickItemRepository.live
 
     val apiLayer: TaskLayer[Api] = (apiConfigLayer ++ dbLayer) >>> Api.live
 
@@ -60,6 +63,13 @@ object Boot extends App {
       (dbLayer ++ actorSystemLayer ++ loggingLayer ++ Clock.live) >>> GraphQLApi.live
     $endif$
 
-    (actorSystemLayer ++ apiConfigLayer ++ apiLayer $if(add_caliban_endpoint.truthy)$ ++ graphQLApiLayer$endif$) >>> HttpServer.live
+    val routesLayer: ZLayer[Api$if(add_caliban_endpoint.truthy)$ with GraphQLApi$endif$, Nothing, Has[Route]] =
+    $if(add_caliban_endpoint.truthy)$
+      ZLayer.fromServices[Api.Service, api.graphql.GraphQLApi.Service, Route]{ (api, gApi) => api.routes ~ gApi.routes }
+    $else$
+      ZLayer.fromService(_.routes)
+    $endif$
+
+    (actorSystemLayer ++ apiConfigLayer ++ (apiLayer $if(add_caliban_endpoint.truthy)$ ++ graphQLApiLayer$endif$ >>> routesLayer)) >>> HttpServer.live
   }
 }

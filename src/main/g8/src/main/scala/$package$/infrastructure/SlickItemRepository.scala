@@ -3,8 +3,8 @@ package $package$.infrastructure
 import $package$.domain._
 import $package$.infrastructure.EntityIdMappers._
 import $package$.infrastructure.tables.ItemsTable
-import $package$.interop.slick.syntax._
-import $package$.interop.slick.DatabaseProvider
+import slick.interop.zio.DatabaseProvider
+import slick.interop.zio.syntax._
 import slick.jdbc.H2Profile.api._
 import zio.logging._
 import zio.stream.ZStream
