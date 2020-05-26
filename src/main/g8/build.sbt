@@ -10,12 +10,10 @@ $if(add_caliban_endpoint.truthy)$
 val calibanVersion    = "0.8.0"
 $endif$
 
-
 val dockerReleaseSettings = Seq(
   dockerExposedPorts := Seq(8080),
   dockerBaseImage := "adoptopenjdk/openjdk12:x86_64-ubuntu-jre-12.0.2_10"
 )
-
 
 val root = (project in file("."))
   .settings(
