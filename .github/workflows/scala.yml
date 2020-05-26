@@ -23,3 +23,5 @@ jobs:
       run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("add_caliban_endpoint" -> "no") }; test'
     - name: Run tests without sse
       run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("add_server_sent_events_endpoint" -> "no") }; test'
+    - name: Run tests without optional addons
+      run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("add_caliban_endpoint" -> "no", "add_server_sent_events_endpoint" -> "no") }; test'
