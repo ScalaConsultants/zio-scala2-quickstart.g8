@@ -43,6 +43,23 @@ curl --request GET \
 
 Check out more routes in [Api.scala](https://github.com/ScalaConsultants/zio-akka-quickstart.g8/blob/master/src/main/g8/src/main/scala/%24package%24/api/Api.scala)
 
+### Docker image
+
+Template provides packaging as docker image out of the box, using [sbt-native-packager](https://sbt-native-packager.readthedocs.io/en/stable/) plugin.
+
+To create an image, run:
+```
+sbt docker:publishLocal
+```
+
+This will create a docker image locally, named the same as your project is. You can run it like the following:
+
+```
+docker run -d -i -p 8080:8080 --name=<project_name> <project_name>:0.1.0-SNAPSHOT
+```
+
+Note the `-i` flag. Interactive mode is required here, because server can be turned off by hitting ENTER on stdin (and therefore it will shutdown immediately if interactive mode is off).
+
 ### Components and libraries
 
 This sample app has several key components:
