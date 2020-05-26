@@ -54,16 +54,6 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-test-sbt"                % zioVersion % Test
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    runAsRoot(dockerCommands),
     dockerReleaseSettings
   )
   .enablePlugins(DockerPlugin, JavaAppPackaging)
-
-// this removes docker commands that create special limited-rights user for the application.
-// in essence this allows application to run under root
-def runAsRoot(dccmd: TaskKey[Seq[CmdLike]]): Def.SettingsDefinition =
-  dccmd := dccmd.value.filter {
-    case e: ExecCmd => e.cmd != "RUN"
-    case e: Cmd     => e.cmd != "USER"
-    case _          => true
-  }
