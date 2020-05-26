@@ -20,6 +20,6 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Run tests add_caliban_endpoint=${{ add-caliban-endpoint }}, add_server_sent_events_endpoint=${{ add-server-sent-events-endpoint }}
-      run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("add_caliban_endpoint" -> "${{ add-caliban-endpoint }}", "add_server_sent_events_endpoint" -> "${{ add-server-sent-events-endpoint }}") }; test'
+    - name: Run tests add_caliban_endpoint=${{ matrix.add-caliban-endpoint }}, add_server_sent_events_endpoint=${{ matrix.add-server-sent-events-endpoint }}
+      run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("add_caliban_endpoint" -> "${{ matrix.add-caliban-endpoint }}", "add_server_sent_events_endpoint" -> "${{ matrix.add-server-sent-events-endpoint }}") }; test'
 
