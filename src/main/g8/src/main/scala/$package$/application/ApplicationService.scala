@@ -47,7 +47,7 @@ object ApplicationService {
   ): ZIO[ItemRepository, DomainError, Option[Unit]] =
     ZIO.accessM(_.get.update(itemId, ItemData(name, price)))
 
-  $if(add_caliban_endpoint.truthy)$
+  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy)$
   def deletedEvents: ZStream[ItemRepository, Nothing, ItemId] =
     ZStream.accessStream(_.get.deletedEvents)
   $endif$
