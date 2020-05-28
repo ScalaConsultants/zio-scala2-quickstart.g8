@@ -32,7 +32,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
     log.info(s"Deleting item \${id.value}") *>
     ZIO
       .fromDBIO(delete)
-      $if(add_caliban_endpoint.truthy)$
+      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy)$
       .flatMap(deletedCount => ZIO.when(deletedCount > 0)(publishDeletedEvents(id)))
       $else$
       .unit
@@ -93,7 +93,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
     }
   }.provide(env)
 
-  $if(add_caliban_endpoint.truthy)$
+  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy)$
   def deletedEvents: ZStream[Any, Nothing, ItemId] = ZStream.unwrap {
     for {
       queue <- Queue.unbounded[ItemId]

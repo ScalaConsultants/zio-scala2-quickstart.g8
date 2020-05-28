@@ -44,8 +44,10 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
 
   def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] =
     getAll.map(_.filter(_.price < price))
+  $endif$
 
   // this is enough for tests we have so far
+  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy)$
   def deletedEvents: ZStream[Any, Nothing, ItemId] = ZStream.empty
   $endif$
 }

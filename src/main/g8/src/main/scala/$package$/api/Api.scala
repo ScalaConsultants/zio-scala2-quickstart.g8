@@ -10,6 +10,15 @@ import akka.http.interop._
 import play.api.libs.json.JsObject
 import zio._
 import zio.config.Config
+$if(add_server_sent_events_endpoint.truthy)$
+import java.time.LocalTime
+import akka.NotUsed
+import akka.http.scaladsl.model.sse.ServerSentEvent
+import akka.stream.scaladsl.Source
+import java.time.format.DateTimeFormatter.ISO_LOCAL_TIME
+import scala.concurrent.duration._
+import zio.interop.reactivestreams._
+$endif$
 
 object Api {
 
@@ -82,7 +91,27 @@ object Api {
                 }
             }
           }
-        }
+        } $if(add_server_sent_events_endpoint.truthy)$ ~
+          pathPrefix("sse" / "items") {
+            import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
+
+            logRequestResult("sse/items", InfoLevel) {
+              pathPrefix("deleted") {
+                get {
+                  complete {
+                    ApplicationService.deletedEvents.toPublisher
+                      .map(p =>
+                        Source
+                          .fromPublisher(p)
+                          .map(itemId => ServerSentEvent(itemId.value.toString))
+                          .keepAlive(1.second, () => ServerSentEvent.heartbeat)
+                      )
+                      .provide(env)
+                  }
+                }
+              }
+            }
+          } $endif$
     }
   )
 
