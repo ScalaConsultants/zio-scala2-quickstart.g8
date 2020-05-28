@@ -70,6 +70,10 @@ GraphiQL console to play with the API.
 
 To try out this feature open the browser http://localhost:8080/graphiql
 
+### What in the world is ZLayer?
+
+If you're confused about what's happening in `Boot.scala` and what is `ZLayer`, please check out latest [ZIO documentation on the topic](https://zio.dev/docs/howto/howto_use_layers).
+
 Template license
 ----------------
 Written in 2020 by [Scalac Sp. z o.o.][scalac].

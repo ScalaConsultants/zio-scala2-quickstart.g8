@@ -13,6 +13,7 @@ import zio.clock.Clock
 import zio.logging.Logging
 import zio.test.Assertion._
 import zio.test._
+import zio.test.TestAspect.sequential
 
 trait GraphQLApiSpecJsonProtocol extends PlayJsonSupport {
   implicit val itemIdFormat = Json.format[ItemId]
@@ -22,7 +23,7 @@ trait GraphQLApiSpecJsonProtocol extends PlayJsonSupport {
 object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
 
   def spec =
-    suite("GraphQLApi must")(
+    (suite("GraphQLApi must")(
       testM("Add item on call to 'addItem'") {
         val query =
           """
@@ -55,7 +56,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
         val query =
           """
             |{
-            |	"query": "{ allItems { id { value } name price } }" 
+            |	"query": "{ allItems { id { value } name price } }"
             |}
             |""".stripMargin
         sendQueryAndCheckResult(query) { (statusCode, contentType, body) =>
@@ -204,7 +205,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
           assert(jsObjectDeleteItemKeys)(isSome(isEmpty))
         }
       }
-    ).provideCustomLayerShared(env)
+    ) @@ sequential) .provideCustomLayerShared(env)
 
   private val systemLayer: ULayer[Has[ActorSystem]] = ZLayer.fromManaged {
     ZManaged.make(ZIO.effect(system).orDie)(s => ZIO.fromFuture(_ => s.terminate()).either)
