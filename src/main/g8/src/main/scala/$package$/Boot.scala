@@ -22,11 +22,11 @@ import akka.http.scaladsl.server.RouteConcatenation._
 
 object Boot extends App {
 
-  def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] =
+  def run(args: List[String]): ZIO[zio.ZEnv, Nothing, ExitCode] =
     ZIO(ConfigFactory.load.resolve)
       .flatMap(rawConfig => program.provideCustomLayer(prepareEnvironment(rawConfig)))
-      .as(0)
-      .catchAll(error => putStrLn(error.getMessage).as(1))
+      .as(ExitCode.success)
+      .catchAll(error => putStrLn(error.getMessage).as(ExitCode.failure))
 
   private val program: ZIO[HttpServer with Console, Throwable, Unit] =
     HttpServer.start.use(_ => putStrLn(s"Server online. Press RETURN to stop...") <* getStrLn)
