@@ -33,7 +33,7 @@ object Api {
     def routes: Route
   }
 
-  val live: ZLayer[Config[HttpServer.Config] with Has[ActorSystem] with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
+  val live: ZLayer[Config[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZIOSupport {
 
       def routes: Route = itemRoute
