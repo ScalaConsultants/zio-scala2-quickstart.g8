@@ -3,9 +3,9 @@ import com.typesafe.sbt.packager.docker.{ Cmd, CmdLike, ExecCmd }
 val akkaHttpVersion   = "10.1.12"
 val akkaVersion       = "2.6.5"
 val slickVersion      = "3.3.2"
-val zioVersion        = "1.0.0-RC19"
-val zioLoggingVersion = "0.2.9"
-val zioConfigVersion  = "1.0.0-RC18"
+val zioVersion        = "1.0.0-RC20"
+val zioLoggingVersion = "0.3.0"
+val zioConfigVersion  = "1.0.0-RC20"
 $if(add_caliban_endpoint.truthy)$
 val calibanVersion    = "0.8.0"
 $endif$
@@ -38,7 +38,7 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-config-typesafe"         % zioConfigVersion,
       "io.scalac"             %% "zio-akka-http-interop"       % "0.1.0",
       "io.scalac"             %% "zio-slick-interop"           % "0.1.0",
-      "dev.zio"               %% "zio-interop-reactivestreams" % "1.0.3.5-RC8",
+      "dev.zio"               %% "zio-interop-reactivestreams" % "1.0.3.5-RC10",
       "ch.qos.logback"        % "logback-classic"              % "1.2.3",
       "dev.zio"               %% "zio-logging"                 % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"           % zioLoggingVersion,
