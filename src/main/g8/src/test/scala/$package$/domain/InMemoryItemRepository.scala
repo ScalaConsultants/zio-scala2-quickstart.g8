@@ -47,7 +47,7 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
   $endif$
 
   // this is enough for tests we have so far
-  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy)$
+  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
   def deletedEvents: ZStream[Any, Nothing, ItemId] = ZStream.empty
   $endif$
 }
