@@ -1,10 +1,10 @@
-val akkaHttpVersion = "10.1.12"
-val akkaVersion = "2.6.5"
-val slickVersion = "3.3.2"
-val zioVersion = "1.0.0-RC20"
+val akkaHttpVersion   = "10.1.12"
+val akkaVersion       = "2.6.5"
+val slickVersion      = "3.3.2"
+val zioVersion        = "1.0.0-RC20"
 val zioLoggingVersion = "0.3.0"
-val zioConfigVersion = "1.0.0-RC20"
-val calibanVersion = "0.8.0"
+val zioConfigVersion  = "1.0.0-RC20"
+val calibanVersion    = "0.8.0"
 
 val root = (project in file("."))
   .enablePlugins(ScriptedPlugin)
