@@ -30,7 +30,7 @@ lazy val root = (project in file(".")).settings(
     "dev.zio"               %% "zio-config-typesafe"         % zioConfigVersion,
     "io.scalac"             %% "zio-akka-http-interop"       % "0.1.0",
     "io.scalac"             %% "zio-slick-interop"           % "0.1.0",
-    "dev.zio"               %% "zio-interop-reactivestreams" % "1.0.3.5-RC8",
+    "dev.zio"               %% "zio-interop-reactivestreams" % "1.0.3.5-RC10",
     "ch.qos.logback"        % "logback-classic"              % "1.2.3",
     "dev.zio"               %% "zio-logging"                 % zioLoggingVersion,
     "dev.zio"               %% "zio-logging-slf4j"           % zioLoggingVersion,
