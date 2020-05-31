@@ -56,7 +56,7 @@ object Boot extends App {
     val dbLayer: TaskLayer[ItemRepository] =
       (((dbConfigLayer ++ dbBackendLayer) >>> DatabaseProvider.live) ++ loggingLayer) >>> SlickItemRepository.live
 
-    val apiLayer: TaskLayer[Api] = (apiConfigLayer ++ dbLayer) >>> Api.live
+    val apiLayer: TaskLayer[Api] = (apiConfigLayer ++ dbLayer$if(add_websocket_endpoint.truthy)$ ++ actorSystemLayer$endif$) >>> Api.live
 
     $if(add_caliban_endpoint.truthy)$
     val graphQLApiLayer: TaskLayer[GraphQLApi] =
