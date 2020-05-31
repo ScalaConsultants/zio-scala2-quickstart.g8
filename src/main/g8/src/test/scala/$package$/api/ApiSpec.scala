@@ -17,7 +17,7 @@ object ApiSpec extends ZioRouteTest {
 
   private val env =
     (ZLayer.succeed(HttpServer.Config("localhost", 8080)) ++
-      InMemoryItemRepository.test) >>>
+      InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$) >>>
       Api.live.passthrough ++ Blocking.live
 
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
