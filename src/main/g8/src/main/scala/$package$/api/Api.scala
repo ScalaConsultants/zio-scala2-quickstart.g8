@@ -10,6 +10,7 @@ import akka.http.interop._
 import play.api.libs.json.JsObject
 import zio._
 import zio.config.Config
+import zio.interop.reactivestreams._
 $if(add_server_sent_events_endpoint.truthy)$
 import java.time.LocalTime
 import akka.NotUsed
@@ -17,7 +18,13 @@ import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.stream.scaladsl.Source
 import java.time.format.DateTimeFormatter.ISO_LOCAL_TIME
 import scala.concurrent.duration._
-import zio.interop.reactivestreams._
+$endif$
+$if(add_websocket_endpoint.truthy)$
+import akka.stream.scaladsl.{ Flow, Sink, Source }
+import akka.actor.ActorSystem
+import akka.http.javadsl.model.ws.BinaryMessage
+import akka.http.scaladsl.model.ws.{ Message, TextMessage }
+import scala.util.{ Try, Success, Failure }
 $endif$
 
 object Api {
@@ -26,7 +33,7 @@ object Api {
     def routes: Route
   }
 
-  val live: ZLayer[Config[HttpServer.Config] with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
+  val live: ZLayer[Config[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZIOSupport {
 
       def routes: Route = itemRoute
@@ -111,7 +118,48 @@ object Api {
                 }
               }
             }
-          } $endif$
+          } $endif$ $if(add_websocket_endpoint.truthy)$ ~
+          pathPrefix("ws" / "items") {
+            logRequestResult("ws/items", InfoLevel) {
+              val greeterWebSocketService =
+                Flow[Message].flatMapConcat {
+                  case tm: TextMessage if tm.getStrictText == "deleted" =>
+                    Source.futureSource(
+                      unsafeRunToFuture(
+                        ApplicationService.deletedEvents.toPublisher
+                          .map(p =>
+                            Source
+                              .fromPublisher(p)
+                              .map(itemId => TextMessage(s"deleted: \${itemId.value}"))
+                          )
+                          .provide(env)
+                      )
+                    )
+                  case tm: TextMessage =>
+                    Try(tm.getStrictText.toLong) match {
+                      case Success(value) =>
+                        Source.futureSource(
+                          unsafeRunToFuture(
+                            ApplicationService
+                              .getItem(ItemId(value))
+                              .bimap(
+                                _.asThrowable,
+                                o => Source(o.toList.map(i => TextMessage(i.toString)))
+                              )
+                              .provide(env)
+                          )
+                        )
+                      case Failure(_) => Source.empty
+                    }
+                  case bm: BinaryMessage =>
+                    bm.getStreamedData.runWith(Sink.ignore, env.get[ActorSystem])
+                    Source.empty
+                }
+
+              handleWebSocketMessages(greeterWebSocketService)
+            }
+          }
+       $endif$
     }
   )
 

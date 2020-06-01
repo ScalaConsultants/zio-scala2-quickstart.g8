@@ -25,7 +25,7 @@ object ItemRepository {
 
     def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]]
 
-    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy)$
+    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
     def deletedEvents: ZStream[Any, Nothing, ItemId]
     $endif$
   }
