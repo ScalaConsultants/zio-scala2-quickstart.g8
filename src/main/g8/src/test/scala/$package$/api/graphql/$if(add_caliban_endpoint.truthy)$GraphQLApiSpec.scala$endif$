@@ -16,7 +16,7 @@ import zio.test._
 import zio.test.TestAspect.sequential
 
 trait GraphQLApiSpecJsonProtocol extends PlayJsonSupport {
-  implicit val itemIdFormat = Json.format[ItemId]
+  implicit val itemIdFormat = Json.valueFormat[ItemId]
   implicit val itemFormat   = Json.format[Item]
 }
 
@@ -28,7 +28,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
         val query =
           """
             |{
-            |	"query": "mutation(\$name: String!, \$price: BigDecimal!) { addItem(name: \$name, price: \$price) { value } }",
+            |	"query": "mutation(\$name: String!, \$price: BigDecimal!) { addItem(name: \$name, price: \$price) }",
             | "variables": {
             |   "name": "Test item",
             |   "price": 10
@@ -40,12 +40,10 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
           (statusCode, contentType, body) =>
             val itemId =
               for {
-                jsonData        <- body.value.get("data")
-                jsObjectData    <- jsonData.asOpt[JsObject]
-                jsonAddItem     <- jsObjectData.value.get("addItem")
-                jsObjectAddItem <- jsonAddItem.asOpt[JsObject]
-                jsonId          <- jsObjectAddItem.value.get("value")
-                id              <- jsonId.asOpt[BigDecimal]
+                jsonData     <- body.value.get("data")
+                jsObjectData <- jsonData.asOpt[JsObject]
+                jsonAddItem  <- jsObjectData.value.get("addItem")
+                id           <- jsonAddItem.asOpt[BigDecimal]
               } yield id
             assert(statusCode)(equalTo(StatusCodes.OK)) &&
             assert(contentType)(equalTo(ContentTypes.`application/json`)) &&
@@ -56,7 +54,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
         val query =
           """
             |{
-            |	"query": "{ allItems { id { value } name price } }"
+            |	"query": "{ allItems { id name price } }"
             |}
             |""".stripMargin
         sendQueryAndCheckResult(query) { (statusCode, contentType, body) =>
@@ -70,7 +68,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
         val query =
           """
             |{
-            |	"query": "query(\$itemId: Long!) { item(value: \$itemId) { id { value } name price } }",
+            |	"query": "query(\$itemId: Long!) { item(value: \$itemId) { id name price } }",
             | "variables": { "itemId": 0 }
             |}
             |""".stripMargin
@@ -92,7 +90,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
         val query =
           """
             |{
-            |	"query": "query(\$itemId: Long!) { item(value: \$itemId) { id { value } name price } }",
+            |	"query": "query(\$itemId: Long!) { item(value: \$itemId) { id name price } }",
             | "variables": { "itemId": 1 }
             |}
             |""".stripMargin
@@ -113,7 +111,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
         val query =
           """
             |{
-            |	"query": "query (\$name: String!) { itemByName(name: \$name) { id { value } name price } }",
+            |	"query": "query (\$name: String!) { itemByName(name: \$name) { id name price } }",
             | "variables": { "name": "Test item" }
             |}
             |""".stripMargin
@@ -129,7 +127,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
         val query =
           """
             |{
-            |	"query": "query (\$name: String!) { itemByName(name: \$name) { id { value } name price } }",
+            |	"query": "query (\$name: String!) { itemByName(name: \$name) { id name price } }",
             | "variables": { "name": "Another item" }
             |}
             |""".stripMargin
@@ -145,7 +143,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
         val query =
           """
             |{
-            |	"query": "query (\$price: BigDecimal!) { cheaperThan(price: \$price) { id { value } name price } }",
+            |	"query": "query (\$price: BigDecimal!) { cheaperThan(price: \$price) { id name price } }",
             | "variables": { "price": 100 }
             |}
             |""".stripMargin
@@ -161,7 +159,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
         val query =
           """
             |{
-            |	"query": "query (\$price: BigDecimal!) { cheaperThan(price: \$price) { id { value } name price } }",
+            |	"query": "query (\$price: BigDecimal!) { cheaperThan(price: \$price) { id name price } }",
             | "variables": { "price": 5 }
             |}
             |""".stripMargin
@@ -205,7 +203,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
           assert(jsObjectDeleteItemKeys)(isSome(isEmpty))
         }
       }
-    ) @@ sequential) .provideCustomLayerShared(env)
+    ) @@ sequential).provideCustomLayerShared(env)
 
   private val systemLayer: ULayer[Has[ActorSystem]] = ZLayer.fromManaged {
     ZManaged.make(ZIO.effect(system).orDie)(s => ZIO.fromFuture(_ => s.terminate()).either)
