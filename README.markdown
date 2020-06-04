@@ -55,10 +55,8 @@ sbt docker:publishLocal
 This will create a docker image locally, named the same as your project is. You can run it like the following:
 
 ```
-docker run -d -i -p 8080:8080 --name=<project_name> <project_name>:0.1.0-SNAPSHOT
+docker run -d -p 8080:8080 --name=<project_name> <project_name>:0.1.0-SNAPSHOT
 ```
-
-Note the `-i` flag. Interactive mode is required here, because server can be turned off by hitting ENTER on stdin (and therefore it will shutdown immediately if interactive mode is off).
 
 ### Components and libraries
 
