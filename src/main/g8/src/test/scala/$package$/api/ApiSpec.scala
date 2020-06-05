@@ -1,8 +1,12 @@
 package $package$.api
 
+import akka.http.interop.HttpServer
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
-import akka.http.interop.HttpServer
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.testkit.WSProbe
+import akka.stream.scaladsl.{ Framing, Sink, Source }
+import akka.util.ByteString
 import $package$.api.JsonSupport._
 import $package$.application.ApplicationService
 import $package$.domain._
@@ -10,19 +14,23 @@ import $package$.interop.akka.ZioRouteTest
 import play.api.libs.json.JsObject
 import zio._
 import zio.blocking._
+import zio.clock.Clock
+import zio.duration.Duration
 import zio.test.Assertion._
 import zio.test._
+
+import scala.concurrent.duration._
 
 object ApiSpec extends ZioRouteTest {
 
   private val env =
     (ZLayer.succeed(HttpServer.Config("localhost", 8080)) ++
       InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$) >>>
-      Api.live.passthrough ++ Blocking.live
+      Api.live.passthrough ++ Blocking.live ++ Clock.live
 
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
 
-  private val specs: Spec[ItemRepository with Blocking with Api, TestFailure[Throwable], TestSuccess] =
+  private val specs: Spec[ItemRepository with Blocking with Api with Clock, TestFailure[Throwable], TestSuccess] =
     suite("Api")(
       testM("Add item on POST to '/items'") {
         val item = CreateItemRequest("name", 100.0)
@@ -86,7 +94,58 @@ object ApiSpec extends ZioRouteTest {
                         })
           contentsCheck <- assertM(allItems)(hasSameElements(items.take(1)))
         } yield resultCheck && contentsCheck
-      }
+      } $if(add_server_sent_events_endpoint.truthy)$ ,
+      testM("Notify about deleted items via SSE endpoint") {
+        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
+
+        for {
+          _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
+          routes <- Api.routes
+          fiber    <- firstNElements(Get("/sse/items/deleted"), routes)(2).fork
+          _        <- ZIO.sleep(Duration.fromScala(1.second))
+          _        <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
+          _        <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
+          messages <- fiber.join
+        } yield assert(messages)(hasSameElements(List("data:1", "data:2")))
+      } $endif$ $if(add_websocket_endpoint.truthy)$,
+      testM("Notify about deleted items via WS endpoint") {
+        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
+
+        val wsClient = WSProbe()
+        for {
+          _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
+          routes <- Api.routes
+
+          resultFiber <- effectBlocking {
+                          WS("/ws/items", wsClient.flow) ~> routes ~> check {
+                            val isUpgrade = isWebSocketUpgrade
+
+                            wsClient.sendMessage("deleted")
+                            wsClient.expectMessage("deleted: 1")
+                            wsClient.expectMessage("deleted: 2")
+                            assert(isUpgrade)(isTrue)
+                          }
+                        }.fork
+          _      <- ZIO.sleep(Duration.fromScala(500.millis))
+          _      <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
+          _      <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
+          result <- resultFiber.join
+        } yield result
+      } $endif$ ) @@ TestAspect.sequential
+
+  def firstNElements(request: HttpRequest, route: Route)(n: Int): Task[Seq[String]] =
+    ZIO.fromFuture(_ =>
+      Source
+        .single(request)
+        .via(Route.handlerFlow(route))
+        .flatMapConcat(
+          _.entity.dataBytes
+            .via(Framing.delimiter(ByteString("\n"), maximumFrameLength = 100, allowTruncation = true))
+            .map(_.utf8String)
+            .filter(_.nonEmpty)
+        )
+        .take(n)
+        .runWith(Sink.seq)
     )
 
   def spec = specs.provideLayer(env)
