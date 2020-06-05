@@ -7,7 +7,7 @@ val zioVersion        = "1.0.0-RC20"
 val zioLoggingVersion = "0.3.0"
 val zioConfigVersion  = "1.0.0-RC20"
 $if(add_caliban_endpoint.truthy)$
-val calibanVersion    = "0.8.0"
+val calibanVersion    = "0.8.1"
 $endif$
 
 val dockerReleaseSettings = Seq(
