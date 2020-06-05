@@ -126,7 +126,7 @@ object ApiSpec extends ZioRouteTest {
                             assert(isUpgrade)(isTrue)
                           }
                         }.fork
-          _      <- ZIO.sleep(Duration.fromScala(500.millis))
+          _      <- ZIO.sleep(Duration.fromScala(1.second))
           _      <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
           _      <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
           result <- resultFiber.join
