@@ -1,4 +1,4 @@
-package com.example.domain
+package $package$.domain
 
 sealed trait DomainError {
   def asThrowable: Throwable = this match {
