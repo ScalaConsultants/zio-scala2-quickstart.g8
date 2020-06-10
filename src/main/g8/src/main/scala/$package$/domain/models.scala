@@ -1,4 +1,4 @@
-package com.example.domain
+package $package$.domain
 
 final case class ItemId(value: Long) extends AnyVal
 

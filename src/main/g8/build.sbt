@@ -1,17 +1,19 @@
 import com.typesafe.sbt.packager.docker.{ Cmd, CmdLike, ExecCmd }
 
 val akkaHttpVersion   = "10.1.12"
-val akkaVersion       = "2.6.5"
+val akkaVersion       = "2.6.6"
 val slickVersion      = "3.3.2"
 val zioVersion        = "1.0.0-RC20"
 val zioLoggingVersion = "0.3.0"
 val zioConfigVersion  = "1.0.0-RC20"
+
 $if(add_caliban_endpoint.truthy)$
 val calibanVersion    = "0.8.1"
 $endif$
 
 val dockerReleaseSettings = Seq(
   dockerExposedPorts := Seq(8080),
+  dockerExposedVolumes := Seq("/opt/docker/logs"),
   dockerBaseImage := "adoptopenjdk/openjdk12:x86_64-ubuntu-jre-12.0.2_10"
 )
 
