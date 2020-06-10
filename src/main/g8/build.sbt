@@ -13,6 +13,7 @@ $endif$
 
 val dockerReleaseSettings = Seq(
   dockerExposedPorts := Seq(8080),
+  dockerExposedVolumes := Seq("/opt/docker/logs"),
   dockerBaseImage := "adoptopenjdk/openjdk12:x86_64-ubuntu-jre-12.0.2_10"
 )
 
