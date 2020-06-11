@@ -2,7 +2,7 @@ lazy val akkaHttpVersion   = "10.1.12"
 lazy val akkaVersion       = "2.6.6"
 lazy val slickVersion      = "3.3.2"
 lazy val zioVersion        = "1.0.0-RC20"
-lazy val zioLoggingVersion = "0.3.0"
+lazy val zioLoggingVersion = "0.3.1"
 lazy val zioConfigVersion  = "1.0.0-RC20"
 lazy val calibanVersion    = "0.8.1"
 
