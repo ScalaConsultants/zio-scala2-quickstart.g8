@@ -101,12 +101,12 @@ object ApiSpec extends ZioRouteTest {
         for {
           _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
           routes <- Api.routes
-          fiber    <- firstNElements(Get("/sse/items/deleted"), routes)(2).fork
+          fiber    <- firstNElements(Get("/sse/items/deleted"), routes)(3).fork
           _        <- ZIO.sleep(Duration.fromScala(1.second))
           _        <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
           _        <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
           messages <- fiber.join
-        } yield assert(messages)(hasSameElements(List("data:1", "data:2")))
+        } yield assert(messages.filterNot(_ == "data:"))(hasSameElements(List("data:1", "data:2")))
       } $endif$ $if(add_websocket_endpoint.truthy)$,
       testM("Notify about deleted items via WS endpoint") {
         val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
