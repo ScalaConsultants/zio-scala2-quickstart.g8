@@ -8,7 +8,7 @@ val zioLoggingVersion = "0.3.0"
 val zioConfigVersion  = "1.0.0-RC20"
 
 $if(add_caliban_endpoint.truthy)$
-val calibanVersion    = "0.8.1"
+val calibanVersion    = "0.8.2"
 $endif$
 
 val dockerReleaseSettings = Seq(
@@ -29,7 +29,7 @@ val root = (project in file("."))
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka"     %% "akka-http"                   % akkaHttpVersion,
-      "de.heikoseeberger"     %% "akka-http-play-json"         % "1.32.0",
+      "de.heikoseeberger"     %% "akka-http-play-json"         % "1.33.0",
       "com.typesafe.akka"     %% "akka-actor-typed"            % akkaVersion,
       "com.typesafe.akka"     %% "akka-stream"                 % akkaVersion,
       "com.typesafe.slick"    %% "slick"                       % slickVersion,
