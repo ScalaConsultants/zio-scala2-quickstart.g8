@@ -4,7 +4,7 @@ val slickVersion      = "3.3.2"
 val zioVersion        = "1.0.0-RC20"
 val zioLoggingVersion = "0.3.0"
 val zioConfigVersion  = "1.0.0-RC20"
-val calibanVersion    = "0.8.1"
+val calibanVersion    = "0.8.2"
 
 val root = (project in file("."))
   .enablePlugins(ScriptedPlugin)
@@ -27,7 +27,7 @@ val root = (project in file("."))
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "de.heikoseeberger" %% "akka-http-play-json" % "1.32.0",
+      "de.heikoseeberger" %% "akka-http-play-json" % "1.33.0",
       "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
       "com.typesafe.akka" %% "akka-stream" % akkaVersion,
       "com.typesafe.slick" %% "slick" % slickVersion,
@@ -38,7 +38,7 @@ val root = (project in file("."))
       "dev.zio" %% "zio-config-typesafe" % zioConfigVersion,
       "io.scalac" %% "zio-akka-http-interop" % "0.1.0",
       "io.scalac" %% "zio-slick-interop" % "0.1.0",
-      "dev.zio" %% "zio-interop-reactivestreams" % "1.0.3.5-RC10",
+      "dev.zio" %% "zio-interop-reactivestreams" % "1.0.3.5-RC11",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "dev.zio" %% "zio-logging" % zioLoggingVersion,
       "dev.zio" %% "zio-logging-slf4j" % zioLoggingVersion,
