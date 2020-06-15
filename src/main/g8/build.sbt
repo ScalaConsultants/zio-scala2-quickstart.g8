@@ -50,6 +50,7 @@ val root = (project in file("."))
       "com.github.ghostdogpr" %% "caliban-akka-http"           % calibanVersion,
       $endif$
       "com.typesafe.akka"     %% "akka-http-testkit"           % akkaHttpVersion % Test,
+      "com.typesafe.akka"     %% "akka-stream-testkit"         % akkaVersion % Test,
       "com.typesafe.akka"     %% "akka-actor-testkit-typed"    % akkaVersion %  Test,
       "dev.zio"               %% "zio-test-sbt"                % zioVersion % Test
     ),
