@@ -10,14 +10,16 @@ import akka.http.interop._
 import play.api.libs.json.JsObject
 import zio._
 import zio.config.Config
+$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.interop.reactivestreams._
+import akka.stream.scaladsl.Source
+$endif$
 $if(add_server_sent_events_endpoint.truthy)$
 import akka.http.scaladsl.model.sse.ServerSentEvent
-import akka.stream.scaladsl.Source
 import scala.concurrent.duration._
 $endif$
 $if(add_websocket_endpoint.truthy)$
-import akka.stream.scaladsl.{ Flow, Sink, Source }
+import akka.stream.scaladsl.{ Flow, Sink }
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.ws.BinaryMessage
 import akka.http.scaladsl.model.ws.{ Message, TextMessage }

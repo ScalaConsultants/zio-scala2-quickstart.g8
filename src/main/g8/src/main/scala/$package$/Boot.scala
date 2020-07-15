@@ -1,6 +1,21 @@
 package $package$
 
 import akka.actor.ActorSystem
+import akka.http.interop._
+$if(add_caliban_endpoint.truthy)$
+import akka.http.scaladsl.server.RouteConcatenation._
+$endif$
+import akka.http.scaladsl.server.Route
+import com.typesafe.config.{ Config, ConfigFactory }
+import slick.interop.zio.DatabaseProvider
+$if(add_caliban_endpoint.truthy)$
+import zio.clock.Clock
+$endif$
+import zio.config.typesafe.TypesafeConfig
+import zio.console._
+import zio.logging._
+import zio.logging.slf4j._
+import zio._
 import $package$.api._
 $if(add_caliban_endpoint.truthy)$
 import $package$.api.graphql.GraphQLApi
@@ -8,17 +23,6 @@ $endif$
 import $package$.config.AppConfig
 import $package$.domain.ItemRepository
 import $package$.infrastructure._
-import slick.interop.zio.DatabaseProvider
-import akka.http.scaladsl.server.Route
-import com.typesafe.config.{ Config, ConfigFactory }
-import zio.clock.Clock
-import zio.config.typesafe.TypesafeConfig
-import zio.console._
-import zio.logging._
-import zio.logging.slf4j._
-import zio._
-import akka.http.interop._
-import akka.http.scaladsl.server.RouteConcatenation._
 
 object Boot extends App {
 

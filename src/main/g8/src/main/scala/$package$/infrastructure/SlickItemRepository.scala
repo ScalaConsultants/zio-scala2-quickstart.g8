@@ -7,10 +7,17 @@ import slick.interop.zio.DatabaseProvider
 import slick.interop.zio.syntax._
 import slick.jdbc.H2Profile.api._
 import zio.logging._
+$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.stream.ZStream
-import zio.{ IO, Queue, Ref, UIO, ZIO, ZLayer }
+import zio.{ UIO, Queue, Ref }
+$endif$
+import zio.{ IO, ZIO, ZLayer }
 
+$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEventsSubscribers: Ref[List[Queue[ItemId]]])
+$else$
+final class SlickItemRepository(env: DatabaseProvider with Logging)
+$endif$
     extends ItemRepository.Service {
   val items = ItemsTable.table
 
@@ -121,9 +128,13 @@ object SlickItemRepository {
 
   val live: ZLayer[DatabaseProvider with Logging, Throwable, ItemRepository] =
     ZLayer.fromFunctionM { env =>
+      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
       val initialize = ZIO.fromDBIO(ItemsTable.table.schema.createIfNotExists) *>
         Ref.make(List.empty[Queue[ItemId]])
-
       initialize.provide(env).map(new SlickItemRepository(env, _))
+      $else$
+      val initialize = ZIO.fromDBIO(ItemsTable.table.schema.createIfNotExists)
+      initialize.provide(env).as(new SlickItemRepository(env))
+      $endif$
     }
 }
