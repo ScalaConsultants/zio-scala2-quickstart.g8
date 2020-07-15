@@ -4,7 +4,6 @@ import akka.http.interop.HttpServer
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.testkit.WSProbe
 import akka.stream.scaladsl.{ Framing, Sink, Source }
 import akka.util.ByteString
 import $package$.api.JsonSupport._
