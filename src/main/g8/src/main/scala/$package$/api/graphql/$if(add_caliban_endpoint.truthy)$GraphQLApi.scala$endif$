@@ -18,7 +18,6 @@ import $package$.domain._
 import zio._
 import zio.clock._
 import zio.duration._
-import zio.internal.Platform
 import zio.logging._
 
 import scala.language.postfixOps

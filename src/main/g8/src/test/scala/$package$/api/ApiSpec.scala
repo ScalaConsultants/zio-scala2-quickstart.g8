@@ -133,7 +133,7 @@ object ApiSpec extends ZioRouteTest {
         } yield result
       } $endif$ ) @@ TestAspect.sequential
 
-  def firstNElements(request: HttpRequest, route: Route)(n: Int): Task[Seq[String]] =
+  def firstNElements(request: HttpRequest, route: Route)(n: Long): Task[Seq[String]] =
     ZIO.fromFuture(_ =>
       Source
         .single(request)

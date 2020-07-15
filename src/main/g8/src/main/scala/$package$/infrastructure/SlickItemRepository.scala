@@ -103,7 +103,7 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
 
   private def publishDeletedEvents(deletedItemId: ItemId) =
     log.info(s"Publishing delete event for item \${deletedItemId.value}") *>
-      deletedEventsSubscribers.get.flatMap(subs =>
+      deletedEventsSubscribers.get.flatMap[Any, Nothing, List[Boolean]](subs =>
         // send item to all subscribers
         UIO.foreach(subs)(queue =>
           queue
