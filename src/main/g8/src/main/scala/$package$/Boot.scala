@@ -29,8 +29,7 @@ object Boot extends App {
   def run(args: List[String]): ZIO[zio.ZEnv, Nothing, ExitCode] =
     ZIO(ConfigFactory.load.resolve)
       .flatMap(rawConfig => program.provideCustomLayer(prepareEnvironment(rawConfig)))
-      .as(ExitCode.success)
-      .catchAll(error => putStrLn(error.getMessage).as(ExitCode.failure))
+      .exitCode
 
   private val program: ZIO[HttpServer with Console, Throwable, Unit] =
     HttpServer.start.tapM(_ => putStrLn(s"Server online.")).useForever
