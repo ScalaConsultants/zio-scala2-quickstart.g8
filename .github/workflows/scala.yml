@@ -15,12 +15,13 @@ jobs:
         add-caliban-endpoint: [yes, no]
         add-server-sent-events-endpoint: [yes, no]
         add-websocket-endpoint: [yes, no]
+        add-sbt-tpolecat: [yes, no]
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Run tests add_caliban_endpoint=${{ matrix.add-caliban-endpoint }}, add_server_sent_events_endpoint=${{ matrix.add-server-sent-events-endpoint }}, add_websocket_endpoint=${{ matrix.add-websocket-endpoint }}
-      run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("add_caliban_endpoint" -> "${{ matrix.add-caliban-endpoint }}", "add_server_sent_events_endpoint" -> "${{ matrix.add-server-sent-events-endpoint }}", "add_websocket_endpoint" -> "${{ matrix.add-websocket-endpoint }}") }; test'
+    - name: Run tests add_caliban_endpoint=${{ matrix.add-caliban-endpoint }}, add_server_sent_events_endpoint=${{ matrix.add-server-sent-events-endpoint }}, add_websocket_endpoint=${{ matrix.add-websocket-endpoint }}, add_sbt_tpolecat=${{ matrix.add-sbt-tpolecat }}
+      run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("add_caliban_endpoint" -> "${{ matrix.add-caliban-endpoint }}", "add_server_sent_events_endpoint" -> "${{ matrix.add-server-sent-events-endpoint }}", "add_websocket_endpoint" -> "${{ matrix.add-websocket-endpoint }}", "add_sbt_tpolecat" -> "${{ matrix.add-sbt-tpolecat }}") }; test'
 
