@@ -10,17 +10,16 @@ import akka.http.interop._
 import play.api.libs.json.JsObject
 import zio._
 import zio.config.Config
+$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.interop.reactivestreams._
-$if(add_server_sent_events_endpoint.truthy)$
-import java.time.LocalTime
-import akka.NotUsed
-import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.stream.scaladsl.Source
-import java.time.format.DateTimeFormatter.ISO_LOCAL_TIME
+$endif$
+$if(add_server_sent_events_endpoint.truthy)$
+import akka.http.scaladsl.model.sse.ServerSentEvent
 import scala.concurrent.duration._
 $endif$
 $if(add_websocket_endpoint.truthy)$
-import akka.stream.scaladsl.{ Flow, Sink, Source }
+import akka.stream.scaladsl.{ Flow, Sink }
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.ws.BinaryMessage
 import akka.http.scaladsl.model.ws.{ Message, TextMessage }
@@ -45,7 +44,7 @@ object Api {
 
       val itemRoute: Route =
         pathPrefix("items") {
-          logRequestResult("items", InfoLevel) {
+          logRequestResult(("items", InfoLevel)) {
             pathEnd {
               get {
                 complete(ApplicationService.getItems.provide(env))
@@ -102,7 +101,7 @@ object Api {
           pathPrefix("sse" / "items") {
             import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
 
-            logRequestResult("sse/items", InfoLevel) {
+            logRequestResult(("sse/items", InfoLevel)) {
               pathPrefix("deleted") {
                 get {
                   complete {
@@ -120,7 +119,7 @@ object Api {
             }
           } $endif$ $if(add_websocket_endpoint.truthy)$ ~
           pathPrefix("ws" / "items") {
-            logRequestResult("ws/items", InfoLevel) {
+            logRequestResult(("ws/items", InfoLevel)) {
               val greeterWebSocketService =
                 Flow[Message].flatMapConcat {
                   case tm: TextMessage if tm.getStrictText == "deleted" =>
