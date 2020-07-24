@@ -2,8 +2,7 @@ package $package$.api
 
 import $package$.domain.{ Item, ItemId }
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
-import play.api.libs.json.{ Format, Json }
-import play.api.libs.functional.syntax._
+import play.api.libs.json.Json
 
 final case class CreateItemRequest(name: String, price: BigDecimal)
 final case class UpdateItemRequest(name: String, price: BigDecimal)

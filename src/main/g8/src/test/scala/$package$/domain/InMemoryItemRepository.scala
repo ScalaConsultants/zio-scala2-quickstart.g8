@@ -52,7 +52,7 @@ final class InMemoryItemRepository(storage: Ref[List[Item]], deletedEventsSubscr
     } yield ZStream.fromQueue(queue)
   }
 
-  private def publishDeletedEvents(deletedItemId: ItemId) =
+  private def publishDeletedEvents(deletedItemId: ItemId): UIO[List[Boolean]] =
     deletedEventsSubscribers.get.flatMap(subs =>
       // send item to all subscribers
       UIO.foreach(subs)(queue =>
