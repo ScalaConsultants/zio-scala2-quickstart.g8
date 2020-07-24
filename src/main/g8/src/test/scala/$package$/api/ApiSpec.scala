@@ -4,7 +4,6 @@ import akka.http.interop.HttpServer
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.testkit.WSProbe
 import akka.stream.scaladsl.{ Framing, Sink, Source }
 import akka.util.ByteString
 import $package$.api.JsonSupport._
@@ -15,11 +14,15 @@ import play.api.libs.json.JsObject
 import zio._
 import zio.blocking._
 import zio.clock.Clock
+$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.duration.Duration
+$endif$
 import zio.test.Assertion._
 import zio.test._
 
+$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import scala.concurrent.duration._
+$endif$
 
 object ApiSpec extends ZioRouteTest {
 
@@ -109,8 +112,9 @@ object ApiSpec extends ZioRouteTest {
         } yield assert(messages.filterNot(_ == "data:"))(hasSameElements(List("data:1", "data:2")))
       } $endif$ $if(add_websocket_endpoint.truthy)$,
       testM("Notify about deleted items via WS endpoint") {
-        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
+        import akka.http.scaladsl.testkit.WSProbe
 
+        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
         val wsClient = WSProbe()
         for {
           _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
@@ -133,7 +137,7 @@ object ApiSpec extends ZioRouteTest {
         } yield result
       } $endif$ ) @@ TestAspect.sequential
 
-  def firstNElements(request: HttpRequest, route: Route)(n: Int): Task[Seq[String]] =
+  def firstNElements(request: HttpRequest, route: Route)(n: Long): Task[Seq[String]] =
     ZIO.fromFuture(_ =>
       Source
         .single(request)
