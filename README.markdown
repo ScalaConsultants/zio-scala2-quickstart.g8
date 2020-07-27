@@ -1,4 +1,4 @@
-![Scala CI](https://github.com/ScalaConsultants/zio-akka-quickstart.g8/workflows/Scala%20CI/badge.svg)
+![Scala CI](https://github.com/ScalaConsultants/zio-akka-quickstart.g8/workflows/Scala%20CI/badge.svg?branch=master)
 
 ## zio-akka-quickstart
 
