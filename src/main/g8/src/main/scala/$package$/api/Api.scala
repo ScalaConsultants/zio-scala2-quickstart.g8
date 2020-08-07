@@ -9,7 +9,7 @@ import $package$.domain._
 import akka.http.interop._
 import play.api.libs.json.JsObject
 import zio._
-import zio.config.Config
+import zio.config.ZConfig
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.interop.reactivestreams._
 import akka.stream.scaladsl.Source
@@ -32,7 +32,7 @@ object Api {
     def routes: Route
   }
 
-  val live: ZLayer[Config[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
+  val live: ZLayer[ZConfig[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZIOSupport {
 
       def routes: Route = itemRoute
