@@ -91,7 +91,7 @@ If you're confused about what's happening in `Boot.scala` and what is `ZLayer`, 
 
 Template license
 ----------------
-Written in 2020 by [Scalac Sp. z o.o.][scalac].
+Written in 2020 by [Scalac Sp. z o.o.](https://scalac.io/?utm_source=scalac_github&utm_campaign=scalac1&utm_medium=web)
 
 To the extent possible under law, the author(s) have dedicated all copyright and related
 and neighboring rights to this template to the public domain worldwide.
