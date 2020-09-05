@@ -10,7 +10,7 @@ object ItemsTable {
     def id    = column[ItemId]("ID", O.PrimaryKey, O.AutoInc)
     def name  = column[String]("NAME")
     def price = column[BigDecimal]("PRICE")
-    def *     = (id, name, price) <> ((Item.apply _).tupled, Item.unapply)
+    def *     = (id, name, price).<>((Item.apply _).tupled, Item.unapply)
   }
 
   val table = TableQuery[ItemsTable.Items]
