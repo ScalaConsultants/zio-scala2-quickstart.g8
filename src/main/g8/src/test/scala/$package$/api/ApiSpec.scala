@@ -141,7 +141,7 @@ object ApiSpec extends ZioRouteTest {
     ZIO.fromFuture(_ =>
       Source
         .single(request)
-        .via(Route.handlerFlow(route))
+        .via(Route.toFlow(route))
         .flatMapConcat(
           _.entity.dataBytes
             .via(Framing.delimiter(ByteString("\n"), maximumFrameLength = 100, allowTruncation = true))

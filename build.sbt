@@ -1,8 +1,8 @@
-val akkaHttpVersion   = "10.1.12"
+val akkaHttpVersion   = "10.2.0"
 val akkaVersion       = "2.6.8"
 val slickVersion      = "3.3.2"
-val zioVersion        = "1.0.0"
-val zioLoggingVersion = "0.5.0"
+val zioVersion        = "1.0.1"
+val zioLoggingVersion = "0.4.0"
 val zioConfigVersion  = "1.0.0-RC26"
 val calibanVersion    = "0.9.1"
 
@@ -27,7 +27,7 @@ val root = (project in file("."))
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "de.heikoseeberger" %% "akka-http-play-json" % "1.33.0",
+      "de.heikoseeberger" %% "akka-http-play-json" % "1.34.0",
       "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
       "com.typesafe.akka" %% "akka-stream" % akkaVersion,
       "com.typesafe.slick" %% "slick" % slickVersion,
@@ -36,7 +36,7 @@ val root = (project in file("."))
       "dev.zio" %% "zio-config" % zioConfigVersion,
       "dev.zio" %% "zio-config-magnolia" % zioConfigVersion,
       "dev.zio" %% "zio-config-typesafe" % zioConfigVersion,
-      "io.scalac" %% "zio-akka-http-interop" % "0.2.0",
+      "io.scalac" %% "zio-akka-http-interop" % "0.4.0",
       "io.scalac" %% "zio-slick-interop" % "0.2.0",
       "dev.zio" %% "zio-interop-reactivestreams" % "1.0.3.5",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
