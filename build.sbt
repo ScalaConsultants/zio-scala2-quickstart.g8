@@ -1,6 +1,6 @@
 val akkaHttpVersion   = "10.2.0"
 val akkaVersion       = "2.6.8"
-val slickVersion      = "3.3.2"
+val slickVersion      = "3.3.3"
 val zioVersion        = "1.0.1"
 val zioLoggingVersion = "0.5.0"
 val zioConfigVersion  = "1.0.0-RC26"
