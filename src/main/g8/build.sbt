@@ -1,6 +1,6 @@
 import com.typesafe.sbt.packager.docker.{ Cmd, CmdLike, ExecCmd }
 
-val akkaHttpVersion   = "10.2.0"
+val akkaHttpVersion   = "10.2.1"
 val akkaVersion       = "2.6.9"
 val slickVersion      = "3.3.3"
 val zioVersion        = "1.0.1"
