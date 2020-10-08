@@ -48,7 +48,7 @@ val root = (project in file("."))
       "ch.qos.logback"        % "logback-classic"                  % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
-      "com.h2database"        % "h2"                               % "1.4.200",
+      "org.postgresql"        % "postgresql"                       % "9.4-1201-jdbc41",
       $if(add_caliban_endpoint.truthy)$
       "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
       "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,

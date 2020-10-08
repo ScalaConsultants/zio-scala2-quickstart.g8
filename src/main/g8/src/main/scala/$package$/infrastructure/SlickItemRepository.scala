@@ -5,7 +5,7 @@ import $package$.infrastructure.tables.ItemsTable
 import $package$.infrastructure.Profile
 import slick.interop.zio.DatabaseProvider
 import slick.interop.zio.syntax._
-import slick.jdbc.H2Profile
+import slick.jdbc.PostgresProfile
 import zio.logging._
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.stream.ZStream
@@ -21,8 +21,8 @@ $endif$
     extends ItemRepository.Service
     with ItemsTable
     with Profile {
-  type P = H2Profile
-  override lazy val profile = H2Profile
+  type P = PostgresProfile
+  override lazy val profile = PostgresProfile
   import profile.api._
 
   val items = table
