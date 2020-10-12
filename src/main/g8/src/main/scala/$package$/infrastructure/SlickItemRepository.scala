@@ -143,7 +143,7 @@ object SlickItemRepository {
         $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
         repository <- Ref.make(List.empty[Queue[ItemId]]).map(new SlickItemRepository(env, _))
         $else$
-        repository <- ZIO.success(new SlickItemRepository(env, _))
+        repository <- ZIO.succeed(new SlickItemRepository(env))
         $endif$
         _          <- repository.createSchamaIfNotExist.mapError(_.cause)
       } yield repository
