@@ -20,7 +20,10 @@ val dockerReleaseSettings = Seq(
   dockerBaseImage := "adoptopenjdk/openjdk12:x86_64-ubuntu-jre-12.0.2_10"
 )
 
+lazy val It = config("it").extend(Test)
+
 val root = (project in file("."))
+  .configs(It)
   .settings(
     inConfig(IntegrationTest)(Defaults.itSettings),
     inThisBuild(
@@ -57,8 +60,8 @@ val root = (project in file("."))
       "com.typesafe.akka"     %% "akka-stream-testkit"             % akkaVersion % Test,
       "com.typesafe.akka"     %% "akka-actor-testkit-typed"        % akkaVersion %  Test,
       "dev.zio"               %% "zio-test-sbt"                    % zioVersion % Test,
-      "org.flywaydb"          %  "flyway-core"                     % flywayVersion % IntegrationTest,
-      "com.dimafeng"          %% "testcontainers-scala-postgresql" % testContainersVersion % IntegrationTest
+      "org.flywaydb"          %  "flyway-core"                     % flywayVersion % It,
+      "com.dimafeng"          %% "testcontainers-scala-postgresql" % testContainersVersion % It
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     dockerReleaseSettings
