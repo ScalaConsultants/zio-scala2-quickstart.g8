@@ -25,7 +25,7 @@ lazy val It = config("it").extend(Test)
 val root = (project in file("."))
   .configs(It)
   .settings(
-    inConfig(IntegrationTest)(Defaults.itSettings),
+    inConfig(It)(Defaults.testSettings),
     inThisBuild(
       List(
         organization := "$organization$",
