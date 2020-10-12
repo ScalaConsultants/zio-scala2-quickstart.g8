@@ -104,7 +104,7 @@ object ApiSpec extends ZioRouteTest {
         for {
           _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
           routes <- Api.routes
-          fiber    <- firstNElements(Get("/sse/items/deleted"), routes)(10).fork
+          fiber    <- firstNElements(Get("/sse/items/deleted"), routes)(3).fork
           _        <- ZIO.sleep(Duration.fromScala(1.second))
           _        <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
           _        <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
