@@ -1,10 +1,12 @@
 package $package$.infrastructure.tables
 
 import $package$.domain._
-import $package$.infrastructure.EntityIdMappers._
-import slick.jdbc.H2Profile.api._
+import $package$.infrastructure.EntityIdMappers
+import $package$.infrastructure.Profile
 
-object ItemsTable {
+trait ItemsTable extends EntityIdMappers {
+  self: Profile =>
+  import profile.api._
 
   class Items(tag: Tag) extends Table[Item](tag, "ITEMS") {
     def id    = column[ItemId]("ID", O.PrimaryKey, O.AutoInc)
@@ -13,5 +15,5 @@ object ItemsTable {
     def *     = (id, name, price).<>((Item.apply _).tupled, Item.unapply)
   }
 
-  val table = TableQuery[ItemsTable.Items]
+  val table = TableQuery[self.Items]
 }

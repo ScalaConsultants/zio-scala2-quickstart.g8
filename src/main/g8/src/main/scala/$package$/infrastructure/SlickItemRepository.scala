@@ -1,11 +1,11 @@
 package $package$.infrastructure
 
 import $package$.domain._
-import $package$.infrastructure.EntityIdMappers._
 import $package$.infrastructure.tables.ItemsTable
+import $package$.infrastructure.Profile
 import slick.interop.zio.DatabaseProvider
 import slick.interop.zio.syntax._
-import slick.jdbc.H2Profile.api._
+import slick.jdbc.PostgresProfile
 import zio.logging._
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.stream.ZStream
@@ -18,8 +18,14 @@ final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEvent
 $else$
 final class SlickItemRepository(env: DatabaseProvider with Logging)
 $endif$
-    extends ItemRepository.Service {
-  val items = ItemsTable.table
+    extends ItemRepository.Service
+    with ItemsTable
+    with Profile {
+  type P = PostgresProfile
+  override lazy val profile = PostgresProfile
+  import profile.api._
+
+  val items = table
 
   def add(data: ItemData): IO[RepositoryError, ItemId] = {
     val insert = (items returning items.map(_.id)) += Item.withData(ItemId(0), data)
@@ -122,19 +128,24 @@ $endif$
         )
       )
   $endif$
+
+  def createSchamaIfNotExist: IO[RepositoryError, Unit] =
+    ZIO.fromDBIO(items.schema.createIfNotExists).provide(env).refineOrDie {
+      case e: Exception => RepositoryError(e)
+    }
 }
 
 object SlickItemRepository {
 
   val live: ZLayer[DatabaseProvider with Logging, Throwable, ItemRepository] =
     ZLayer.fromFunctionM { env =>
-      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-      val initialize = ZIO.fromDBIO(ItemsTable.table.schema.createIfNotExists) *>
-        Ref.make(List.empty[Queue[ItemId]])
-      initialize.provide(env).map(new SlickItemRepository(env, _))
-      $else$
-      val initialize = ZIO.fromDBIO(ItemsTable.table.schema.createIfNotExists)
-      initialize.provide(env).as(new SlickItemRepository(env))
-      $endif$
+      for {
+        $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+        repository <- Ref.make(List.empty[Queue[ItemId]]).map(new SlickItemRepository(env, _))
+        $else$
+        repository <- ZIO.succeed(new SlickItemRepository(env))
+        $endif$
+        _          <- repository.createSchamaIfNotExist.mapError(_.cause)
+      } yield repository
     }
 }
