@@ -39,7 +39,7 @@ object Boot extends App {
 
     // using raw config since it's recommended and the simplest to work with slick
     val dbConfigLayer = ZLayer.fromEffect(ZIO(rawConfig.getConfig("db")))
-    val dbBackendLayer = ZLayer.succeed(slick.jdbc.H2Profile.backend)
+    val dbBackendLayer = ZLayer.succeed(slick.jdbc.PostgresProfile.backend)
 
     // narrowing down to the required part of the config to ensure separation of concerns
     val apiConfigLayer = configLayer.map(c => Has(c.get.api))
