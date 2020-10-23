@@ -1,11 +1,13 @@
 import com.typesafe.sbt.packager.docker.{ Cmd, CmdLike, ExecCmd }
 
-val akkaHttpVersion   = "10.2.0"
-val akkaVersion       = "2.6.10"
-val slickVersion      = "3.3.3"
-val zioVersion        = "1.0.1"
-val zioLoggingVersion = "0.5.1"
-val zioConfigVersion  = "1.0.0-RC27"
+val akkaHttpVersion       = "10.2.1"
+val akkaVersion           = "2.6.9"
+val slickVersion          = "3.3.3"
+val zioVersion            = "1.0.3"
+val zioLoggingVersion     = "0.5.1"
+val zioConfigVersion      = "1.0.0-RC27"
+val flywayVersion         = "7.0.1"
+val testContainersVersion = "0.38.4"
 
 $if(add_caliban_endpoint.truthy)$
 val calibanVersion    = "0.9.2"
@@ -17,8 +19,12 @@ val dockerReleaseSettings = Seq(
   dockerBaseImage := "adoptopenjdk/openjdk12:x86_64-ubuntu-jre-12.0.2_10"
 )
 
+lazy val It = config("it").extend(Test)
+
 val root = (project in file("."))
+  .configs(It)
   .settings(
+    inConfig(It)(Defaults.testSettings),
     inThisBuild(
       List(
         organization := "$organization$",
@@ -29,7 +35,7 @@ val root = (project in file("."))
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka"     %% "akka-http"                   % akkaHttpVersion,
-      "de.heikoseeberger"     %% "akka-http-play-json"         % "1.34.0",
+      "de.heikoseeberger"     %% "akka-http-play-json"         % "1.35.0",
       "com.typesafe.akka"     %% "akka-actor-typed"            % akkaVersion,
       "com.typesafe.akka"     %% "akka-stream"                 % akkaVersion,
       "com.typesafe.slick"    %% "slick"                       % slickVersion,
@@ -44,15 +50,17 @@ val root = (project in file("."))
       "ch.qos.logback"        % "logback-classic"              % "1.2.3",
       "dev.zio"               %% "zio-logging"                 % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"           % zioLoggingVersion,
-      "com.h2database"        % "h2"                           % "1.4.200",
+      "org.postgresql"        % "postgresql"                   % "9.4-1201-jdbc41",
       $if(add_caliban_endpoint.truthy)$
-      "com.github.ghostdogpr" %% "caliban"                     % calibanVersion,
-      "com.github.ghostdogpr" %% "caliban-akka-http"           % calibanVersion,
+      "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
+      "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
       $endif$
-      "com.typesafe.akka"     %% "akka-http-testkit"           % akkaHttpVersion % Test,
-      "com.typesafe.akka"     %% "akka-stream-testkit"         % akkaVersion % Test,
-      "com.typesafe.akka"     %% "akka-actor-testkit-typed"    % akkaVersion %  Test,
-      "dev.zio"               %% "zio-test-sbt"                % zioVersion % Test
+      "com.typesafe.akka"     %% "akka-http-testkit"               % akkaHttpVersion % Test,
+      "com.typesafe.akka"     %% "akka-stream-testkit"             % akkaVersion % Test,
+      "com.typesafe.akka"     %% "akka-actor-testkit-typed"        % akkaVersion %  Test,
+      "dev.zio"               %% "zio-test-sbt"                    % zioVersion % Test,
+      "org.flywaydb"          %  "flyway-core"                     % flywayVersion % It,
+      "com.dimafeng"          %% "testcontainers-scala-postgresql" % testContainersVersion % It
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     dockerReleaseSettings
