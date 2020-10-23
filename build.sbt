@@ -1,4 +1,4 @@
-val akkaHttpVersion   = "10.2.0"
+val akkaHttpVersion   = "10.2.1"
 val akkaVersion       = "2.6.9"
 val slickVersion      = "3.3.3"
 val zioVersion        = "1.0.2"
@@ -27,7 +27,7 @@ val root = (project in file("."))
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-      "de.heikoseeberger" %% "akka-http-play-json" % "1.34.0",
+      "de.heikoseeberger" %% "akka-http-play-json" % "1.35.0",
       "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
       "com.typesafe.akka" %% "akka-stream" % akkaVersion,
       "com.typesafe.slick" %% "slick" % slickVersion,
