@@ -3,7 +3,7 @@ val akkaVersion       = "2.6.10"
 val slickVersion      = "3.3.3"
 val zioVersion        = "1.0.3"
 val zioLoggingVersion = "0.5.3"
-val zioConfigVersion  = "1.0.0-RC27"
+val zioConfigVersion  = "1.0.0-RC29"
 val calibanVersion    = "0.9.2"
 
 val root = (project in file("."))
