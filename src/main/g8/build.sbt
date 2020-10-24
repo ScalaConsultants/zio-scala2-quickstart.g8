@@ -1,10 +1,10 @@
 import com.typesafe.sbt.packager.docker.{ Cmd, CmdLike, ExecCmd }
 
 val akkaHttpVersion       = "10.2.1"
-val akkaVersion           = "2.6.9"
+val akkaVersion           = "2.6.10"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.3"
-val zioLoggingVersion     = "0.5.1"
+val zioLoggingVersion     = "0.5.3"
 val zioConfigVersion      = "1.0.0-RC29"
 val flywayVersion         = "7.0.1"
 val testContainersVersion = "0.38.4"
@@ -41,6 +41,7 @@ val root = (project in file("."))
       "com.typesafe.slick"    %% "slick"                       % slickVersion,
       "com.typesafe.slick"    %% "slick-hikaricp"              % slickVersion,
       "dev.zio"               %% "zio"                         % zioVersion,
+      "dev.zio"               %% "zio-streams"                 % zioVersion,
       "dev.zio"               %% "zio-config"                  % zioConfigVersion,
       "dev.zio"               %% "zio-config-magnolia"         % zioConfigVersion,
       "dev.zio"               %% "zio-config-typesafe"         % zioConfigVersion,
