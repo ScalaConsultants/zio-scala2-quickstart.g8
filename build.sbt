@@ -7,6 +7,7 @@ val zioConfigVersion  = "1.0.0-RC29"
 val calibanVersion    = "0.9.2"
 val flywayVersion         = "7.0.1"
 val testContainersVersion = "0.38.4"
+val swaggerVersion = "2.2.0"
 
 val root = (project in file("."))
   .enablePlugins(ScriptedPlugin)
@@ -45,6 +46,7 @@ val root = (project in file("."))
       "ch.qos.logback"        % "logback-classic"                  % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
+      "com.github.swagger-akka-http" %% "swagger-akka-http"    % swaggerVersion,
       "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
       "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
       "com.typesafe.akka"     %% "akka-http-testkit"               % akkaHttpVersion % Test,
