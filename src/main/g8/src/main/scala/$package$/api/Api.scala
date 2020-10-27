@@ -1,13 +1,17 @@
 package $package$.api
 
 import akka.event.Logging._
-import akka.http.scaladsl.model.{ HttpResponse, StatusCodes }
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{ Directives, Route }
-import $package$.application.ApplicationService
-import $package$.domain._
+import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.interop._
 import play.api.libs.json.JsObject
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.{Consumes, POST, Path, Produces}
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.{Content, Schema}
+import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import zio._
 import zio.config.ZConfig
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
@@ -35,13 +39,14 @@ object Api {
   val live: ZLayer[ZConfig[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZIOSupport {
 
-      def routes: Route = itemRoute
+      def routes: Route = itemRoute  ~  SwaggerDocService.routes
 
       implicit val domainErrorResponse: ErrorResponse[DomainError] = {
         case RepositoryError(_) => HttpResponse(StatusCodes.InternalServerError)
         case ValidationError(_) => HttpResponse(StatusCodes.BadRequest)
       }
 
+      @Path("/echoenumeratum")
       val itemRoute: Route =
         pathPrefix("items") {
           logRequestResult(("items", InfoLevel)) {
@@ -49,6 +54,10 @@ object Api {
               get {
                 complete(ApplicationService.getItems.provide(env))
               } ~
+              @POST
+              @Consumes(Array(MediaType.APPLICATION_JSON))
+              @Produces(Array(MediaType.APPLICATION_JSON))
+              @Operation(summary = "Add integers", description = "Add integers")
               post {
                 entity(Directives.as[CreateItemRequest]) { req =>
                   ApplicationService
@@ -62,6 +71,7 @@ object Api {
                 }
               }
             } ~
+            @Path("/{username}")
             path(LongNumber) {
               itemId =>
                 delete {
@@ -98,6 +108,7 @@ object Api {
             }
           }
         } $if(add_server_sent_events_endpoint.truthy)$ ~
+
           pathPrefix("sse" / "items") {
             import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
 
@@ -118,6 +129,7 @@ object Api {
               }
             }
           } $endif$ $if(add_websocket_endpoint.truthy)$ ~
+
           pathPrefix("ws" / "items") {
             logRequestResult(("ws/items", InfoLevel)) {
               val greeterWebSocketService =

@@ -8,6 +8,8 @@ val zioLoggingVersion     = "0.5.3"
 val zioConfigVersion      = "1.0.0-RC29"
 val flywayVersion         = "7.0.1"
 val testContainersVersion = "0.38.4"
+val swaggerVersion = "2.2.0"
+val javaxVersion =  "2.0.1"
 
 $if(add_caliban_endpoint.truthy)$
 val calibanVersion    = "0.9.2"
@@ -52,6 +54,8 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-logging"                 % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"           % zioLoggingVersion,
       "org.postgresql"        % "postgresql"                   % "9.4-1201-jdbc41",
+      "javax.ws.rs"                  % "javax.ws.rs-api"                  % javaxVersion,
+      "com.github.swagger-akka-http" %% "swagger-akka-http"               % swaggerVersion,
       $if(add_caliban_endpoint.truthy)$
       "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
       "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
