@@ -9,9 +9,8 @@ import slick.jdbc.PostgresProfile
 import zio.logging._
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.stream.ZStream
-import zio.{ UIO, Queue, Ref }
 $endif$
-import zio.{ IO, ZIO, ZLayer }
+import zio._
 
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEventsSubscribers: Ref[List[Queue[ItemId]]])
@@ -128,24 +127,10 @@ $endif$
         )
       )
   $endif$
-
-  def createSchamaIfNotExist: IO[RepositoryError, Unit] =
-    ZIO.fromDBIO(items.schema.createIfNotExists).provide(env).refineOrDie {
-      case e: Exception => RepositoryError(e)
-    }
 }
 
 object SlickItemRepository {
 
-  val live: ZLayer[DatabaseProvider with Logging, Throwable, ItemRepository] =
-    ZLayer.fromFunctionM { env =>
-      for {
-        $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-        repository <- Ref.make(List.empty[Queue[ItemId]]).map(new SlickItemRepository(env, _))
-        $else$
-        repository <- ZIO.succeed(new SlickItemRepository(env))
-        $endif$
-        _          <- repository.createSchamaIfNotExist.mapError(_.cause)
-      } yield repository
-    }
+  val live: RLayer[DatabaseProvider with Logging, ItemRepository] =
+    ZLayer.fromFunctionM(env => $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$Ref.make(List.empty[Queue[ItemId]]).map(new SlickItemRepository(env, _))$else$ZIO.succeed(new SlickItemRepository(env))$endif$)
 }
