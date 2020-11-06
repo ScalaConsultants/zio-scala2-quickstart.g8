@@ -1,12 +1,15 @@
-val akkaHttpVersion   = "10.2.1"
-val akkaVersion       = "2.6.10"
-val slickVersion      = "3.3.3"
-val zioVersion        = "1.0.3"
-val zioLoggingVersion = "0.5.3"
-val zioConfigVersion  = "1.0.0-RC29"
-val calibanVersion    = "0.9.2"
-val flywayVersion         = "7.0.1"
+// Dependencies are needed for Scala Steward to check if there are newer versions
+val akkaHttpVersion       = "10.2.1"
+val akkaVersion           = "2.6.10"
+val slickVersion          = "3.3.3"
+val zioVersion            = "1.0.3"
+val zioLoggingVersion     = "0.5.3"
+val zioConfigVersion      = "1.0.0-RC29"
+val flywayVersion         = "7.1.1"
 val testContainersVersion = "0.38.4"
+val calibanVersion        = "0.9.2"
+
+lazy val It = config("it").extend(Test)
 
 val root = (project in file("."))
   .enablePlugins(ScriptedPlugin)
@@ -45,15 +48,15 @@ val root = (project in file("."))
       "ch.qos.logback"        % "logback-classic"                  % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
+      "org.postgresql"        % "postgresql"                       % "9.4-1201-jdbc41",
+      "org.flywaydb"          % "flyway-core"                      % flywayVersion,
       "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
       "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
       "com.typesafe.akka"     %% "akka-http-testkit"               % akkaHttpVersion % Test,
       "com.typesafe.akka"     %% "akka-stream-testkit"             % akkaVersion % Test,
       "com.typesafe.akka"     %% "akka-actor-testkit-typed"        % akkaVersion % Test,
       "dev.zio"               %% "zio-test-sbt"                    % zioVersion % Test,
-      "org.flywaydb"          %  "flyway-core"                     % flywayVersion % It,
       "com.dimafeng"          %% "testcontainers-scala-postgresql" % testContainersVersion % It
-
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
