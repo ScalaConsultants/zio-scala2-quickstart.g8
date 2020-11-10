@@ -13,7 +13,7 @@ import zio.clock.Clock
 $endif$
 import zio.config.typesafe.TypesafeConfig
 import zio.console._
-import zio.logging._
+import zio.logging._-
 import zio.logging.slf4j._
 import zio._
 import $package$.api._

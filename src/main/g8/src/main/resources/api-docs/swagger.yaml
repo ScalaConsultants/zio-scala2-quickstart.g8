@@ -1,0 +1,200 @@
+openapi: 3.0.0
+info:
+  title: zio-akka-quickstart
+  description: This is a simple API description
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+- url: https://virtserver.swaggerhub.com/Bestils/zio-akka-quickstart/1.0.0
+  description: SwaggerHub API Auto Mocking
+tags:
+- name: items
+  description: Operations available to regular developers
+paths:
+  /items:
+    get:
+      tags:
+      - items
+      summary: Finds Items by status
+      description: Multiple status values can be provided with comma separated strings
+      operationId: find all items
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+        "400":
+          description: Invalid status value
+    post:
+      tags:
+      - items
+      summary: none
+      requestBody:
+        description: Create Item Request with auto generated id
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+        "400":
+          description: Invalid status value
+  /items/{itemId}:
+    get:
+      tags:
+      - items
+      summary: Finds Items by status
+      description: Multiple status values can be provided with comma separated strings
+      operationId: findItemByItemId
+      parameters:
+      - name: itemId
+        in: path
+        description: Item ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+        "400":
+          description: Invalid status value
+    put:
+      tags:
+      - items
+      summary: Update an existing item
+      operationId: putItem
+      parameters:
+      - name: itemId
+        in: path
+        description: Item ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Create Item Request with auto generated id
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+        required: true
+      responses:
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Item not found
+        "405":
+          description: Validation exception
+    delete:
+      tags:
+      - items
+      summary: Deletes an item
+      operationId: deleteItem
+      parameters:
+      - name: itemId
+        in: path
+        description: Item ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: successful operation
+        "400":
+          description: Invalid status value
+    patch:
+      tags:
+      - items
+      summary: Update an existing item
+      operationId: patchItem
+      parameters:
+      - name: itemId
+        in: path
+        description: Item ID
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Patch chosen item
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+        required: true
+      responses:
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Item not found
+        "405":
+          description: Validation exception
+  /sse/items/deleted:
+    get:
+      tags:
+      - items
+      summary: result deleted items
+      operationId: searchInventory
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+        "400":
+          description: Invalid status value
+components:
+  schemas:
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        price:
+          type: string
+    CreateItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: string
+    UpdateItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: string
