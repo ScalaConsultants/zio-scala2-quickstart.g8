@@ -13,6 +13,7 @@ import zio.config.ZConfig
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.interop.reactivestreams._
 import akka.stream.scaladsl.Source
+import $package$.api.docs.AsyncApiDocs
 $endif$
 $if(add_server_sent_events_endpoint.truthy)$
 import akka.http.scaladsl.model.sse.ServerSentEvent
@@ -35,7 +36,7 @@ object Api {
   val live: ZLayer[ZConfig[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZIOSupport {
 
-      def routes: Route = itemRoute
+      def routes: Route = itemRoute$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ ~ AsyncApiDocs.routes$endif$
 
       implicit val domainErrorResponse: ErrorResponse[DomainError] = {
         case RepositoryError(_) => HttpResponse(StatusCodes.InternalServerError)

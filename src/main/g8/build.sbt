@@ -10,6 +10,15 @@ $if(add_caliban_endpoint.truthy)$
 val calibanVersion        = "0.9.2"
 $endif$
 
+$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+lazy val generateAsyncApiDocs = taskKey[Seq[File]]("Generate AsyncAPI docs files")
+generateAsyncApiDocs := AsyncApiDocsHelper.generateDocs(
+  (Compile / resourceDirectory).value,
+  (Compile / resourceManaged).value,
+  streams.value
+)
+
+$endif$
 val dockerReleaseSettings = Seq(
   dockerExposedPorts := Seq(8080),
   dockerExposedVolumes := Seq("/opt/docker/logs"),
@@ -30,6 +39,9 @@ val root = (project in file("."))
     ),
     name := "$name$",
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
+    $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    Compile / resourceGenerators += generateAsyncApiDocs.taskValue,
+    $endif$
     libraryDependencies ++= Seq(
       "com.typesafe.akka"     %% "akka-http"                       % akkaHttpVersion,
       "de.heikoseeberger"     %% "akka-http-play-json"             % "1.35.2",

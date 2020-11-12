@@ -1,0 +1,45 @@
+import sbt.Keys.TaskStreams
+import sbt._
+import sbt.io.ExtensionFilter
+
+import scala.sys.process._
+
+object AsyncApiDocsHelper {
+
+  def generateDocs(resources: File, resourcesManaged: File, s: TaskStreams): Seq[File] = {
+    lazy val inputYaml = resources / "asyncapi.yml"
+    lazy val outputDir = resourcesManaged / "asyncapi"
+    lazy val generate  = shell :+ generateDocsCmd(inputYaml, outputDir)
+
+    def outputFiles(): Seq[File] = (outputDir ** new ExtensionFilter("html", "css", "js")).get()
+
+    def regenerate(): Seq[File] =
+      if (generate.! == 0) {
+        s.log.success("AsyncAPI docs generated")
+        outputFiles()
+      } else {
+        s.log.error("Failure during AsyncAPI docs generation")
+        Seq.empty
+      }
+
+    val regenerateOnInputChanged = Tracked.inputChanged(s.cacheStoreFactory.make("asyncapi")) {
+      (inChanged: Boolean, _: HashFileInfo) => if (inChanged) regenerate() else outputFiles()
+    }
+
+    regenerateOnInputChanged(FileInfo.hash(inputYaml))
+  }
+
+  private def generateDocsCmd(inputYaml: File, outputDir: File): String =
+    s"""docker run --rm \\\\
+       |  -v "\$inputYaml:/app/asyncapi.yml" \\\\
+       |  -v "\$outputDir:/app/output" \\\\
+       |  asyncapi/generator:1.0.0-rc.15 \\\\
+       |    -o /app/output \\\\
+       |    /app/asyncapi.yml \\\\
+       |    @asyncapi/html-template --force-write""".stripMargin
+
+  private lazy val shell: Seq[String] =
+    if (sys.props("os.name").contains("Windows")) Vector("cmd", "/c")
+    else Vector("bash", "-c")
+
+}

@@ -1,0 +1,87 @@
+asyncapi: '2.0.0'
+info:
+  title: Items API
+  version: '0.1.0'
+  description: |
+    The Items API allows you to receive items' details
+    and get notified when items are deleted.
+
+servers:
+  devserver:
+    url: http://localhost:8080
+    protocol: http
+
+channels:
+$if(add_server_sent_events_endpoint.truthy)$  /sse/items/deleted:
+    description: The SSE channel for deleted items.
+    subscribe:
+      summary: Stream of deleted items IDs.
+      message:
+        \$ref: '#/components/messages/itemId'
+
+$endif$
+$if(add_websocket_endpoint.truthy)$  /ws/items:
+    description: The WebSocket channel for items.
+    publish:
+      summary: Send item command.
+      message:
+        \$ref: '#/components/messages/itemCommand'
+    subscribe:
+      summary: Receive item events.
+      message:
+        \$ref: '#/components/messages/itemEvent'
+
+$endif$
+components:
+  messages:
+$if(add_server_sent_events_endpoint.truthy)$    itemId:
+      name: itemId
+      title: Item ID
+      payload:
+        \$ref: '#/components/schemas/itemId'
+
+$endif$
+$if(add_websocket_endpoint.truthy)$    itemCommand:
+      name: itemCommand
+      title: Item command
+      summary: Request for action from the server.
+      payload:
+        oneOf:
+          - \$ref: '#/components/schemas/itemId'
+          - \$ref: '#/components/schemas/deleted'
+
+    itemEvent:
+      name: itemEvent
+      title: Item event
+      summary: Item event returned by the server.
+      payload:
+        oneOf:
+          - \$ref: '#/components/schemas/itemData'
+          - \$ref: '#/components/schemas/deletedItem'
+
+$endif$
+  schemas:
+    itemId:
+      type: integer
+      format: int64
+$if(add_websocket_endpoint.truthy)$
+
+    itemData:
+      type: object
+      properties:
+        id:
+          \$ref: '#/components/schemas/itemId'
+        name:
+          type: string
+        price:
+          type: number
+          format: price
+
+    deleted:
+      type: string
+      format: '"deleted"'
+
+    deletedItem:
+      type: string
+      format: '"deleted: <item_id>"'
+$endif$
