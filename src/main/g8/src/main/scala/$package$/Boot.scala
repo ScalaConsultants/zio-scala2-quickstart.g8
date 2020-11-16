@@ -25,6 +25,7 @@ import $package$.config.AppConfig
 import $package$.domain.ItemRepository
 import $package$.infrastructure._
 import $package$.infrastructure.flyway.FlywayProvider
+import $package$.infrastructure.swagger.SwaggerDocService
 
 object Boot extends App {
 
@@ -84,7 +85,7 @@ object Boot extends App {
     val routesLayer: URLayer[Api$if(add_caliban_endpoint.truthy)$ with GraphQLApi$endif$, Has[Route]] =
     $if(add_caliban_endpoint.truthy)$
       ZLayer.fromServices[Api.Service, api.graphql.GraphQLApi.Service, Route] { (api, gApi) =>
-        api.routes ~ gApi.routes
+        api.routes ~ gApi.routes ~ SwaggerDocService.routes
       }
     $else$
       ZLayer.fromService(_.routes)

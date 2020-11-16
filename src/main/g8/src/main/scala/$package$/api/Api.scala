@@ -8,10 +8,9 @@ import akka.http.interop._
 import play.api.libs.json.JsObject
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.{Consumes, POST, Path, Produces}
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.media.{Content, Schema}
-import io.swagger.v3.oas.annotations.parameters.RequestBody
-import io.swagger.v3.oas.annotations.responses.ApiResponse
+import akka.http.scaladsl.server.{ Directives, Route }
+import $package$.application.ApplicationService
+import $package$.domain._
 import zio._
 import zio.config.ZConfig
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
@@ -39,7 +38,7 @@ object Api {
   val live: ZLayer[ZConfig[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZIOSupport {
 
-      def routes: Route = itemRoute  ~  SwaggerDocService.routes
+      def routes: Route = itemRoute
 
       implicit val domainErrorResponse: ErrorResponse[DomainError] = {
         case RepositoryError(_) => HttpResponse(StatusCodes.InternalServerError)
@@ -102,7 +101,6 @@ object Api {
             }
           }
         } $if(add_server_sent_events_endpoint.truthy)$ ~
-
           pathPrefix("sse" / "items") {
             import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
 
@@ -123,7 +121,6 @@ object Api {
               }
             }
           } $endif$ $if(add_websocket_endpoint.truthy)$ ~
-
           pathPrefix("ws" / "items") {
             logRequestResult(("ws/items", InfoLevel)) {
               val greeterWebSocketService =
