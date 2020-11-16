@@ -46,7 +46,6 @@ object Api {
         case ValidationError(_) => HttpResponse(StatusCodes.BadRequest)
       }
 
-      @Path("/echoenumeratum")
       val itemRoute: Route =
         pathPrefix("items") {
           logRequestResult(("items", InfoLevel)) {
@@ -54,10 +53,6 @@ object Api {
               get {
                 complete(ApplicationService.getItems.provide(env))
               } ~
-              @POST
-              @Consumes(Array(MediaType.APPLICATION_JSON))
-              @Produces(Array(MediaType.APPLICATION_JSON))
-              @Operation(summary = "Add integers", description = "Add integers")
               post {
                 entity(Directives.as[CreateItemRequest]) { req =>
                   ApplicationService
@@ -71,7 +66,6 @@ object Api {
                 }
               }
             } ~
-            @Path("/{username}")
             path(LongNumber) {
               itemId =>
                 delete {

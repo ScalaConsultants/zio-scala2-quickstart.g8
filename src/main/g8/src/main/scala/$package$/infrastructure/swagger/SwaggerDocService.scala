@@ -12,7 +12,7 @@ object SwaggerDocService extends SwaggerHttpService {
   val config    = ConfigFactory.load()
   val API_URL   = config.getString("swagger.api.url")
   val BASE_PATH = config.getString("swagger.api.base.path")
-  val PROTOCOL  = config.getString("swagger.api.protocol")
+
 
   override val host     = API_URL
   override val basePath = BASE_PATH
@@ -27,7 +27,7 @@ object SwaggerDocService extends SwaggerHttpService {
       get {
         getFromResource(s"api-docs/swagger.yaml")
       }
-    } $if(add_swagger_ui.truthy)$, ~
+    } $if(add_swagger_ui.truthy)$ ~
     (get & pathPrefix("swagger")) {
       (pathEndOrSingleSlash & redirectToTrailingSlashIfMissing(StatusCodes.TemporaryRedirect)) {
         getFromResource("swagger/index.html")
