@@ -52,6 +52,8 @@ final class InMemoryItemRepository(storage: Ref[List[Item]], deletedEventsSubscr
     } yield ZStream.fromQueue(queue)
   }
 
+  override val healthCheck: UIO[Boolean] = UIO.succeed(true)
+
   private def publishDeletedEvents(deletedItemId: ItemId): UIO[List[Boolean]] =
     deletedEventsSubscribers.get.flatMap(subs =>
       // send item to all subscribers

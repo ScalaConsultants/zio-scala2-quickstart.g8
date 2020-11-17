@@ -1,6 +1,6 @@
 package $package$.domain
 
-import zio.IO
+import zio.{IO, UIO}
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.stream.ZStream
 $endif$
@@ -8,6 +8,8 @@ $endif$
 object ItemRepository {
 
   trait Service {
+
+    val healthCheck: UIO[Boolean]
 
     def add(data: ItemData): IO[RepositoryError, ItemId]
 

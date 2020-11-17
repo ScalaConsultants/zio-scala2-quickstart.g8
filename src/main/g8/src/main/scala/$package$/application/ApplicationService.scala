@@ -1,12 +1,19 @@
 package $package$.application
 
-import $package$.domain._
+import play.api.libs.json.JsString
 import zio.ZIO
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.stream.ZStream
 $endif$
 
 object ApplicationService {
+
+  val healthCheck: ZIO[ItemRepository, Nothing, JsString] =
+    for {
+
+      status <- ZIO.accessM[ItemRepository](_.get.healthCheck)
+
+    } yield JsString("{isDatabaseWorking :" +  status.toString +"}")
 
   $if(add_caliban_endpoint.truthy)$
   def getItemsCheaperThan(price: BigDecimal): ZIO[ItemRepository, DomainError, List[Item]] =
