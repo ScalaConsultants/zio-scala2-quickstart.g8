@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.interop._
-import $package$.application.ApplicationService
+import $package$.application.{ ApplicationService, HealthCheckService }
 import $package$.domain._
 import play.api.libs.json.JsObject
 import zio._
@@ -32,7 +32,7 @@ object Api {
     def routes: Route
   }
 
-  val live: ZLayer[ZConfig[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
+  val live: ZLayer[ZConfig[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository with HealthCheck, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZIOSupport {
 
       def routes: Route = itemRoute

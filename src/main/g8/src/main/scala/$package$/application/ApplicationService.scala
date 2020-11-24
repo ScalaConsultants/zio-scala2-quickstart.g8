@@ -1,6 +1,5 @@
 package $package$.application
 
-import play.api.libs.json.JsString
 import zio.ZIO
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.stream.ZStream

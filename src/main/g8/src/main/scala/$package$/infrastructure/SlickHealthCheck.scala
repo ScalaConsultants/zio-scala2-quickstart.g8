@@ -5,6 +5,10 @@ import slick.interop.zio.syntax._
 import slick.jdbc.PostgresProfile
 import zio.logging._
 import zio._
+import $package$.domain.{DbStatus, HealthCheck, ItemId}
+import $package$.infrastructure.tables.ItemsTable
+import zio.logging._
+import zio._
 
 final class SlickHealthCheck(env: DatabaseProvider with Logging)
   extends HealthCheck.Service

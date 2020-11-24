@@ -22,16 +22,17 @@ import zio.duration.Duration
 $endif$
 import zio.test.Assertion._
 import zio.test._
-
+import $package$.infrastructure.{ SlickHealthCheck }
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import scala.concurrent.duration._
 $endif$
+import zio.logging.Logging
 
 object ItApiSpec extends ZioRouteTest with PosgresContainer {
 
   private val env = (ZLayer.succeed(HttpServer.Config("localhost", 8080)) ++
-    containerRepository $if(add_websocket_endpoint.truthy)$++ ZLayer.succeed(system)$endif$) >>>
-    Api.live.passthrough ++ Blocking.live ++ Clock.live
+    containerRepository ++ ZLayer.succeed(system) ++ ((Logging.ignore ++ containerDatabaseProvider) >>> SlickHealthCheck.live) >>>
+    Api.live.passthrough ++ Blocking.live ++ Clock.live)
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
 
   private val specs: Spec[ItemRepository with Blocking with Api with Clock, TestFailure[Throwable], TestSuccess] =
