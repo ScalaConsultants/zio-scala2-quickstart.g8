@@ -1,13 +1,12 @@
 package $package$.api
 
-
-import $package$.application.ApplicationService
-import $package$.domain._
 import akka.event.Logging._
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.interop._
+import $package$.application.ApplicationService
+import $package$.domain._
 import play.api.libs.json.JsObject
 import zio._
 import zio.config.ZConfig
@@ -45,7 +44,7 @@ object Api {
 
       val itemRoute: Route =
         path("healthcheck") {
-          get(complete(ApplicationService.healthCheck.provide(env)))
+          (get | head )(complete(HealthCheckService.healthCheck.provide(env)))
         } ~ pathPrefix("items") {
           logRequestResult(("items", InfoLevel)) {
             pathEnd {

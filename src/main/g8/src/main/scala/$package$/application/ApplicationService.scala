@@ -9,13 +9,6 @@ import $package$.domain._
 
 object ApplicationService {
 
-  val healthCheck: ZIO[ItemRepository, Nothing, JsString] =
-    for {
-
-      status <- ZIO.accessM[ItemRepository](_.get.healthCheck)
-
-    } yield JsString("{isDatabaseWorking :" +  status.toString +"}")
-
   $if(add_caliban_endpoint.truthy)$
   def getItemsCheaperThan(price: BigDecimal): ZIO[ItemRepository, DomainError, List[Item]] =
     ZIO.accessM(_.get.getCheaperThan(price))

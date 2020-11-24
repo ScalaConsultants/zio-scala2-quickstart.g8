@@ -9,8 +9,6 @@ object ItemRepository {
 
   trait Service {
 
-    val healthCheck: UIO[Boolean]
-
     def add(data: ItemData): IO[RepositoryError, ItemId]
 
     def delete(id: ItemId): IO[RepositoryError, Unit]
