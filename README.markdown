@@ -2,11 +2,24 @@
 
 ## zio-akka-quickstart
 
-A [Giter8][g8] template for a basic Scala application build using ZIO, Akka HTTP and Slick!
+A [Giter8][g8] template for a fully functional, ready to deploy microservice (or monolith - it's up to you).
 
-This template integrates [ZIO][zio] with [Akka HTTP][akka-http] and [Slick][slick], so that you can seamlessly use all power of ZIO in a familiar environment of battle tested akka-http routes and slick query DSL.
+This template integrates [ZIO][zio] with [Akka HTTP][akka-http] and [Slick][slick], so that you can seamlessly use all the power of ZIO in a familiar environment of battle tested Akka HTTP routes and Slick query DSL. Out of the box there's a set of REST endpoints for example CRUD operations ready to refactor.
 
-It also leverages [ZLayer][zlayer] and [ZManaged][zmanaged] to build dependency graph in a very visible, type-safe and resource-safe way.
+Other notable integrations include:
+* (Optional) GraphQL endpoint with GraphQL console
+* (Optional) WebSocket endpoint
+* (Optional) SSE endpoint
+* `Testcontainers` for integration tests
+* `Flyway migrations`
+* `sbt-native-packager` for docker images
+* `scalafmt`
+* `play-json` for JSON processing.
+* `zio-logging` for logging.
+* `zio-config` for typesafe configuration.
+* `zio-test` for testing.
+
+Leverages [ZLayer][zlayer] and [ZManaged][zmanaged] to build dependency graph in a very visible, resource and type-safe way.
 
 ### Setting up the project
 
@@ -58,7 +71,7 @@ This will create a docker image locally, named the same as your project is. You 
 docker run -d -p 8080:8080 --name=<project_name> <project_name>:0.1.0-SNAPSHOT
 ```
 
-### Components and libraries
+### Main components
 
 This sample app has several key components:
 
@@ -68,14 +81,6 @@ This sample app has several key components:
 * `ApplicationService` - a more higher level service, that works with different error type and uses ZIO environment.
 * `Boot` - wiring all the components together using `ZLayer`.
 * `ApiSpec` - akka-http endpoint spec using zio-test.
-
-Additional libraries used:
-
-* `caliban` for an optional GraphQL endpoint. 
-* `play-json` for JSON processing.
-* `zio-logging` for logging.
-* `zio-config` for typesafe configuration.
-* `zio-test` for testing.
 
 ### GraphQL
 
@@ -87,7 +92,7 @@ To try out this feature open the browser http://localhost:8080/graphiql
 
 ### What in the world is ZLayer?
 
-If you're confused about what's happening in `Boot.scala` and what is `ZLayer`, please check out latest [ZIO documentation on the topic](https://zio.dev/docs/howto/howto_use_layers).
+If you're new to `ZIO` you might be confused about what's happening in `Boot.scala` and what is `ZLayer`, please check out ebook about this subject [Mastering ZLayer](TODO) as well as [the latest official documentation](https://zio.dev/docs/howto/howto_use_layers).
 
 Template license
 ----------------
