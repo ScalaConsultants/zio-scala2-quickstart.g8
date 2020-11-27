@@ -178,6 +178,26 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           update <- ApplicationService.partialUpdateItem(ItemId(1), None, Some(777.7))
         } yield assert(update)(equalTo(None))
       }
+      //TODO: In this moment deletEvents is not working at all. Need to be fixed and refactored.
+      //      //  def deletedEvents
+      //      testM("delete event run without anything ") {
+      //        val name: String      = "name"
+      //        val price: BigDecimal = 100.0
+      //        for {
+      //          _: ItemId <- ApplicationService.addItem(name, price)
+      //          things    <- ApplicationService.deletedEvents.runCollect
+      //        } yield assert(things.toList)(equalTo(List(ItemId(1))))
+      //      },
+      //  def deletedEvents
+      //      testM("delete event ") {         This test is freezing propably whole infrastructure of events is made wrong.
+      //        val name: String      = "name"
+      //        val price: BigDecimal = 100.0
+      //        for {
+      //          _: ItemId <- ApplicationService.addItem(name, price)
+      //          _         <- ApplicationService.deleteItem(ItemId(1))
+      //          things    <- ApplicationService.deletedEvents.runCollect
+      //        } yield assert(things.toList)(equalTo(List(ItemId(1))))
+      //      }
     ) @@ before(FlywayProvider.flyway.flatMap(_.migrate).orDie)
 
 }
