@@ -48,7 +48,7 @@ val root = (project in file("."))
       "ch.qos.logback"        % "logback-classic"                  % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
-      "org.postgresql"        % "postgresql"                       % "9.4.1212",
+      "org.postgresql"        % "postgresql"                       % "42.2.18",
       "org.flywaydb"          % "flyway-core"                      % flywayVersion,
       "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
       "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
