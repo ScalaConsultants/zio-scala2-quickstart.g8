@@ -113,6 +113,15 @@ $endif$
     } yield ZStream.fromQueue(queue)
   }
 
+  val healthCheck: UIO[Boolean] =
+  ZIO
+  .fromDBIO(items.result)
+  .provide(env)
+  .fold(
+  _ => false,
+  _ => true
+  )
+
   private def publishDeletedEvents(deletedItemId: ItemId) =
     log.info(s"Publishing delete event for item \${deletedItemId.value}") *>
       deletedEventsSubscribers.get.flatMap[Any, Nothing, List[Boolean]](subs =>
