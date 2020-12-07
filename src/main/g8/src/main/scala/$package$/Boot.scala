@@ -22,7 +22,7 @@ $if(add_caliban_endpoint.truthy)$
 import $package$.api.graphql.GraphQLApi
 $endif$
 import $package$.config.AppConfig
-import $package$.domain.{HealthCheck, ItemRepository}
+import $package$.domain.{HealthCheck, ItemRepository, Subscriber}
 import $package$.infrastructure._
 import $package$.infrastructure.flyway.FlywayProvider
 
@@ -69,6 +69,12 @@ object Boot extends App {
       logFormat.format(correlationId, message)
     }
 
+    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    val subscriberLayer: TaskLayer[Subscriber] = {
+      loggingLayer >>> EventSubscriber.live
+    }
+    $endif$
+
     val dbProvider: ZLayer[Any, Throwable, DatabaseProvider] =
       (dbConfigLayer ++ dbBackendLayer) >>> DatabaseProvider.live
 
@@ -80,10 +86,12 @@ object Boot extends App {
 
     val flywayLayer: TaskLayer[FlywayProvider] = dbConfigLayer >>> FlywayProvider.live
 
-    val apiLayer: TaskLayer[Api] = (apiConfigLayer ++ dbLayer ++ actorSystemLayer ++ healthCheckLayer) >>> Api.live
+    val apiLayer: TaskLayer[Api] = (apiConfigLayer ++ dbLayer ++ actorSystemLayer ++ healthCheckLayer
+      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ ++subscriberLayer $endif$) >>> Api.live
+
     $if(add_caliban_endpoint.truthy)$
     val graphQLApiLayer: TaskLayer[GraphQLApi] =
-      (dbLayer ++ actorSystemLayer ++ loggingLayer ++ Clock.live) >>> GraphQLApi.live
+      (dbLayer ++ actorSystemLayer ++ loggingLayer ++ Clock.live ++ subscriberLayer) >>> GraphQLApi.live
     $endif$
 
     val routesLayer: URLayer[Api$if(add_caliban_endpoint.truthy)$ with GraphQLApi$endif$, Has[Route]] =

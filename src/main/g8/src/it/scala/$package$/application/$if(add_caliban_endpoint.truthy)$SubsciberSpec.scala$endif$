@@ -1,0 +1,45 @@
+package com.example.application
+
+import com.example.ITSpec.ITSpec
+import com.example.domain._
+import com.example.infrastructure.flyway.FlywayProvider
+import zio.test.Assertion._
+import zio.test.TestAspect._
+import zio.test.{ suite, testM, _ }
+
+object deleteSpecForTests extends ITSpec(Some("items")) {
+
+  val migrateDbSchema =
+    FlywayProvider.flyway
+      .flatMap(_.migrate)
+      .toManaged_
+
+  def flippingFailure(value: Any): Exception =
+    new Exception(
+      "Flipping failed! The referred effect was successful with `" + value + "` result of `" + value.getClass + "` type!"
+    )
+
+  migrateDbSchema.useNow
+  val spec: ITSpec =
+    suite("Item Repository")(
+      //  def deletedEvents
+      testM("check empty que") {
+        val name: String      = "name"
+        val price: BigDecimal = 100.0
+        for {
+          _: ItemId <- ApplicationService.addItem(name, price)
+          things    <- ApplicationService.deletedEvents.runCollect
+        } yield assert(things.toList)(equalTo(List(ItemId(1))))
+      },
+      testM("publishDelete event  ") {
+        val name: String      = "name"
+        val price: BigDecimal = 100.0
+        for {
+          _: ItemId <- ApplicationService.addItem(name, price)
+          _         <- ApplicationService.deleteItem(ItemId(1))
+          things    <- ApplicationService.deletedEvents.runCollect
+        } yield assert(things.toList)(equalTo(List(ItemId(1))))
+      }
+    ) @@ before(FlywayProvider.flyway.flatMap(_.migrate).orDie)
+
+}

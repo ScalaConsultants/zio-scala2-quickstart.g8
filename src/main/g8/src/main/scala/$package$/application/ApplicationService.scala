@@ -8,6 +8,7 @@ import $package$.domain._
 
 object ApplicationService {
 
+
   $if(add_caliban_endpoint.truthy)$
   def getItemsCheaperThan(price: BigDecimal): ZIO[ItemRepository, DomainError, List[Item]] =
     ZIO.accessM(_.get.getCheaperThan(price))
@@ -18,9 +19,6 @@ object ApplicationService {
 
   def addItem(name: String, price: BigDecimal): ZIO[ItemRepository, DomainError, ItemId] =
     ZIO.accessM(_.get.add(ItemData(name, price)))
-
-  def deleteItem(itemId: ItemId): ZIO[ItemRepository, DomainError, Unit] =
-    ZIO.accessM(_.get.delete(itemId))
 
   def getItem(itemId: ItemId): ZIO[ItemRepository, DomainError, Option[Item]] =
     ZIO.accessM(_.get.getById(itemId))
@@ -50,7 +48,18 @@ object ApplicationService {
     ZIO.accessM(_.get.update(itemId, ItemData(name, price)))
 
   $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-  def deletedEvents: ZStream[ItemRepository, Nothing, ItemId] =
-    ZStream.accessStream(_.get.deletedEvents)
+  def deleteItem(itemId: ItemId): ZIO[ItemRepository with Subscriber, DomainError, Int] = {
+    for {
+      out <- ZIO.accessM[ItemRepository](_.get.delete(itemId))
+      _   <- ZIO.accessM[Subscriber](_.get.publishDeleteEvents(itemId))
+    } yield out
+  }
+
+  def deletedEvents: ZStream[Subscriber, Nothing, ItemId] =
+    ZStream.accessStream(_.get.showDeleteEvents)
+
+    $else$
+  def deleteItem(itemId: ItemId): ZIO[ItemRepository, DomainError, Unit] =
+    ZIO.accessM(_.get.delete(itemId))
   $endif$
 }
