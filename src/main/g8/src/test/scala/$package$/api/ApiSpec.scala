@@ -28,13 +28,47 @@ object ApiSpec extends ZioRouteTest {
 
   private val env =
     (ZLayer.succeed(HttpServer.Config("localhost", 8080)) ++
-      InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$) >>>
+      InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$) ++ InMemoryHealthCheck.test) >>>
       Api.live.passthrough ++ Blocking.live ++ Clock.live ++ Annotations.live
 
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
 
   private val specs: Spec[ItemRepository with Blocking with Api with Clock with Annotations, TestFailure[Throwable], TestSuccess] =
     suite("Api")(
+      testM("Health check on Get to '/healthcheck'") {
+        for {
+          routes <- Api.routes
+
+          request = Get("/healthcheck")
+          resultCheck <- effectBlocking(request ~> routes ~> check {
+            // Here and in other tests we have to evaluate response on the spot before passing anything to `assert`.
+            // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
+            val theStatus = status
+            val theCT     = contentType
+            val theBody   = entityAs[DbStatus]
+            assert(theStatus)(equalTo(StatusCodes.OK)) &&
+              assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
+              assert(theBody)(equalTo(DbStatus(true)))
+          })
+        } yield resultCheck
+      },
+      testM("Health check on Head to '/healthcheck'") {
+        for {
+          routes <- Api.routes
+
+          request = Head("/healthcheck")
+          resultCheck <- effectBlocking(request ~> routes ~> check {
+            // Here and in other tests we have to evaluate response on the spot before passing anything to `assert`.
+            // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
+            val theStatus = status
+            val theCT     = contentType
+            val theBody   = entityAs[DbStatus]
+            assert(theStatus)(equalTo(StatusCodes.OK)) &&
+              assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
+              assert(theBody)(equalTo(DbStatus(true)))
+          })
+        } yield resultCheck
+      },
       testM("Add item on POST to '/items'") {
         val item = CreateItemRequest("name", 100.0)
 
