@@ -19,7 +19,7 @@ import zio.duration.Duration
 $endif$
 import zio.test.Assertion._
 import zio.test._
-import zio.test.TestAspect._
+import zio.test.TestAspect.ignore
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import scala.concurrent.duration._
 $endif$
@@ -29,11 +29,11 @@ object ApiSpec extends ZioRouteTest {
   private val env =
     (ZLayer.succeed(HttpServer.Config("localhost", 8080)) ++
       InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$) >>>
-      Api.live.passthrough ++ Blocking.live ++ Clock.live
+      Api.live.passthrough ++ Blocking.live ++ Clock.live ++ Annotations.live
 
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
 
-  private val specs: Spec[ItemRepository with Blocking with Api with Clock, TestFailure[Throwable], TestSuccess] =
+  private val specs: Spec[ItemRepository with Blocking with Api with Clock with Annotations, TestFailure[Throwable], TestSuccess] =
     suite("Api")(
       testM("Add item on POST to '/items'") {
         val item = CreateItemRequest("name", 100.0)

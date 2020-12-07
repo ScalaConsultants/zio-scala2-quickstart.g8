@@ -6,7 +6,7 @@ import $package$.infrastructure.flyway.FlywayProvider
 import zio.ZIO
 import zio.test.Assertion._
 import zio.test.{ suite, testM, _ }
-import zio.test.TestAspect._
+import zio.test.TestAspect.{ before, ignore }
 
 object ItItemRepositorySpec extends ITSpec(Some("items")) {
 
