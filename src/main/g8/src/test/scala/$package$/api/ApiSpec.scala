@@ -19,8 +19,8 @@ import zio.duration.Duration
 $endif$
 import zio.test.Assertion._
 import zio.test._
-import zio.test.TestAspect.ignore
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+import zio.test.TestAspect.ignore
 import scala.concurrent.duration._
 $endif$
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
