@@ -15,13 +15,13 @@ import zio._
 import zio.blocking._
 import zio.clock.Clock
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-//import zio.duration.Duration
+import zio.duration.Duration
 $endif$
 import zio.test.Assertion._
 import zio.test._
-
+import zio.test.TestAspect._
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-//import scala.concurrent.duration._
+import scala.concurrent.duration._
 $endif$
 
 object ApiSpec extends ZioRouteTest {
@@ -97,52 +97,48 @@ object ApiSpec extends ZioRouteTest {
           })
           contentsCheck <- assertM(allItems)(hasSameElements(items.take(1)))
         } yield resultCheck && contentsCheck
-      },
-
-      // TODO: In this moment Delete event is not working at all need to be fixed
-//      } $if(add_server_sent_events_endpoint.truthy)$ ,
-//      testM("Notify about deleted items via SSE endpoint") {
-//        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
-//
-//        for {
-//          _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-//          routes <- Api.routes
-//          fiber    <- firstNElements(Get("/sse/items/deleted"), routes)(3).fork
-//          _        <- ZIO.sleep(Duration.fromScala(1.second))
-//          _        <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
-//          _        <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
-//          messages <- fiber.join
-//        } yield assert(messages.filterNot(_ == "data:"))(hasSameElements(List("data:1", "data:2")))
-//      } $endif$ $if(add_websocket_endpoint.truthy)$,
-//      testM("Notify about deleted items via WS endpoint") {
-//        import akka.http.scaladsl.testkit.WSProbe
-//
-//        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
-//        val wsClient = WSProbe()
-//        for {
-//          _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-//          routes <- Api.routes
-//
-//          resultFiber <- effectBlocking {
-//                          WS("/ws/items", wsClient.flow) ~> routes ~> check {
-//                            val isUpgrade = isWebSocketUpgrade
-//
-//                            wsClient.sendMessage("deleted")
-//                            wsClient.expectMessage("deleted: 1")
-//                            wsClient.expectMessage("deleted: 2")
-//                            assert(isUpgrade)(isTrue)
-//                          }
-//                        }.fork
-//          _      <- ZIO.sleep(Duration.fromScala(1.second))
-//          _      <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
-//          _      <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
-//          result <- resultFiber.join
-//        } yield result
-//      } $endif$
 
 
+     //TODO: In this moment Delete event is not working at all need to be fixed
+      } $if(add_server_sent_events_endpoint.truthy)$ ,
+      testM("Notify about deleted items via SSE endpoint") {
 
+        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
 
+        for {
+          _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
+          routes <- Api.routes
+          fiber    <- firstNElements(Get("/sse/items/deleted"), routes)(3).fork
+          _        <- ZIO.sleep(Duration.fromScala(1.second))
+          _        <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
+          _        <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
+          messages <- fiber.join
+        } yield assert(messages.filterNot(_ == "data:"))(hasSameElements(List("data:1", "data:2")))
+      }@@ ignore $endif$ $if(add_websocket_endpoint.truthy)$,
+      testM("Notify about deleted items via WS endpoint") {
+        import akka.http.scaladsl.testkit.WSProbe
+        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
+        val wsClient = WSProbe()
+        for {
+          _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
+          routes <- Api.routes
+
+          resultFiber <- effectBlocking {
+                          WS("/ws/items", wsClient.flow) ~> routes ~> check {
+                            val isUpgrade = isWebSocketUpgrade
+
+                            wsClient.sendMessage("deleted")
+                            wsClient.expectMessage("deleted: 1")
+                            wsClient.expectMessage("deleted: 2")
+                            assert(isUpgrade)(isTrue)
+                          }
+                        }.fork
+          _      <- ZIO.sleep(Duration.fromScala(1.second))
+          _      <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
+          _      <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
+          result <- resultFiber.join
+        } yield result
+      } @@ ignore $endif$
     ) @@ TestAspect.sequential
   def firstNElements(request: HttpRequest, route: Route)(n: Long): Task[Seq[String]] =
     ZIO.fromFuture(_ =>

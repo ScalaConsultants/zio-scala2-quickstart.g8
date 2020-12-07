@@ -7,8 +7,6 @@ import zio.blocking._
 
 object Postgres {
 
-  final case class TestCredentials(username: String, password: String)
-
   final class SchemaAwarePostgresContainer(
                                             dockerImageNameOverride: Option[String] = None,
                                             databaseName: Option[String] = None,
