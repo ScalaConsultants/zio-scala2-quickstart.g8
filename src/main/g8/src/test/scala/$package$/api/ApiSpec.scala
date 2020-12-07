@@ -24,11 +24,12 @@ $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import scala.concurrent.duration._
 $endif$
 
+
 object ApiSpec extends ZioRouteTest {
 
   private val env =
     (ZLayer.succeed(HttpServer.Config("localhost", 8080)) ++
-      InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$) ++ InMemoryHealthCheck.test) >>>
+      InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$ ++ InMemoryHealthCheck.test) >>>
       Api.live.passthrough ++ Blocking.live ++ Clock.live ++ Annotations.live
 
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
