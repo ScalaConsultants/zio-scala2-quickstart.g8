@@ -15,13 +15,15 @@ import $package$.application.ApplicationService
 import $package$.domain._
 import $package$.interop.akka.ZioRouteTest
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+import zio.test.TestAspect.ignore
 import zio.duration.Duration
 $endif$
 import zio.test.Assertion._
 import zio.test._
-import zio.test.TestAspect.ignore
+
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import scala.concurrent.duration._
+
 $endif$
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import com.example.infrastructure.InMemoryEventSubscriber
@@ -37,7 +39,7 @@ object ApiSpec extends ZioRouteTest {
 
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
 
-  private val specs: Spec[ItemRepository with Blocking with Api with Clock with Annotations with $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$  Subscriber  $endif$ , TestFailure[Throwable], TestSuccess] =
+  private val specs: Spec[ItemRepository with Blocking with Api with Clock with Annotations  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ with  Subscriber  $endif$ , TestFailure[Throwable], TestSuccess] =
     suite("Api")(
       testM("Health check on Get to '/healthcheck'") {
         for {

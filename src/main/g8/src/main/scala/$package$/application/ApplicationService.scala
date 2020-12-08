@@ -59,7 +59,7 @@ object ApplicationService {
     ZStream.accessStream(_.get.showDeleteEvents)
 
     $else$
-  def deleteItem(itemId: ItemId): ZIO[ItemRepository, DomainError, Unit] =
+  def deleteItem(itemId: ItemId): ZIO[ItemRepository, DomainError, Int] =
     ZIO.accessM(_.get.delete(itemId))
   $endif$
 }

@@ -50,6 +50,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           error <- ApplicationService.addItem(name, price).flip.orDieWith(flippingFailure)
         } yield assert(error.toString)(equalTo("RepositoryError(java.lang.NullPointerException)"))
       },
+      $if(add_caliban_endpoint.truthy)$
       //             def getItemByName
       testM("Get correct item by name ") {
         val name: String = "name"
@@ -84,6 +85,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           equalTo(List(Item(ItemId(1), name, 100.00), Item(ItemId(2), name, 105.00), Item(ItemId(3), name, 115.00)))
         )
       },
+      $endif$
       //  def getItem
       testM("Get correct item ") {
         val name: String = "name"

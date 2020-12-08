@@ -22,7 +22,10 @@ $if(add_caliban_endpoint.truthy)$
 import $package$.api.graphql.GraphQLApi
 $endif$
 import $package$.config.AppConfig
-import $package$.domain.{HealthCheck, ItemRepository, Subscriber}
+import $package$.domain.{HealthCheck, ItemRepository}
+$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+import $package$.domain.Subscriber
+$endif$
 import $package$.infrastructure._
 import $package$.infrastructure.flyway.FlywayProvider
 
