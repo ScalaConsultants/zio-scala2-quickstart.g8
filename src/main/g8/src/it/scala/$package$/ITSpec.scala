@@ -69,7 +69,7 @@ object ITSpec {
         (Logging.ignore ++ containerDatabaseProvider) >>> SlickItemRepository.live
 
       val logging = Slf4jLogger.make { (context, message) =>
-        val logFormat = "[correlation-id = %s] %s"
+        val logFormat     = "[correlation-id = %s] %s"
         val correlationId = LogAnnotation.CorrelationId.render(
           context.get(LogAnnotation.CorrelationId)
         )

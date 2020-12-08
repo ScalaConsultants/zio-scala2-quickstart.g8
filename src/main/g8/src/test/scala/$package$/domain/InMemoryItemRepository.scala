@@ -35,7 +35,7 @@ final class InMemoryItemRepository(storage: Ref[List[Item]], deletedEventsSubscr
         case i if i.id == id => i.copy(name = data.name, price = data.price)
         case i               => i
       }
-      val updated = if (newItems == items) None else Some(())
+      val updated  = if (newItems == items) None else Some(())
       updated -> newItems
     }
 
