@@ -184,7 +184,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
           val jsObjectDeleteItemKeys = getKeysFromBody(body, "deleteItem")
           assert(statusCode)(equalTo(StatusCodes.OK)) &&
           assert(contentType)(equalTo(ContentTypes.`application/json`)) &&
-          assert(jsObjectDeleteItemKeys)(isSome(isEmpty))
+          assert(jsObjectDeleteItemKeys)(isNone)
         }
       },
       testM("Succeed on call to 'deleteItem', when the given itemId does not exist") {
@@ -200,7 +200,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
           val jsObjectDeleteItemKeys = getKeysFromBody(body, "deleteItem")
           assert(statusCode)(equalTo(StatusCodes.OK)) &&
           assert(contentType)(equalTo(ContentTypes.`application/json`)) &&
-          assert(jsObjectDeleteItemKeys)(isSome(isEmpty))
+          assert(jsObjectDeleteItemKeys)(isNone)
         }
       }
     ) @@ sequential).provideCustomLayerShared(env)
