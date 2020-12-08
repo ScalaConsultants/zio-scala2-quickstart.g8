@@ -30,7 +30,7 @@ object deleteSpecForTests extends ITSpec(Some("items")) {
           _: ItemId <- ApplicationService.addItem(name, price)
           things    <- ApplicationService.deletedEvents.runCollect
         } yield assert(things.toList)(equalTo(List(ItemId(1))))
-      },
+      } @@ ignore ,
       testM("publishDelete event  ") {
         val name: String      = "name"
         val price: BigDecimal = 100.0
@@ -39,7 +39,7 @@ object deleteSpecForTests extends ITSpec(Some("items")) {
           _         <- ApplicationService.deleteItem(ItemId(1))
           things    <- ApplicationService.deletedEvents.runCollect
         } yield assert(things.toList)(equalTo(List(ItemId(1))))
-      }
+      } @@ ignore
     ) @@ before(FlywayProvider.flyway.flatMap(_.migrate).orDie)
 
 }
