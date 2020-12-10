@@ -1,9 +1,9 @@
 package $package$.api
 
 import akka.event.Logging._
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{ HttpResponse, StatusCodes }
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.server.{ Directives, ExceptionHandler, RejectionHandler, Route }
 import akka.http.interop._
 import akka.http.scaladsl.model.StatusCodes.NoContent
 import play.api.libs.json.JsObject
@@ -43,128 +43,146 @@ object Api {
         case ValidationError(_) => HttpResponse(StatusCodes.BadRequest)
       }
 
-      val itemRoute: Route =
-        path("healthcheck") {
-          get {
-            complete(HealthCheckService.healthCheck.provide(env))
-          } ~ head(complete(NoContent))
-        } ~ pathPrefix("items") {
-          logRequestResult(("items", InfoLevel)) {
-            pathEnd {
-              get {
-                complete(ApplicationService.getItems.provide(env))
-              } ~
-              post {
-                entity(Directives.as[CreateItemRequest]) { req =>
-                  ApplicationService
-                    .addItem(req.name, req.price)
-                    .provide(env)
-                    .map { id =>
-                      complete {
-                        Item(id, req.name, req.price)
+      import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+
+      // Your CORS settings are loaded from `application.conf`
+
+      // Your rejection handler
+      val rejectionHandler = corsRejectionHandler.withFallback(RejectionHandler.default)
+
+      // Your exception handler
+      val exceptionHandler = ExceptionHandler { case e: NoSuchElementException =>
+        complete(StatusCodes.NotFound -> e.getMessage)
+      }
+        // Combining the two handlers only for convenience
+        val handleErrors = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
+
+        val itemRoute: Route =
+          handleErrors {
+            cors() {
+              handleErrors {
+                path("healthcheck") {
+                  get {
+                    complete(HealthCheckService.healthCheck.provide(env))
+                  } ~ head(complete(NoContent))
+                } ~ pathPrefix("items") {
+                  logRequestResult(("items", InfoLevel)) {
+                    pathEnd {
+                      get {
+                        complete(ApplicationService.getItems.provide(env))
+                      } ~
+                        post {
+                          entity(Directives.as[CreateItemRequest]) { req =>
+                            ApplicationService
+                              .addItem(req.name, req.price)
+                              .provide(env)
+                              .map { id =>
+                                complete {
+                                  Item(id, req.name, req.price)
+                                }
+                              }
+                          }
+                        }
+                    } ~
+                      path(LongNumber) {
+                        itemId =>
+                          delete {
+                            complete(
+                              ApplicationService
+                                .deleteItem(ItemId(itemId))
+                                .provide(env)
+                                .as(JsObject.empty)
+                            )
+                          } ~
+                            get {
+                              complete(ApplicationService.getItem(ItemId(itemId)).provide(env))
+                            } ~
+                            patch {
+                              entity(Directives.as[PartialUpdateItemRequest]) { req =>
+                                complete(
+                                  ApplicationService
+                                    .partialUpdateItem(ItemId(itemId), req.name, req.price)
+                                    .provide(env)
+                                    .as(JsObject.empty)
+                                )
+                              }
+                            } ~
+                            put {
+                              entity(Directives.as[UpdateItemRequest]) { req =>
+                                complete(
+                                  ApplicationService
+                                    .updateItem(ItemId(itemId), req.name, req.price)
+                                    .provide(env)
+                                    .as(JsObject.empty)
+                                )
+                              }
+                            }
+                      }
+                  }
+                } $if (add_server_sent_events_endpoint.truthy) $ ~pathPrefix("sse" / "items") {
+                  import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
+
+                  logRequestResult(("sse/items", InfoLevel)) {
+                    pathPrefix("deleted") {
+                      get {
+                        complete {
+                          ApplicationService.deletedEvents.toPublisher
+                            .map(p =>
+                              Source
+                                .fromPublisher(p)
+                                .map(itemId => ServerSentEvent(itemId.value.toString))
+                                .keepAlive(1.second, () => ServerSentEvent.heartbeat)
+                            )
+                            .provide(env)
+                        }
                       }
                     }
-                }
-              }
-            } ~
-            path(LongNumber) {
-              itemId =>
-                delete {
-                  complete(
-                    ApplicationService
-                      .deleteItem(ItemId(itemId))
-                      .provide(env)
-                      .as(JsObject.empty)
-                  )
-                } ~
-                get {
-                  complete(ApplicationService.getItem(ItemId(itemId)).provide(env))
-                } ~
-                patch {
-                  entity(Directives.as[PartialUpdateItemRequest]) { req =>
-                    complete(
-                      ApplicationService
-                        .partialUpdateItem(ItemId(itemId), req.name, req.price)
-                        .provide(env)
-                        .as(JsObject.empty)
-                    )
                   }
-                } ~
-                put {
-                  entity(Directives.as[UpdateItemRequest]) { req =>
-                    complete(
-                      ApplicationService
-                        .updateItem(ItemId(itemId), req.name, req.price)
-                        .provide(env)
-                        .as(JsObject.empty)
-                    )
-                  }
-                }
-            }
-          }
-        } $if(add_server_sent_events_endpoint.truthy)$ ~
-          pathPrefix("sse" / "items") {
-            import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
-
-            logRequestResult(("sse/items", InfoLevel)) {
-              pathPrefix("deleted") {
-                get {
-                  complete {
-                    ApplicationService.deletedEvents.toPublisher
-                      .map(p =>
-                        Source
-                          .fromPublisher(p)
-                          .map(itemId => ServerSentEvent(itemId.value.toString))
-                          .keepAlive(1.second, () => ServerSentEvent.heartbeat)
-                      )
-                      .provide(env)
-                  }
-                }
-              }
-            }
-          } $endif$ $if(add_websocket_endpoint.truthy)$ ~
-          pathPrefix("ws" / "items") {
-            logRequestResult(("ws/items", InfoLevel)) {
-              val greeterWebSocketService =
-                Flow[Message].flatMapConcat {
-                  case tm: TextMessage if tm.getStrictText == "deleted" =>
-                    Source.futureSource(
-                      unsafeRunToFuture(
-                        ApplicationService.deletedEvents.toPublisher
-                          .map(p =>
-                            Source
-                              .fromPublisher(p)
-                              .map(itemId => TextMessage(s"deleted: \${itemId.value}"))
+                } $endif$ $if(add_websocket_endpoint.truthy) $ ~pathPrefix("ws" / "items") {
+                  logRequestResult(("ws/items", InfoLevel)) {
+                    val greeterWebSocketService =
+                      Flow[Message].flatMapConcat {
+                        case tm: TextMessage if tm.getStrictText == "deleted" =>
+                          Source.futureSource(
+                            unsafeRunToFuture(
+                              ApplicationService.deletedEvents.toPublisher
+                                .map(p =>
+                                  Source
+                                    .fromPublisher(p)
+                                    .map(itemId => TextMessage(s"deleted: \${itemId.value}"))
+                                )
+                                .provide(env)
+                            )
                           )
-                          .provide(env)
-                      )
-                    )
-                  case tm: TextMessage =>
-                    Try(tm.getStrictText.toLong) match {
-                      case Success(value) =>
-                        Source.futureSource(
-                          unsafeRunToFuture(
-                            ApplicationService
-                              .getItem(ItemId(value))
-                              .bimap(
-                                _.asThrowable,
-                                o => Source(o.toList.map(i => TextMessage(i.toString)))
+                        case tm: TextMessage =>
+                          Try(tm.getStrictText.toLong) match {
+                            case Success(value) =>
+                              Source.futureSource(
+                                unsafeRunToFuture(
+                                  ApplicationService
+                                    .getItem(ItemId(value))
+                                    .bimap(
+                                      _.asThrowable,
+                                      o => Source(o.toList.map(i => TextMessage(i.toString)))
+                                    )
+                                    .provide(env)
+                                )
                               )
-                              .provide(env)
-                          )
-                        )
-                      case Failure(_) => Source.empty
-                    }
-                  case bm: BinaryMessage =>
-                    bm.getStreamedData.runWith(Sink.ignore, env.get[ActorSystem])
-                    Source.empty
-                }
+                            case Failure(_) => Source.empty
+                          }
+                        case bm: BinaryMessage =>
+                          bm.getStreamedData.runWith(Sink.ignore, env.get[ActorSystem])
+                          Source.empty
+                      }
 
-              handleWebSocketMessages(greeterWebSocketService)
+                    handleWebSocketMessages(greeterWebSocketService)
+                  }
+                }
+                $endif$
+              }
             }
           }
-       $endif$
-    }
+      }
   )
 
   // accessors

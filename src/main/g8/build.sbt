@@ -6,6 +6,9 @@ val zioLoggingVersion     = "0.5.3"
 val zioConfigVersion      = "1.0.0-RC29"
 val flywayVersion         = "7.1.1"
 val testContainersVersion = "0.38.4"
+$if(add_cors.truthy)$
+val akkaHttpCorsVersion = "1.1.0"
+$endif$
 $if(add_caliban_endpoint.truthy)$
 val calibanVersion        = "0.9.2"
 $endif$
@@ -31,6 +34,9 @@ val root = (project in file("."))
     name := "$name$",
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
+      $if(add_cors.truthy)$
+       "ch.megard"            %% "akka-http-cors"                  % akkaHttpCorsVersion,
+      $endif$
       "com.typesafe.akka"     %% "akka-http"                       % akkaHttpVersion,
       "de.heikoseeberger"     %% "akka-http-play-json"             % "1.35.2",
       "com.typesafe.akka"     %% "akka-actor-typed"                % akkaVersion,
