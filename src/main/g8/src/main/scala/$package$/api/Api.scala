@@ -5,11 +5,12 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.interop._
-import $package$.application.{ ApplicationService, HealthCheckService }
-import $package$.domain._
+import akka.http.scaladsl.model.StatusCodes.NoContent
 import play.api.libs.json.JsObject
 import zio._
 import zio.config.ZConfig
+import $package$.application.{ ApplicationService, HealthCheckService }
+import $package$.domain._
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.interop.reactivestreams._
 import akka.stream.scaladsl.Source
@@ -46,7 +47,9 @@ object Api {
 
       val itemRoute: Route =
         path("healthcheck") {
-          (get | head )(complete(HealthCheckService.healthCheck.provide(env)))
+          get {
+            complete(HealthCheckService.healthCheck.provide(env))
+          } ~ head(complete(NoContent))
         } ~ pathPrefix("items") {
           logRequestResult(("items", InfoLevel)) {
             pathEnd {

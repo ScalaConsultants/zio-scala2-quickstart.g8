@@ -66,10 +66,8 @@ object ApiSpec extends ZioRouteTest {
             // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
             val theStatus = status
             val theCT     = contentType
-            val theBody   = entityAs[DbStatus]
-            assert(theStatus)(equalTo(StatusCodes.OK)) &&
-              assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
-              assert(theBody)(equalTo(DbStatus(true)))
+            assert(theStatus)(equalTo(StatusCodes.NoContent)) &&
+              assert(theCT)(equalTo(ContentTypes.NoContentType))
           })
         } yield resultCheck
       },
