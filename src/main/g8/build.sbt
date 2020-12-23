@@ -2,6 +2,7 @@ val akkaHttpVersion       = "10.2.1"
 val akkaVersion           = "2.6.10"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.3"
+val zioJsonVersion            = "0.0.1"
 val zioLoggingVersion     = "0.5.3"
 val zioConfigVersion      = "1.0.0-RC29"
 val flywayVersion         = "7.1.1"
@@ -50,6 +51,7 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
       "org.postgresql"        % "postgresql"                       % "9.4.1212",
       "org.flywaydb"          % "flyway-core"                      % flywayVersion,
+      "dev.zio" %% "zio-json" % zioJsonVersion,
       $if(add_caliban_endpoint.truthy)$
       "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
       "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
