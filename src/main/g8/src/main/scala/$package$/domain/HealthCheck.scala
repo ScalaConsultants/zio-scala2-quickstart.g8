@@ -1,6 +1,6 @@
 package $package$.domain
 
-import zio.{UIO}
+import zio.{ UIO }
 
 object HealthCheck {
 
