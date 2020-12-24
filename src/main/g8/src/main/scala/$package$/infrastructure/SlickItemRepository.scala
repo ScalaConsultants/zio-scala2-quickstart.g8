@@ -7,19 +7,10 @@ import slick.interop.zio.DatabaseProvider
 import slick.interop.zio.syntax._
 import slick.jdbc.PostgresProfile
 import zio.logging._
-$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-import zio.stream.ZStream
-$endif$
 import zio._
 
-$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-final class SlickItemRepository(env: DatabaseProvider with Logging, deletedEventsSubscribers: Ref[List[Queue[ItemId]]])
-$else$
-final class SlickItemRepository(env: DatabaseProvider with Logging)
-$endif$
-    extends ItemRepository.Service
-    with ItemsTable
-    with Profile {
+final class SlickItemRepository(env: DatabaseProvider with Logging) extends ItemRepository.Service
+    with ItemsTable  with Profile {
   type P = PostgresProfile
   override lazy val profile = PostgresProfile
   import profile.api._
@@ -38,21 +29,13 @@ $endif$
 
   }.provide(env)
 
-  def delete(id: ItemId): IO[RepositoryError, Unit] = {
-    val delete = items.filter(_.id === id).delete
-
-    log.info(s"Deleting item \${id.value}") *>
-    ZIO
-      .fromDBIO(delete)
-      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-      .flatMap(deletedCount => ZIO.when(deletedCount > 0)(publishDeletedEvents(id)))
-      $else$
-      .unit
-      $endif$
-      .refineOrDie {
-        case e: Exception => RepositoryError(e)
-      }
-  }.provide(env)
+  def delete(id: ItemId): ZIO[Any, RepositoryError, Int] = {
+    val deleteRequest = items.filter(_.id === id).delete
+    Console.println("deleted" + deleteRequest.toString)
+    ZIO.fromDBIO(deleteRequest).provide(env).refineOrDie {
+     case e: Exception => RepositoryError(e)
+    }
+  }
 
   val getAll: IO[RepositoryError, List[Item]] =
     ZIO.fromDBIO(items.result).provide(env).map(_.toList).refineOrDie {
@@ -105,14 +88,6 @@ $endif$
     }
   }.provide(env)
 
-  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-  def deletedEvents: ZStream[Any, Nothing, ItemId] = ZStream.unwrap {
-    for {
-      queue <- Queue.unbounded[ItemId]
-      _     <- deletedEventsSubscribers.update(queue :: _)
-    } yield ZStream.fromQueue(queue)
-  }
-
   val healthCheck: UIO[Boolean] =
   ZIO
   .fromDBIO(items.result)
@@ -122,24 +97,11 @@ $endif$
   _ => true
   )
 
-  private def publishDeletedEvents(deletedItemId: ItemId) =
-    log.info(s"Publishing delete event for item \${deletedItemId.value}") *>
-      deletedEventsSubscribers.get.flatMap[Any, Nothing, List[Boolean]](subs =>
-        // send item to all subscribers
-        UIO.foreach(subs)(queue =>
-          queue
-            .offer(deletedItemId)
-            .onInterrupt(
-              // if queue was shutdown, remove from subscribers
-              deletedEventsSubscribers.update(_.filterNot(_ == queue))
-            )
-        )
-      )
-  $endif$
+
 }
 
 object SlickItemRepository {
 
   val live: RLayer[DatabaseProvider with Logging, ItemRepository] =
-    ZLayer.fromFunctionM(env => $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$Ref.make(List.empty[Queue[ItemId]]).map(new SlickItemRepository(env, _))$else$ZIO.succeed(new SlickItemRepository(env))$endif$)
+    ZLayer.fromFunction(env => new SlickItemRepository(env))
 }
