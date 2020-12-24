@@ -14,6 +14,7 @@ import zio.logging.Logging
 import zio.test.Assertion._
 import zio.test._
 import zio.test.TestAspect.sequential
+import com.example.infrastructure.InMemoryEventSubscriber
 
 trait GraphQLApiSpecJsonProtocol extends PlayJsonSupport {
   implicit val itemIdFormat = Json.valueFormat[ItemId]
@@ -36,18 +37,17 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
             |}
             |""".stripMargin
 
-        sendQueryAndCheckResult(query) {
-          (statusCode, contentType, body) =>
-            val itemId =
-              for {
-                jsonData     <- body.value.get("data")
-                jsObjectData <- jsonData.asOpt[JsObject]
-                jsonAddItem  <- jsObjectData.value.get("addItem")
-                id           <- jsonAddItem.asOpt[BigDecimal]
-              } yield id
-            assert(statusCode)(equalTo(StatusCodes.OK)) &&
-            assert(contentType)(equalTo(ContentTypes.`application/json`)) &&
-            assert(itemId)(isSome(equalTo(BigDecimal(0))))
+        sendQueryAndCheckResult(query) { (statusCode, contentType, body) =>
+          val itemId =
+            for {
+              jsonData     <- body.value.get("data")
+              jsObjectData <- jsonData.asOpt[JsObject]
+              jsonAddItem  <- jsObjectData.value.get("addItem")
+              id           <- jsonAddItem.asOpt[BigDecimal]
+            } yield id
+          assert(statusCode)(equalTo(StatusCodes.OK)) &&
+          assert(contentType)(equalTo(ContentTypes.`application/json`)) &&
+          assert(itemId)(isSome(equalTo(BigDecimal(0))))
         }
       },
       testM("Return all items on call to 'allItems'") {
@@ -184,7 +184,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
           val jsObjectDeleteItemKeys = getKeysFromBody(body, "deleteItem")
           assert(statusCode)(equalTo(StatusCodes.OK)) &&
           assert(contentType)(equalTo(ContentTypes.`application/json`)) &&
-          assert(jsObjectDeleteItemKeys)(isSome(isEmpty))
+          assert(jsObjectDeleteItemKeys)(isNone)
         }
       },
       testM("Succeed on call to 'deleteItem', when the given itemId does not exist") {
@@ -200,7 +200,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
           val jsObjectDeleteItemKeys = getKeysFromBody(body, "deleteItem")
           assert(statusCode)(equalTo(StatusCodes.OK)) &&
           assert(contentType)(equalTo(ContentTypes.`application/json`)) &&
-          assert(jsObjectDeleteItemKeys)(isSome(isEmpty))
+          assert(jsObjectDeleteItemKeys)(isNone)
         }
       }
     ) @@ sequential).provideCustomLayerShared(env)
@@ -210,7 +210,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
   }
 
   private val env: ULayer[GraphQLApi] =
-    (InMemoryItemRepository.test ++ systemLayer ++ Clock.live ++ Logging.ignore) >>> GraphQLApi.live.orDie
+      (  InMemoryEventSubscriber.test ++ InMemoryItemRepository.test ++  systemLayer ++ Clock.live ++ Logging.ignore)  >>> GraphQLApi.live.orDie
 
   private def sendQueryAndCheckResult(query: String)(
     assertion: (StatusCode, ContentType, JsObject) => TestResult

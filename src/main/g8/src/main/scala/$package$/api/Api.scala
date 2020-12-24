@@ -1,15 +1,15 @@
 package $package$.api
 
 import akka.event.Logging._
-import akka.http.scaladsl.model.{ HttpResponse, StatusCodes }
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{ Directives, Route }
-import $package$.application.ApplicationService
-import $package$.domain._
+import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.interop._
+import akka.http.scaladsl.model.StatusCodes.NoContent
 import play.api.libs.json.JsObject
 import zio._
-import zio.config.ZConfig
+import $package$.application.{ ApplicationService, HealthCheckService }
+import $package$.domain._
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.interop.reactivestreams._
 import akka.stream.scaladsl.Source
@@ -32,7 +32,9 @@ object Api {
     def routes: Route
   }
 
-  val live: ZLayer[ZConfig[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository, Nothing, Api] = ZLayer.fromFunction(env =>
+  val live: ZLayer[Has[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$   $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    with Subscriber
+  $endif$  with ItemRepository with HealthCheck, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZIOSupport {
 
       def routes: Route = itemRoute
@@ -43,7 +45,11 @@ object Api {
       }
 
       val itemRoute: Route =
-        pathPrefix("items") {
+        path("healthcheck") {
+          get {
+            complete(HealthCheckService.healthCheck.provide(env))
+          } ~ head(complete(NoContent))
+        } ~ pathPrefix("items") {
           logRequestResult(("items", InfoLevel)) {
             pathEnd {
               get {
