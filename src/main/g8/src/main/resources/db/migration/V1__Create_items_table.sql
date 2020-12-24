@@ -1,5 +1,5 @@
 CREATE TABLE items (
-    id    bigint NOT NULL,
+    id    serial primary key NOT NULL,
     name  varchar NOT NULL,
     price numeric(21,2) NOT NULL
 );

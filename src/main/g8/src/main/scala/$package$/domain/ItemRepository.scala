@@ -1,9 +1,7 @@
 package $package$.domain
 
-import zio.IO
-$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-import zio.stream.ZStream
-$endif$
+import zio.{IO}
+
 
 object ItemRepository {
 
@@ -11,7 +9,7 @@ object ItemRepository {
 
     def add(data: ItemData): IO[RepositoryError, ItemId]
 
-    def delete(id: ItemId): IO[RepositoryError, Unit]
+    def delete(id: ItemId): IO[RepositoryError, Int]
 
     val getAll: IO[RepositoryError, List[Item]]
 
@@ -27,8 +25,5 @@ object ItemRepository {
 
     def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]]
 
-    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-    def deletedEvents: ZStream[Any, Nothing, ItemId]
-    $endif$
   }
 }

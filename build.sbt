@@ -1,13 +1,13 @@
 // Dependencies are needed for Scala Steward to check if there are newer versions
-val akkaHttpVersion       = "10.2.1"
+val akkaHttpVersion       = "10.2.2"
 val akkaVersion           = "2.6.10"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.3"
 val zioLoggingVersion     = "0.5.3"
-val zioConfigVersion      = "1.0.0-RC29"
-val flywayVersion         = "7.1.1"
+val zioConfigVersion      = "1.0.0-RC31-1"
+val flywayVersion         = "7.3.2"
 val testContainersVersion = "0.38.4"
-val calibanVersion        = "0.9.2"
+val calibanVersion        = "0.9.4"
 
 lazy val It = config("it").extend(Test)
 
@@ -44,18 +44,18 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-config-typesafe"             % zioConfigVersion,
       "io.scalac"             %% "zio-akka-http-interop"           % "0.4.0",
       "io.scalac"             %% "zio-slick-interop"               % "0.2.0",
-      "dev.zio"               %% "zio-interop-reactivestreams"     % "1.3.0.7-2",
-      "ch.qos.logback"        % "logback-classic"                  % "1.2.3",
+      "dev.zio"               %% "zio-interop-reactivestreams"     % "1.0.3.5",
+      "ch.qos.logback"         % "logback-classic"                 % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
-      "org.postgresql"        % "postgresql"                       % "9.4-1201-jdbc41",
-      "org.flywaydb"          % "flyway-core"                      % flywayVersion,
+      "org.postgresql"         % "postgresql"                      % "9.4.1212",
+      "org.flywaydb"           % "flyway-core"                     % flywayVersion,
       "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
       "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
-      "com.typesafe.akka"     %% "akka-http-testkit"               % akkaHttpVersion % Test,
-      "com.typesafe.akka"     %% "akka-stream-testkit"             % akkaVersion % Test,
-      "com.typesafe.akka"     %% "akka-actor-testkit-typed"        % akkaVersion % Test,
-      "dev.zio"               %% "zio-test-sbt"                    % zioVersion % Test,
+      "com.typesafe.akka"     %% "akka-http-testkit"               % akkaHttpVersion       % Test,
+      "com.typesafe.akka"     %% "akka-stream-testkit"             % akkaVersion           % Test,
+      "com.typesafe.akka"     %% "akka-actor-testkit-typed"        % akkaVersion           % Test,
+      "dev.zio"               %% "zio-test-sbt"                    % zioVersion            % Test,
       "com.dimafeng"          %% "testcontainers-scala-postgresql" % testContainersVersion % It
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
