@@ -6,8 +6,7 @@ import $package$.infrastructure.flyway.FlywayProvider
 import zio.ZIO
 import zio.test.Assertion._
 import zio.test.{ suite, testM, _ }
-import zio.test.TestAspect.{ before, ignore }
-
+import zio.test.TestAspect.before
 object ItItemRepositorySpec extends ITSpec(Some("items")) {
 
   val migrateDbSchema =
@@ -27,7 +26,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
     suite("Item Repository")(
       //  def addItem
       testM("Add correct item ") {
-        val name: String      = "name"
+        val name: String = "name"
         val price: BigDecimal = 100.0
         for {
           _: ItemId     <- ApplicationService.addItem(name, price)
@@ -35,7 +34,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
         } yield contentsCheck
       },
       testM("Should add different item and fail in assertion ") {
-        val name: String      = "name1"
+        val name: String = "name1"
         val price: BigDecimal = 100.0
         for {
           _: ItemId     <- ApplicationService.addItem(name, price)
@@ -44,7 +43,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
         } yield !contentsCheck
       },
       testM("Should not allow to add wrong data to db") {
-        val name: String      = ""
+        val name: String = ""
         val price: BigDecimal = null
         migrateDbSchema.useNow
         for {
@@ -72,7 +71,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
       },
       //  def getItemsCheaperThan
       testM("Get cheaper items") {
-        val name: String      = "name"
+        val name: String = "name"
         val price: BigDecimal = 100.0
         for {
           _: ItemId <- ApplicationService.addItem(name, price)
@@ -104,7 +103,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
       },
       //  def getItems
       testM("Get all items ") {
-        val name: String      = "name"
+        val name: String = "name"
         val price: BigDecimal = 100.0
         for {
           _: ItemId     <- ApplicationService.addItem(name, price)
@@ -117,7 +116,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
       },
       //  def getItems
       testM("Get empty item list ") {
-        val name: String      = "name"
+        val name: String = "name"
         val price: BigDecimal = 100.0
         for {
           _: ItemId     <- ApplicationService.addItem(name, price)
@@ -130,7 +129,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
       },
       //  def deleteItem
       testM("Delete item ") {
-        val name: String      = "name"
+        val name: String = "name"
         val price: BigDecimal = 100.0
         for {
           _: ItemId <- ApplicationService.addItem(name, price)
@@ -144,11 +143,11 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
       testM("Get Unit if tried to delete not existing item ") {
         for {
           delete <- ApplicationService.deleteItem(ItemId(1))
-        } yield assert(delete)(equalTo(()))
+        } yield assert(delete)(equalTo((0)))
       },
       //  def  updateItem
       testM("Update item ") {
-        val name: String      = "name"
+        val name: String = "name"
         val price: BigDecimal = 100.0
         for {
           _: ItemId     <- ApplicationService.addItem(name, price)
@@ -164,7 +163,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
       },
       //  def partialUpdateItem
       testM("Partially update item item ") {
-        val name: String      = "name"
+        val name: String = "name"
         val price: BigDecimal = 100.0
         for {
           _: ItemId     <- ApplicationService.addItem(name, price)
@@ -177,27 +176,6 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
         for {
           update <- ApplicationService.partialUpdateItem(ItemId(1), None, Some(777.7))
         } yield assert(update)(equalTo(None))
-      },
-      // TODO: In this moment deletEvents is not working at all. Ne
-      //  def deletedEvents
-      testM("delete event run without anything ") {
-        val name: String      = "name"
-        val price: BigDecimal = 100.0
-        for {
-          _: ItemId <- ApplicationService.addItem(name, price)
-          things    <- ApplicationService.deletedEvents.runCollect
-        } yield assert(things.toList)(equalTo(List(ItemId(1))))
-      } @@ ignore,
-//        def deletedEvents
-      testM("delete event ") { //This test is freezing propably whole infrastructure of events is made wrong.
-        val name: String      = "name"
-        val price: BigDecimal = 100.0
-        for {
-          _: ItemId <- ApplicationService.addItem(name, price)
-          _         <- ApplicationService.deleteItem(ItemId(1))
-          things    <- ApplicationService.deletedEvents.runCollect
-        } yield assert(things.toList)(equalTo(List(ItemId(1))))
-      } @@ ignore
+      }
     ) @@ before(FlywayProvider.flyway.flatMap(_.migrate).orDie)
-
 }
