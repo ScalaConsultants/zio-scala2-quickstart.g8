@@ -4,37 +4,40 @@ import akka.http.interop.HttpServer
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
-import akka.stream.scaladsl.{ Framing, Sink, Source }
+import akka.stream.scaladsl.{Framing, Sink, Source}
 import akka.util.ByteString
-import $package$.api.JsonSupport._
-import $package$.application.ApplicationService
-import $package$.domain._
-import $package$.interop.akka.ZioRouteTest
 import play.api.libs.json.JsObject
 import zio._
 import zio.blocking._
 import zio.clock.Clock
+import $package$.api.JsonSupport._
+import $package$.application.ApplicationService
+import $package$.domain._
+import $package$.interop.akka.ZioRouteTest
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+import zio.test.TestAspect.ignore
 import zio.duration.Duration
 $endif$
 import zio.test.Assertion._
 import zio.test._
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-import zio.test.TestAspect.ignore
 import scala.concurrent.duration._
 $endif$
-
+$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+import $package$.infrastructure.InMemoryEventSubscriber
+$endif$
 
 object ApiSpec extends ZioRouteTest {
 
   private val env =
     (ZLayer.succeed(HttpServer.Config("localhost", 8080)) ++
-      InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$ ++ InMemoryHealthCheck.test) >>>
+      InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$
+      ++ $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$  InMemoryEventSubscriber.test ++ $endif$ InMemoryHealthCheck.test) >>>
       Api.live.passthrough ++ Blocking.live ++ Clock.live ++ Annotations.live
 
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
 
-  private val specs: Spec[ItemRepository with Blocking with Api with Clock with Annotations, TestFailure[Throwable], TestSuccess] =
+  private val specs: Spec[ItemRepository with Blocking with Api with Clock with Annotations  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ with  Subscriber  $endif$ , TestFailure[Throwable], TestSuccess] =
     suite("Api")(
       testM("Health check on Get to '/healthcheck'") {
         for {

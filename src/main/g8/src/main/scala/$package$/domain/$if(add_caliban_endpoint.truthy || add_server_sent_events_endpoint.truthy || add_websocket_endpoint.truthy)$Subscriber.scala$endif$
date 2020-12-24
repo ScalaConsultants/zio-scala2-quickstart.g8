@@ -1,0 +1,15 @@
+package $package$.domain
+
+import zio.IO
+import zio.stream.Stream
+
+object Subscriber {
+
+  trait Service {
+
+    def showDeleteEvents: Stream[Nothing, ItemId]
+
+    def publishDeleteEvents(deletedItemId: ItemId): IO[Nothing, List[Boolean]]
+
+  }
+}
