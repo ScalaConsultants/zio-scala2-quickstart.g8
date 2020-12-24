@@ -33,7 +33,9 @@ object Api {
     def routes: Route
   }
 
-  val live: ZLayer[ZConfig[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$ with ItemRepository with HealthCheck, Nothing, Api] = ZLayer.fromFunction(env =>
+  val live: ZLayer[ZConfig[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$   $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    with Subscriber
+  $endif$  with ItemRepository with HealthCheck, Nothing, Api] = ZLayer.fromFunction(env =>
     new Service with JsonSupport with ZIOSupport {
 
       def routes: Route = itemRoute
