@@ -2,7 +2,7 @@ val akkaHttpVersion       = "10.2.2"
 val akkaVersion           = "2.6.10"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.3"
-val zioLoggingVersion     = "0.5.3"
+val zioLoggingVersion     = "0.5.4"
 val zioConfigVersion      = "1.0.0-RC31-1"
 val flywayVersion         = "7.3.2"
 val testContainersVersion = "0.38.4"
@@ -48,7 +48,7 @@ val root = (project in file("."))
       "ch.qos.logback"        % "logback-classic"                  % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
-      "org.postgresql"        % "postgresql"                       % "9.4.1212",
+      "org.postgresql"        % "postgresql"                       % "42.2.18",
       "org.flywaydb"          % "flyway-core"                      % flywayVersion,
       $if(add_caliban_endpoint.truthy)$
       "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
