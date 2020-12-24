@@ -7,7 +7,7 @@ val zioLoggingVersion     = "0.5.3"
 val zioConfigVersion      = "1.0.0-RC31-1"
 val flywayVersion         = "7.3.2"
 val testContainersVersion = "0.38.4"
-val calibanVersion        = "0.9.2"
+val calibanVersion        = "0.9.4"
 
 lazy val It = config("it").extend(Test)
 
