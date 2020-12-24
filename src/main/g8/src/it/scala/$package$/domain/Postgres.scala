@@ -1,14 +1,14 @@
 package $package$.domain
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import org.testcontainers.utility.DockerLoggerFactory
+import org.testcontainers.utility.{ DockerImageName, DockerLoggerFactory }
 import zio._
 import zio.blocking._
 
 object Postgres {
 
   final class SchemaAwarePostgresContainer(
-    dockerImageNameOverride: Option[String] = None,
+    dockerImageNameOverride: Option[DockerImageName] = None,
     databaseName: Option[String] = None,
     pgUsername: Option[String] = None,
     pgPassword: Option[String] = None,
@@ -31,7 +31,7 @@ object Postgres {
     ZManaged.make {
       effectBlocking {
         val container = new SchemaAwarePostgresContainer(
-          dockerImageNameOverride = Some("postgres"),
+          dockerImageNameOverride = Some(DockerImageName.parse("postgres")),
           currentSchema = currentSchema
         )
         container.start()
