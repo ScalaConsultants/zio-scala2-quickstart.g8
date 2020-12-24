@@ -1,13 +1,13 @@
-val akkaHttpVersion       = "10.2.1"
+val akkaHttpVersion       = "10.2.2"
 val akkaVersion           = "2.6.10"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.3"
 val zioLoggingVersion     = "0.5.3"
-val zioConfigVersion      = "1.0.0-RC29"
-val flywayVersion         = "7.1.1"
-val testContainersVersion = "0.38.8"
+val zioConfigVersion      = "1.0.0-RC31-1"
+val flywayVersion         = "7.3.2"
+val testContainersVersion = "0.38.4"
 $if(add_caliban_endpoint.truthy)$
-val calibanVersion        = "0.9.2"
+val calibanVersion        = "0.9.4"
 $endif$
 
 val dockerReleaseSettings = Seq(
