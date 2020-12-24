@@ -1,10 +1,8 @@
 package $package$.domain
 
 import zio._
-import zio.stream.ZStream
 
-final class InMemoryItemRepository(storage: Ref[List[Item]], deletedEventsSubscribers: Ref[List[Queue[ItemId]]])
-    extends ItemRepository.Service {
+final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemRepository.Service {
   def add(data: ItemData): IO[RepositoryError, ItemId] =
     storage.modify { items =>
       val nextId = ItemId(
@@ -15,10 +13,12 @@ final class InMemoryItemRepository(storage: Ref[List[Item]], deletedEventsSubscr
       nextId -> (Item.withData(nextId, data) :: items)
     }
 
-  def delete(id: ItemId): IO[RepositoryError, Unit] =
-    storage
-      .modify(items => () -> items.filterNot(_.id == id))
-      .flatMap(_ => publishDeletedEvents(id).unit)
+  def delete(id: ItemId): IO[RepositoryError, Int] =
+    for {
+      out <- getAll.map(_.find(_.id == id).size)
+      _ <- storage
+        .modify(items => () -> items.filterNot(_.id == id))
+    } yield (out)
 
   val getAll: IO[RepositoryError, List[Item]] =
     storage.get
@@ -35,7 +35,7 @@ final class InMemoryItemRepository(storage: Ref[List[Item]], deletedEventsSubscr
         case i if i.id == id => i.copy(name = data.name, price = data.price)
         case i               => i
       }
-      val updated = if (newItems == items) None else Some(())
+      val updated  = if (newItems == items) None else Some(())
       updated -> newItems
     }
 
@@ -45,31 +45,12 @@ final class InMemoryItemRepository(storage: Ref[List[Item]], deletedEventsSubscr
   def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] =
     getAll.map(_.filter(_.price < price))
 
-  def deletedEvents: ZStream[Any, Nothing, ItemId] = ZStream.unwrap {
-    for {
-      queue <- Queue.unbounded[ItemId]
-      _     <- deletedEventsSubscribers.update(queue :: _)
-    } yield ZStream.fromQueue(queue)
-  }
-
-  private def publishDeletedEvents(deletedItemId: ItemId): UIO[List[Boolean]] =
-    deletedEventsSubscribers.get.flatMap(subs =>
-      // send item to all subscribers
-      UIO.foreach(subs)(queue =>
-        queue
-          .offer(deletedItemId)
-          .onInterrupt(
-            // if queue was shutdown, remove from subscribers
-            deletedEventsSubscribers.update(_.filterNot(_ == queue))
-          )
-      )
-    )
 }
 
 object InMemoryItemRepository {
 
-  val test: Layer[Nothing, ItemRepository] = ZLayer.fromEffect(for {
-    storage <- Ref.make(List.empty[Item])
-    deleted <- Ref.make(List.empty[Queue[ItemId]])
-  } yield new InMemoryItemRepository(storage, deleted))
+  val test: Layer[Nothing, ItemRepository] =
+    (for {
+      storage <- Ref.make(List.empty[Item])
+    } yield new InMemoryItemRepository(storage)).toLayer
 }
