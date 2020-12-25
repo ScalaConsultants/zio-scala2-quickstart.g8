@@ -14,6 +14,8 @@ import $package$.api.JsonSupport._
 import $package$.application.ApplicationService
 import $package$.domain._
 import $package$.interop.akka.ZioRouteTest
+import zio.logging._
+import zio.logging.slf4j.Slf4jLogger
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.test.TestAspect.ignore
 import zio.duration.Duration
@@ -29,15 +31,28 @@ $endif$
 
 object ApiSpec extends ZioRouteTest {
 
-  private val env =
-    (ZLayer.succeed(HttpServer.Config("localhost", 8080)) ++
-      InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ ZLayer.succeed(system)$endif$
-      ++ $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$  InMemoryEventSubscriber.test ++ $endif$ InMemoryHealthCheck.test) >>>
-      Api.live.passthrough ++ Blocking.live ++ Clock.live ++ Annotations.live
+  private val loggingLayer: ULayer[Logging] = Slf4jLogger.make { (context, message) =>
+      val logFormat = "[correlation-id = %s] %s"
+      val correlationId = LogAnnotation.CorrelationId.render(
+        context.get(LogAnnotation.CorrelationId)
+      )
+      logFormat.format(correlationId, message)
+    }
 
-  private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
+  val apiLayer = (
+    (InMemoryItemRepository.test >>> ApplicationService.live) ++ 
+      loggingLayer ++ 
+      $if(add_websocket_endpoint.truthy)$ZLayer.succeed(system) ++ $endif$
+      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ InMemoryEventSubscriber.test ++ $endif$
+      InMemoryHealthCheck.test ++ 
+      ZLayer.succeed(HttpServer.Config("localhost", 8080))
+  ) >>> Api.live.passthrough
 
-  private val specs: Spec[ItemRepository with Blocking with Api with Clock with Annotations  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ with  Subscriber  $endif$ , TestFailure[Throwable], TestSuccess] =
+  private val env = apiLayer ++ Blocking.live ++ Clock.live ++ Annotations.live
+
+  private def allItems: ZIO[ApplicationService, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
+
+  private val specs: Spec[ApplicationService with Blocking with Api with Clock with Annotations$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ with Subscriber$endif$, TestFailure[Throwable], TestSuccess] =
     suite("Api")(
       testM("Health check on Get to '/healthcheck'") {
         for {

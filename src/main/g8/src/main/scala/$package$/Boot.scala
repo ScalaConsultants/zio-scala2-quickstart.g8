@@ -21,6 +21,7 @@ import $package$.api._
 $if(add_caliban_endpoint.truthy)$
 import $package$.api.graphql.GraphQLApi
 $endif$
+import $package$.application.ApplicationService
 import $package$.config.AppConfig
 import $package$.domain.{HealthCheck, ItemRepository}
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
@@ -89,7 +90,9 @@ object Boot extends App {
 
     val flywayLayer: TaskLayer[FlywayProvider] = dbConfigLayer >>> FlywayProvider.live
 
-    val apiLayer: TaskLayer[Api] = (apiConfigLayer ++ dbLayer ++ actorSystemLayer ++ healthCheckLayer
+    val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = dbLayer >>> ApplicationService.live
+
+    val apiLayer: TaskLayer[Api] = (apiConfigLayer ++ applicationLayer ++ dbLayer ++ actorSystemLayer ++ healthCheckLayer ++ loggingLayer
       $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ ++subscriberLayer $endif$) >>> Api.live
 
     $if(add_caliban_endpoint.truthy)$
