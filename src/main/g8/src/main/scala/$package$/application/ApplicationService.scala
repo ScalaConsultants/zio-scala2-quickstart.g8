@@ -41,7 +41,7 @@ object ApplicationService {
     ): IO[DomainError, Option[Unit]]
   }
 
-  $if(add_caliban_endpoint.truthy)$
+  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
   val live: URLayer[ItemRepository with Subscriber, ApplicationService] = ZLayer.fromServices[ItemRepository.Service, Subscriber.Service, ApplicationService.Service] { case (repo, sbscr) =>
   $else$
   val live: URLayer[ItemRepository, ApplicationService] = ZLayer.fromService { repo =>
