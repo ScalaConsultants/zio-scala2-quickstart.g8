@@ -74,9 +74,8 @@ object Boot extends App {
     }
 
     $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-    val subscriberLayer: TaskLayer[Subscriber] = {
+    val subscriberLayer: TaskLayer[Subscriber] = 
       loggingLayer >>> EventSubscriber.live
-    }
     $endif$
 
     val dbProvider: ZLayer[Any, Throwable, DatabaseProvider] =
@@ -88,16 +87,23 @@ object Boot extends App {
     val healthCheckLayer: TaskLayer[HealthCheck] =
       (dbProvider ++ loggingLayer) >>> SlickHealthCheck.live
 
-    val flywayLayer: TaskLayer[FlywayProvider] = dbConfigLayer >>> FlywayProvider.live
+    val flywayLayer: TaskLayer[FlywayProvider] = 
+      dbConfigLayer >>> FlywayProvider.live
 
-    val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = dbLayer >>> ApplicationService.live
+    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = 
+      (dbLayer ++ subscriberLayer) >>> ApplicationService.live
+    $else$
+    val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = 
+      dbLayer >>> ApplicationService.live
+    $endif$
 
-    val apiLayer: TaskLayer[Api] = (apiConfigLayer ++ applicationLayer ++ dbLayer ++ actorSystemLayer ++ healthCheckLayer ++ loggingLayer
-      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ ++subscriberLayer $endif$) >>> Api.live
+    val apiLayer: TaskLayer[Api] = 
+      (apiConfigLayer ++ applicationLayer ++ actorSystemLayer ++ healthCheckLayer ++ loggingLayer) >>> Api.live
 
     $if(add_caliban_endpoint.truthy)$
     val graphQLApiLayer: TaskLayer[GraphQLApi] =
-      (dbLayer ++ actorSystemLayer ++ loggingLayer ++ Clock.live ++ subscriberLayer) >>> GraphQLApi.live
+      (applicationLayer ++ actorSystemLayer ++ loggingLayer ++ Clock.live) >>> GraphQLApi.live
     $endif$
 
     val routesLayer: URLayer[Api$if(add_caliban_endpoint.truthy)$ with GraphQLApi$endif$, Has[Route]] =

@@ -40,10 +40,9 @@ object ApiSpec extends ZioRouteTest {
     }
 
   val apiLayer = (
-    (InMemoryItemRepository.test >>> ApplicationService.live) ++ 
+    ((InMemoryItemRepository.test$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ ++ InMemoryEventSubscriber.test$endif$) >>> ApplicationService.live) ++ 
       loggingLayer ++ 
       $if(add_websocket_endpoint.truthy)$ZLayer.succeed(system) ++ $endif$
-      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ InMemoryEventSubscriber.test ++ $endif$
       InMemoryHealthCheck.test ++ 
       ZLayer.succeed(HttpServer.Config("localhost", 8080))
   ) >>> Api.live.passthrough
@@ -52,7 +51,7 @@ object ApiSpec extends ZioRouteTest {
 
   private def allItems: ZIO[ApplicationService, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
 
-  private val specs: Spec[ApplicationService with Blocking with Api with Clock with Annotations$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ with Subscriber$endif$, TestFailure[Throwable], TestSuccess] =
+  private val specs: Spec[ApplicationService with Blocking with Api with Clock with Annotations, TestFailure[Throwable], TestSuccess] =
     suite("Api")(
       testM("Health check on Get to '/healthcheck'") {
         for {

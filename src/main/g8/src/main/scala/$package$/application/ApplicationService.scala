@@ -2,7 +2,7 @@ package $package$.application
 
 import zio.{ IO, URLayer, ZIO, ZLayer }
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-import zio.stream.ZStream
+import zio.stream.{ Stream, ZStream }
 $endif$
 import $package$.domain._
 
@@ -11,7 +11,11 @@ object ApplicationService {
   trait Service {
 
     def addItem(name: String, price: BigDecimal): IO[DomainError, ItemId]
-  
+
+    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    def deletedEvents: Stream[Nothing, ItemId]
+    
+    $endif$
     def deleteItem(itemId: ItemId): IO[DomainError, Int]
   
     def getItem(itemId: ItemId): IO[DomainError, Option[Item]]
@@ -37,12 +41,27 @@ object ApplicationService {
     ): IO[DomainError, Option[Unit]]
   }
 
+  $if(add_caliban_endpoint.truthy)$
+  val live: URLayer[ItemRepository with Subscriber, ApplicationService] = ZLayer.fromServices[ItemRepository.Service, Subscriber.Service, ApplicationService.Service] { case (repo, sbscr) =>
+  $else$
   val live: URLayer[ItemRepository, ApplicationService] = ZLayer.fromService { repo =>
+  $endif$
     new Service {
       def addItem(name: String, price: BigDecimal): IO[DomainError, ItemId] = repo.add(ItemData(name, price))
   
+      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+      def deletedEvents: Stream[Nothing, ItemId] = sbscr.showDeleteEvents
+    
+      def deleteItem(itemId: ItemId): IO[DomainError, Int] = 
+        for {
+          out <- repo.delete(itemId)
+          _   <- sbscr.publishDeleteEvents(itemId)
+        } yield out
+
+      $else$
       def deleteItem(itemId: ItemId): IO[DomainError, Int] = repo.delete(itemId)
-  
+      $endif$
+
       def getItem(itemId: ItemId): IO[DomainError, Option[Item]] = repo.getById(itemId)
 
       $if(add_caliban_endpoint.truthy)$
@@ -76,20 +95,12 @@ object ApplicationService {
     ZIO.accessM(_.get.addItem(name, price))
 
   $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-  def deletedEvents: ZStream[Subscriber, Nothing, ItemId] =
-    ZStream.accessStream(_.get.showDeleteEvents)
+  def deletedEvents: ZStream[ApplicationService, Nothing, ItemId] =
+    ZStream.accessStream(_.get.deletedEvents)
 
-  def deleteItem(itemId: ItemId): ZIO[ApplicationService with Subscriber, DomainError, Int] = {
-    for {
-      out <- ZIO.accessM[ItemRepository](_.get.delete(itemId))
-      _   <- ZIO.accessM[Subscriber](_.get.publishDeleteEvents(itemId))
-    } yield out
-  }
-
-  $else$
+  $endif$
   def deleteItem(itemId: ItemId): ZIO[ApplicationService, DomainError, Int] =
     ZIO.accessM(_.get.deleteItem(itemId))
-  $endif$
 
   def getItem(itemId: ItemId): ZIO[ApplicationService, DomainError, Option[Item]] =
     ZIO.accessM(_.get.getItem(itemId))
