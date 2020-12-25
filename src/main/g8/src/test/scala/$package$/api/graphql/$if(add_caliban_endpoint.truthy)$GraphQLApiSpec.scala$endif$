@@ -3,7 +3,9 @@ package $package$.api.graphql
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import $package$.api.GraphQLApi
+import $package$.application.ApplicationService
 import $package$.domain.{ InMemoryItemRepository, Item, ItemId }
+import $package$.infrastructure.InMemoryEventSubscriber
 import $package$.interop.akka.ZioRouteTest
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json._
@@ -14,7 +16,6 @@ import zio.logging.Logging
 import zio.test.Assertion._
 import zio.test._
 import zio.test.TestAspect.sequential
-import com.example.infrastructure.InMemoryEventSubscriber
 
 trait GraphQLApiSpecJsonProtocol extends PlayJsonSupport {
   implicit val itemIdFormat = Json.valueFormat[ItemId]
@@ -210,7 +211,7 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
   }
 
   private val env: ULayer[GraphQLApi] =
-      (  InMemoryEventSubscriber.test ++ InMemoryItemRepository.test ++  systemLayer ++ Clock.live ++ Logging.ignore)  >>> GraphQLApi.live.orDie
+      ((InMemoryEventSubscriber.test ++ InMemoryItemRepository.test) >>> ApplicationService.live ++ systemLayer ++ Clock.live ++ Logging.ignore)  >>> GraphQLApi.live.orDie
 
   private def sendQueryAndCheckResult(query: String)(
     assertion: (StatusCode, ContentType, JsObject) => TestResult

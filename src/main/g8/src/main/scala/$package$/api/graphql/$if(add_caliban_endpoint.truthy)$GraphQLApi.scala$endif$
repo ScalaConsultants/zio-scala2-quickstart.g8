@@ -22,7 +22,7 @@ import zio.logging._
 
 import scala.language.postfixOps
 
-object GraphQLApi extends GenericSchema[ItemRepository with Subscriber] {
+object GraphQLApi extends GenericSchema[ApplicationService] {
 
   trait Service {
     def routes: Route
@@ -34,18 +34,18 @@ object GraphQLApi extends GenericSchema[ItemRepository with Subscriber] {
 
   private final case class Queries(
     @GQLDescription("Find items by name")
-    itemByName: ItemName => RIO[ItemRepository with Subscriber, List[Item]],
+    itemByName: ItemName => RIO[ApplicationService, List[Item]],
     @GQLDescription("Find items cheaper than specified price")
-    cheaperThan: ItemPrice => RIO[ItemRepository with Subscriber, List[Item]],
+    cheaperThan: ItemPrice => RIO[ApplicationService, List[Item]],
     @GQLDescription("Get all items")
-    allItems: RIO[ItemRepository with Subscriber, List[Item]],
+    allItems: RIO[ApplicationService, List[Item]],
     @GQLDescription("Get item by ID")
-    item: ItemId => RIO[ItemRepository with Subscriber, Option[Item]]
+    item: ItemId => RIO[ApplicationService, Option[Item]]
   )
 
   private final case class Mutations(
-    addItem: ItemInput => RIO[ItemRepository with Subscriber, ItemId],
-    deleteItem: ItemId => RIO[ItemRepository with Subscriber, Int]
+    addItem: ItemInput => RIO[ApplicationService, ItemId],
+    deleteItem: ItemId => RIO[ApplicationService, Int]
   )
 
   private val slowQueriesHandler: (Duration, String) => URIO[Logging, Unit] = (time, query) => {
@@ -54,10 +54,10 @@ object GraphQLApi extends GenericSchema[ItemRepository with Subscriber] {
     }
   }
 
-  private def runService[A](f: ZIO[ItemRepository with Subscriber, DomainError, A]): RIO[ItemRepository with Subscriber, A] =
+  private def runService[A](f: ZIO[ApplicationService, DomainError, A]): RIO[ApplicationService, A] =
     f.mapError(_.asThrowable)
 
-  private val api: GraphQL[Clock with Logging with ItemRepository with Subscriber] = {
+  private val api: GraphQL[Clock with Logging with ApplicationService] = {
     graphQL(
       RootResolver(
         Queries(
@@ -82,16 +82,15 @@ object GraphQLApi extends GenericSchema[ItemRepository with Subscriber] {
   val live =
     ZLayer.fromServicesM[
       Logger[String],
-      ItemRepository.Service,
-      Subscriber.Service,
+      ApplicationService.Service,
       ActorSystem,
       Clock with Logging,
       CalibanError.ValidationError,
       GraphQLApi.Service
-    ] { (logger, itemRepositoryService, eventsService, actorSystem) =>
+    ] { (logger, applicationService, actorSystem) =>
       implicit val system  = actorSystem
       implicit val ec      = system.dispatcher
-      implicit val runtime = Runtime.default.map(_ ++ Has(logger) ++ Has(itemRepositoryService) ++ Has(eventsService))
+      implicit val runtime = Runtime.default.map(_ ++ Has(logger) ++ Has(applicationService))
       val adapter          = AkkaHttpAdapter(new PlayJsonBackend)
       api.interpreter.map { interpreter =>
         new Service {

@@ -20,24 +20,24 @@ object deleteSpecForTests extends ITSpec(Some("items")) {
     )
 
   migrateDbSchema.useNow
+  
   val spec: ITSpec =
-    suite("Item Repository")(
-      //  def deletedEvents
-      testM("check empty que") {
+    suite("Subscriber")(
+      testM("check empty queue") {
         val name: String      = "name"
         val price: BigDecimal = 100.0
         for {
-          _: ItemId <- ApplicationService.addItem(name, price)
-          things    <- ApplicationService.deletedEvents.runCollect
+          _: ItemId <- ItemRepository.add(ItemData(name, price))
+          things    <- Subscriber.showDeletedEvents.runCollect
         } yield assert(things.toList)(equalTo(List(ItemId(1))))
       } @@ ignore ,
-      testM("publishDelete event  ") {
+      testM("publishDelete event") {
         val name: String      = "name"
         val price: BigDecimal = 100.0
         for {
-          _: ItemId <- ApplicationService.addItem(name, price)
-          _         <- ApplicationService.deleteItem(ItemId(1))
-          things    <- ApplicationService.deletedEvents.runCollect
+          _: ItemId <- ItemRepository.add(ItemData(name, price))
+          _         <- ItemRepository.delete(ItemId(1))
+          things    <- Subscriber.showDeletedEvents.runCollect
         } yield assert(things.toList)(equalTo(List(ItemId(1))))
       } @@ ignore
     ) @@ before(FlywayProvider.flyway.flatMap(_.migrate).orDie)
