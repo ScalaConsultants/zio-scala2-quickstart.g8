@@ -1,8 +1,8 @@
 package $package$
 
-import $package$.domain.Postgres.SchemaAwarePostgresContainer
-import $package$.domain.{ ItemRepository, Postgres}
-import $package$.infrastructure.SlickItemRepository
+import $package$.domain.ItemRepository
+import $package$.infrastructure.{ Postgres, SlickItemRepository }
+import $package$.infrastructure.Postgres.SchemaAwarePostgresContainer
 import $package$.infrastructure.flyway.FlywayProvider
 import com.typesafe.config.{ Config, ConfigFactory }
 import slick.interop.zio.DatabaseProvider

@@ -1,4 +1,4 @@
-package $package$.application
+package $package$.infrastructure
 
 import $package$.ITSpec.ITSpec
 import $package$.domain.{ ItemRepository, _ }

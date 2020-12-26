@@ -1,8 +1,8 @@
-package com.example.application
+package $package$.infrastructure
 
-import com.example.ITSpec.ITSpec
-import com.example.domain._
-import com.example.infrastructure.flyway.FlywayProvider
+import $package$.ITSpec.ITSpec
+import $package$.domain._
+import $package$.infrastructure.flyway.FlywayProvider
 import zio.test.Assertion._
 import zio.test.TestAspect._
 import zio.test.{ suite, testM, _ }
