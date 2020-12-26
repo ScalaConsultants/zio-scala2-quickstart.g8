@@ -1,4 +1,4 @@
-package $package$.domain
+package $package$.infrastructure
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.testcontainers.utility.{ DockerImageName, DockerLoggerFactory }
