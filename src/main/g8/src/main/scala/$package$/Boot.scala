@@ -21,8 +21,12 @@ import $package$.api._
 $if(add_caliban_endpoint.truthy)$
 import $package$.api.graphql.GraphQLApi
 $endif$
+import $package$.application.ApplicationService
 import $package$.config.AppConfig
-import $package$.domain.ItemRepository
+import $package$.domain.{HealthCheck, ItemRepository}
+$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+import $package$.domain.Subscriber
+$endif$
 import $package$.infrastructure._
 import $package$.infrastructure.flyway.FlywayProvider
 
@@ -69,16 +73,37 @@ object Boot extends App {
       logFormat.format(correlationId, message)
     }
 
+    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    val subscriberLayer: TaskLayer[Subscriber] = 
+      loggingLayer >>> EventSubscriber.live
+    $endif$
+
+    val dbProvider: ZLayer[Any, Throwable, DatabaseProvider] =
+      (dbConfigLayer ++ dbBackendLayer) >>> DatabaseProvider.live
+
     val dbLayer: TaskLayer[ItemRepository] =
-      (((dbConfigLayer ++ dbBackendLayer) >>> DatabaseProvider.live) ++ loggingLayer) >>> SlickItemRepository.live
+      (dbProvider ++ loggingLayer) >>> SlickItemRepository.live
 
-    val flywayLayer: TaskLayer[FlywayProvider] = dbConfigLayer >>> FlywayProvider.live
+    val healthCheckLayer: TaskLayer[HealthCheck] =
+      (dbProvider ++ loggingLayer) >>> SlickHealthCheck.live
 
-    val apiLayer: TaskLayer[Api] = (apiConfigLayer ++ dbLayer$if(add_websocket_endpoint.truthy)$ ++ actorSystemLayer$endif$) >>> Api.live
+    val flywayLayer: TaskLayer[FlywayProvider] = 
+      dbConfigLayer >>> FlywayProvider.live
+
+    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = 
+      (dbLayer ++ subscriberLayer) >>> ApplicationService.live
+    $else$
+    val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = 
+      dbLayer >>> ApplicationService.live
+    $endif$
+
+    val apiLayer: TaskLayer[Api] = 
+      (apiConfigLayer ++ applicationLayer ++ actorSystemLayer ++ healthCheckLayer ++ loggingLayer) >>> Api.live
 
     $if(add_caliban_endpoint.truthy)$
     val graphQLApiLayer: TaskLayer[GraphQLApi] =
-      (dbLayer ++ actorSystemLayer ++ loggingLayer ++ Clock.live) >>> GraphQLApi.live
+      (applicationLayer ++ actorSystemLayer ++ loggingLayer ++ Clock.live) >>> GraphQLApi.live
     $endif$
 
     val routesLayer: URLayer[Api$if(add_caliban_endpoint.truthy)$ with GraphQLApi$endif$, Has[Route]] =
