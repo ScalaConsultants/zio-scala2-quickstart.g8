@@ -6,9 +6,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.interop._
 import akka.http.scaladsl.model.StatusCodes.NoContent
-import play.api.libs.json.JsObject
 import zio._
 import zio.config.ZConfig
+import zio.json._
 import $package$.application.{ ApplicationService, HealthCheckService }
 import $package$.domain._
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
@@ -24,8 +24,10 @@ import akka.stream.scaladsl.{ Flow, Sink }
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.ws.BinaryMessage
 import akka.http.scaladsl.model.ws.{ Message, TextMessage }
-import scala.util.{ Try, Success, Failure }
+import scala.util.{ Try, Success, Failure }tylko
 $endif$
+import zio.json.JsonCodec.apply
+import zio.json._
 
 object Api {
 
@@ -74,7 +76,7 @@ object Api {
                     ApplicationService
                       .deleteItem(ItemId(itemId))
                       .provide(env)
-                      .as(JsObject.empty)
+                      .as(Seq.empty[String].toJson)
                   )
                 } ~
                 get {
@@ -86,7 +88,7 @@ object Api {
                       ApplicationService
                         .partialUpdateItem(ItemId(itemId), req.name, req.price)
                         .provide(env)
-                        .as(JsObject.empty)
+                        .as(Seq.empty[String].toJson)
                     )
                   }
                 } ~
@@ -96,7 +98,7 @@ object Api {
                       ApplicationService
                         .updateItem(ItemId(itemId), req.name, req.price)
                         .provide(env)
-                        .as(JsObject.empty)
+                        .as(Seq.empty[String].toJson)
                     )
                   }
                 }
