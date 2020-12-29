@@ -1,0 +1,22 @@
+package $package$.domain
+
+import zio.{ IO, ZIO }
+import zio.stream.{ Stream, ZStream }
+
+object Subscriber {
+
+  trait Service {
+
+    def publishDeleteEvents(deletedItemId: ItemId): IO[Nothing, List[Boolean]]
+    
+    def showDeleteEvents: Stream[Nothing, ItemId]
+
+  }
+
+  def publishDeleteEvents(deletedItemId: ItemId): ZIO[Subscriber, Nothing, List[Boolean]] =
+    ZIO.accessM(_.get.publishDeleteEvents(deletedItemId))
+
+  def showDeletedEvents: ZStream[Subscriber, Nothing, ItemId] =
+    ZStream.accessStream(_.get.showDeleteEvents)
+
+}

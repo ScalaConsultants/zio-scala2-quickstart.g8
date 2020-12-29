@@ -1,6 +1,6 @@
 package $package$.api
 
-import $package$.domain.{ Item, ItemId, DbStatus}
+import $package$.domain.{ DbStatus, Item, ItemId }
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.Json
 
