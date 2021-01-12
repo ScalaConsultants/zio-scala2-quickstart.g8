@@ -5,7 +5,7 @@ val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.3"
 val zioLoggingVersion     = "0.5.4"
 val zioConfigVersion      = "1.0.0-RC31-1"
-val flywayVersion         = "7.4.0"
+val flywayVersion         = "7.5.0"
 val testContainersVersion = "0.38.8"
 val calibanVersion        = "0.9.4"
 
