@@ -72,21 +72,9 @@ object ITSpec {
           config
         }
       $if(doobie)$
-      val tranactor: Layer[Throwable, Has[TransactorLayer]] = {
-        config >>> ZLayer.fromServiceM { cfg: Config =>
-          for {
-            url    <- Task(cfg.getString("url"))
-            user   <- Task(cfg.getString("user"))
-            pwd    <- Task(cfg.getString("password"))
-            driver <- Task(cfg.getString("driver"))
-          } yield Transactor.fromDriverManager[Task](
-            driver,
-            url,
-            user,
-            pwd
-          )
-        }
-      }
+      val tranactor: Layer[Throwable, Has[TransactorLayer]] =
+      config >>> DoobieDatabaseProvider.tranactorLayer
+
 
       val doobieWithContainerRepository: Layer[Throwable, ItemRepository] =
         (tranactor ++ Logging.ignore) >>> DoobieItemRepository.live
