@@ -1,0 +1,26 @@
+package com.example.infrastructure
+
+import com.example.domain.TransactorLayer
+import com.typesafe.config.Config
+import doobie.util.transactor.Transactor
+import zio.interop.catz.{ taskConcurrentInstance, zioContextShift }
+
+import zio.{ Has, Task, ZLayer }
+object DoobieDatabaseProvider {
+
+  val tranactorLayer: ZLayer[Has[Config], Throwable, Has[TransactorLayer]] =
+    ZLayer.fromServiceM { cfg: Config =>
+      for {
+        url    <- Task(cfg.getString("url"))
+        user   <- Task(cfg.getString("user"))
+        pwd    <- Task(cfg.getString("password"))
+        driver <- Task(cfg.getString("driver"))
+      } yield Transactor.fromDriverManager[Task](
+        driver,
+        url,
+        user,
+        pwd
+      )
+    }
+
+}
