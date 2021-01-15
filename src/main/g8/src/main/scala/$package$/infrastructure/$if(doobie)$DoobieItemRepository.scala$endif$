@@ -1,95 +1,110 @@
-package $package$.infrastructure
+package com.example.infrastructure
 
 import $package$.domain._
-import $package$.infrastructure.tables.ItemsTable
-import $package$.infrastructure.Profile
-import slick.interop.zio.DatabaseProvider
-import slick.interop.zio.syntax._
-import slick.jdbc.PostgresProfile
-import zio.logging._
+import doobie.implicits._
 import zio._
-$if(doobie)$DoobieItemRepository.scala$endif$
+import zio.interop.catz.taskConcurrentInstance
+import zio.logging._
+
 object DoobieItemRepository {
 
-  val live: RLayer[DatabaseProvider with Logging, ItemRepository] =
-    ZLayer.fromServices[DatabaseProvider.Service, Logger[String], ItemRepository.Service] { case (db, log) => 
-      new ItemRepository.Service with ItemsTable with Profile {
-        type P = PostgresProfile
-        override lazy val profile = PostgresProfile
-        import profile.api._
+  val live: RLayer[Has[TransactorLayer] with Logging, ItemRepository] =
+    ZLayer.fromServices[TransactorLayer, Logger[String], ItemRepository.Service] { case (transactor, log) =>
+      new ItemRepository.Service {
 
-        val items = table
-
-        def add(data: ItemData): IO[RepositoryError, ItemId] = {
-          val insert = (items returning items.map(_.id)) += Item.withData(ItemId(0), data)
-      
-          log.info(s"Adding item \$data") *>
-          ZIO
-            .fromDBIO(insert)
-            .provideLayer(ZLayer.succeed(db))
-            .refineOrDie {
-              case e: Exception => RepositoryError(e)
+        override def add(data: ItemData): IO[RepositoryError, ItemId] =
+          for {
+            querry <- sql"""INSERT INTO items (name, price) Values ( ${data.name},${data.price});""".update
+            .withUniqueGeneratedKeys[ItemId]("id")
+            .transact(transactor)
+            .refineOrDie { case e: Exception =>
+              RepositoryError(e)
             }
-        }
+          _ <-   log.info(s"$querry wass added to database")
+          } yield querry
 
-        def delete(id: ItemId): IO[RepositoryError, Int] = {
-          val deleteRequest = items.filter(_.id === id).delete
-          Console.println("deleted" + deleteRequest.toString)
-          ZIO.fromDBIO(deleteRequest).provideLayer(ZLayer.succeed(db)).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }
+        override def delete(id: ItemId): IO[RepositoryError, Int] =
+          for {
+          result <- sql"""DELETE FROM items where id = $id""".update.run
+                      .transact(transactor)
+                      .refineOrDie { case e: Exception =>
+                        RepositoryError(e)
+                      }
+          _ <-   log.info(s"Deleted $result objects")
+        } yield result
 
-        val getAll: IO[RepositoryError, List[Item]] =
-          ZIO.fromDBIO(items.result).provideLayer(ZLayer.succeed(db)).map(_.toList).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
+        override def getAll: IO[RepositoryError, List[Item]] =
+          for {
+            result <- sql"""SELECT * FROM items """
+                        .query[Item]
+                        .to[List]
+                        .transact(transactor)
+                        .refineOrDie { case e: Exception =>
+                          RepositoryError(e)
+                        }
+            _ <-   log.info(s"Found ${result.size} results")
+          } yield result
 
-        def getById(id: ItemId): IO[RepositoryError, Option[Item]] = {
-          val query = items.filter(_.id === id).result
-      
-          ZIO.fromDBIO(query).provideLayer(ZLayer.succeed(db)).map(_.headOption).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }
+        override def getById(id: ItemId): ZIO[Any, RepositoryError, Option[Item]] =
+          for {
+            result <- sql"""SELECT * FROM Items where id = $id"""
+                        .query[Item]
+                        .option
+                        .transact(transactor)
+                        .refineOrDie { case e: Exception =>
+                          RepositoryError(e)
+                        }
+            _ <-   log.info(s"Found ${result}")
+          } yield result
 
-        def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]] = {
-          val query = items.filter(_.id inSet ids).result
-      
-          ZIO.fromDBIO(query).provideLayer(ZLayer.succeed(db)).map(_.toList).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }
+        import cats.implicits._
+        override def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]] =
+          for {
+            result <-
+              (fr"SELECT * FROM items where " ++ fr"IN (" ++ ids.toList.map(n => fr"$n").intercalate(fr",") ++ fr")")
+                .query[Item]
+                .to[List]
+                .transact(transactor)
+                .refineOrDie { case e: Exception =>
+                  RepositoryError(e)
+                }
+            _ <-   log.info(s"Found ${result.size} results ")
+          } yield result
 
-        $if(add_caliban_endpoint.truthy)$
-        def getByName(name: String): IO[RepositoryError, List[Item]] = {
-          val query = items.filter(_.name === name).result
-      
-          ZIO.fromDBIO(query).provideLayer(ZLayer.succeed(db)).map(_.toList).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }
+        override def getByName(name: String): IO[RepositoryError, List[Item]] = for {
+          result <- sql"""SELECT * FROM items where name = $name"""
+                      .query[Item]
+                      .to[List]
+                      .transact(transactor)
+                      .refineOrDie { case e: Exception =>
+                        RepositoryError(e)
+                      }
+          _ <-   log.info(s"Found ${result.size} results with name = $name")
+        } yield result
 
-        def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] = {
-          val query = items.filter(_.price < price).result
-      
-          ZIO.fromDBIO(query).provideLayer(ZLayer.succeed(db)).map(_.toList).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }
-        $endif$
+        override def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] = for {
+          result <- sql"""SELECT * FROM items where price  < $price """
+                      .query[Item]
+                      .to[List]
+                      .transact(transactor)
+                      .refineOrDie { case e: Exception =>
+                        RepositoryError(e)
+                      }
+          _ <-   log.info(s"Found ${result.size} results  cheaper then = $price")
+        } yield result
 
-        def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]] = {
-          val q      = items.filter(_.id === id).map(item => (item.name, item.price))
-          val update = q.update((data.name, data.price))
-      
-          val foundF = (n: Int) => if (n > 0) Some(()) else None
-      
-          log.info(s"Updating item \${id.value} to \$data") *>
-          ZIO.fromDBIO(update).provideLayer(ZLayer.succeed(db)).map(foundF).refineOrDie {
-            case e: Exception => RepositoryError(e)
-          }
-        }
+        override def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]] = for {
+          result <-  sql"""UPDATE items SET name = ${data.name} , price =  ${data.price} where id = $id ;""".update.run
+            .transact(transactor)
+            .map {
+              case 0 => None
+              case 1 => Some(())
+            }
+            .refineOrDie { case e: Exception =>
+              RepositoryError(e)
+            }
+        _ <-   log.info(s"Updated  $result with id = $id")
+        } yield result
       }
     }
 }
