@@ -41,6 +41,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           contentsCheck <- assertM(allItems)(equalTo(List(Item(ItemId(1), "name", 100.0))))
         } yield !contentsCheck
       },
+      $if(slick)$
       testM("Should not allow to add wrong data to db") {
         val name: String = ""
         val price: BigDecimal = null
@@ -49,6 +50,17 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           error <- ItemRepository.add(ItemData(name, price)).flip.orDieWith(flippingFailure)
         } yield assert(error.toString)(equalTo("RepositoryError(java.lang.NullPointerException)"))
       },
+      $endif$
+        $if(doobie)$
+        testM("Should not allow to add wrong data to db") {
+          val name: String      = ""
+          val price: BigDecimal = null
+          migrateDbSchema.useNow
+          for {
+            error <- ItemRepository.add(ItemData(name, price)).flip.orDieWith(flippingFailure)
+          } yield assert(error.toString)(equalTo("RepositoryError(java.lang.RuntimeException: oops, null)"))
+        },
+      $endif$
       $if(add_caliban_endpoint.truthy) $
       // def getItemByName
       testM("Get correct item by name ") {
