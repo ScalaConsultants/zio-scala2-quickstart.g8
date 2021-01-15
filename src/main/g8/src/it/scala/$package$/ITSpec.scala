@@ -60,7 +60,20 @@ object ITSpec {
           )
           config
         }
-
+      val tranactor: Layer[Throwable, Has[TransactorLayer]] =
+        config >>> ZLayer.fromServiceM { cfg: Config =>
+          for {
+            url    <- Task(cfg.getString("url"))
+            user   <- Task(cfg.getString("user"))
+            pwd    <- Task(cfg.getString("password"))
+            driver <- Task(cfg.getString("driver"))
+          } yield Transactor.fromDriverManager[Task](
+            driver, // driver classname
+            url,    // connect URL (driver-specific)
+            user,   // user
+            pwd     // password
+          )
+        }
       val dbProvider: ZLayer[Postgres with Any, Throwable, DatabaseProvider] =
         config ++ ZLayer.succeed(slick.jdbc.PostgresProfile.backend) >>> DatabaseProvider.live
 
