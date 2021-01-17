@@ -1,6 +1,8 @@
 val akkaHttpVersion       = "10.2.2"
 val akkaVersion           = "2.6.10"
+$if(slick.truthy)$
 val slickVersion          = "3.3.3"
+$endif$
 val zioVersion            = "1.0.3"
 val zioLoggingVersion     = "0.5.4"
 val zioConfigVersion      = "1.0.0-RC31-1"
@@ -43,8 +45,10 @@ val root = (project in file("."))
       "de.heikoseeberger"     %% "akka-http-play-json"             % "1.35.2",
       "com.typesafe.akka"     %% "akka-actor-typed"                % akkaVersion,
       "com.typesafe.akka"     %% "akka-stream"                     % akkaVersion,
-      "com.typesafe.slick"    %% "slick"                           % slickVersion,
+      $if(slick.truthy)$
+        "com.typesafe.slick"    %% "slick"                           % slickVersion,
       "com.typesafe.slick"    %% "slick-hikaricp"                  % slickVersion,
+      $endif$
       "dev.zio"               %% "zio"                             % zioVersion,
       "dev.zio"               %% "zio-streams"                     % zioVersion,
       "dev.zio"               %% "zio-config"                      % zioConfigVersion,
