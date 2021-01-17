@@ -1,7 +1,8 @@
-package com.example.infrastructure
+package $package$.infrastructure
 
 import $package$.domain._
 import doobie.implicits._
+import $package$.infrastructure.utilities.TransactorLayer
 import zio._
 import zio.interop.catz.taskConcurrentInstance
 import zio.logging._

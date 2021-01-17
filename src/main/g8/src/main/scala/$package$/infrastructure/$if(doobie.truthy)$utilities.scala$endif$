@@ -1,0 +1,10 @@
+package $package$.infrastructure
+
+import doobie.util.transactor.Transactor.Aux
+import zio.Task
+
+package object utilities {
+
+  type TransactorLayer = Aux[Task, Unit]
+
+}

@@ -1,6 +1,7 @@
 package $package$.infrastructure
 
-import com.example.domain.{ DbStatus, HealthCheck, RepositoryError, TransactorLayer }
+import $package$.domain.{DbStatus, HealthCheck, RepositoryError}
+import $package$.infrastructure.utilities.TransactorLayer
 import doobie.implicits._
 import zio._
 import zio.interop.catz.taskConcurrentInstance

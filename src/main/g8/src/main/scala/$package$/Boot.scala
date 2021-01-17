@@ -7,7 +7,12 @@ import akka.http.scaladsl.server.RouteConcatenation._
 $endif$
 import akka.http.scaladsl.server.Route
 import com.typesafe.config.{ Config, ConfigFactory }
+$if(slick.truthy)$
 import slick.interop.zio.DatabaseProvider
+$endif$
+$if(doobie.truthy)$
+import com.example.infrastructure.utilities.TransactorLayer
+$endif$
 $if(add_caliban_endpoint.truthy)$
 import zio.clock.Clock
 $endif$
@@ -107,7 +112,7 @@ object Boot extends App {
 
     $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
     val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = 
-      ( $if(slick.truthy)$ slickDbLayer ++     $endif$ $if(doobie.truthy)$  doobieLayer ++      $endif$ ++ subscriberLayer) >>> ApplicationService.live
+      ( $if(slick.truthy)$ slickDbLayer ++     $endif$ $if(doobie.truthy)$  doobieLayer ++      $endif$  subscriberLayer) >>> ApplicationService.live
     $else$
     val applicationLayer: ZLayer[Any, Throwable, ApplicationService] =
       $if(slick.truthy)$ slickDbLayer ++     $endif$ $if(doobie.truthy)$  doobieLayer ++      $endif$ >>> ApplicationService.live
