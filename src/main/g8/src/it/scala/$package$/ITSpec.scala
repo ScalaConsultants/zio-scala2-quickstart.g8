@@ -1,23 +1,17 @@
 package $package$
 
 import $package$.domain.ItemRepository
-import $package$.infrastructure.{EventSubscriber,
-  $if(doobie.truthy)$  DoobieItemRepository, $endif$
-  $if(slick.truthy)$   SlickItemRepository,$endif$
-  Postgres}
+import $package$.infrastructure._
 import $package$.infrastructure.Postgres.SchemaAwarePostgresContainer
 import $package$.infrastructure.flyway.FlywayProvider
 import com.typesafe.config.{ Config, ConfigFactory }
-import slick.interop.zio.DatabaseProvider
 import zio.blocking.Blocking
 import zio.duration.durationInt
 $if(slick.truthy)$
 import slick.interop.zio.DatabaseProvider
 $endif$
 $if(doobie.truthy)$
-import zio.interop.catz.{ taskConcurrentInstance, zioContextShift }
-import doobie.util.transactor.Transactor
-import doobie.util.transactor.Transactor.Aux
+import com.example.infrastructure.utilities.TransactorLayer£
 $endif$
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
