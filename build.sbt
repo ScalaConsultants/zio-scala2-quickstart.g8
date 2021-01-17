@@ -8,7 +8,10 @@ val zioConfigVersion      = "1.0.0-RC31-1"
 val flywayVersion         = "7.3.2"
 val testContainersVersion = "0.38.8"
 val calibanVersion        = "0.9.4"
+$if(doobie.truthy)$
+val catsInteropVersion        = "2.2.0.1"
 val doobieVersion = "0.9.0"
+$endif$
 
 lazy val It = config("it").extend(Test)
 
@@ -32,6 +35,11 @@ val root = (project in file("."))
     )(Resolver.ivyStylePatterns),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
+      $if(doobie.truthy)$
+        "org.tpolecat" %% "doobie-core"      % doobieVersion,
+      "org.tpolecat" %% "doobie-postgres"  %doobieVersion,
+      "dev.zio" %% "zio-interop-cats" % catsInteropVersion,
+      $endif$
       "org.tpolecat" %% "doobie-core"      % doobieVersion,
       "org.tpolecat" %% "doobie-postgres"  %doobieVersion,
       "com.typesafe.akka"     %% "akka-http"                       % akkaHttpVersion,

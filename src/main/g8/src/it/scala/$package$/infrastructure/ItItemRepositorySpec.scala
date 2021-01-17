@@ -41,7 +41,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           contentsCheck <- assertM(allItems)(equalTo(List(Item(ItemId(1), "name", 100.0))))
         } yield !contentsCheck
       },
-      $if(slick)$
+      $if(slick.truthy)$
       testM("Should not allow to add wrong data to db") {
         val name: String = ""
         val price: BigDecimal = null
@@ -51,7 +51,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
         } yield assert(error.toString)(equalTo("RepositoryError(java.lang.NullPointerException)"))
       },
       $endif$
-        $if(doobie)$
+        $if(doobie.truthy)$
         testM("Should not allow to add wrong data to db") {
           val name: String      = ""
           val price: BigDecimal = null

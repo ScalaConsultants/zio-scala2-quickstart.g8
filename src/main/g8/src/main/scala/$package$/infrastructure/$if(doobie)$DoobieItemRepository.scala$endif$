@@ -14,23 +14,23 @@ object DoobieItemRepository {
 
         override def add(data: ItemData): IO[RepositoryError, ItemId] =
           for {
-            querry <- sql"""INSERT INTO items (name, price) Values ( ${data.name},${data.price});""".update
+            querry <- sql"""INSERT INTO items (name, price) Values ( \${data.name},\${data.price});""".update
             .withUniqueGeneratedKeys[ItemId]("id")
             .transact(transactor)
             .refineOrDie { case e: Exception =>
               RepositoryError(e)
             }
-          _ <-   log.info(s"$querry wass added to database")
+          _ <-   log.info(s"\$querry wass added to database")
           } yield querry
 
         override def delete(id: ItemId): IO[RepositoryError, Int] =
           for {
-          result <- sql"""DELETE FROM items where id = $id""".update.run
+          result <- sql"""DELETE FROM items where id = \$id""".update.run
                       .transact(transactor)
                       .refineOrDie { case e: Exception =>
                         RepositoryError(e)
                       }
-          _ <-   log.info(s"Deleted $result objects")
+          _ <-   log.info(s"Deleted \$result objects")
         } yield result
 
         override def getAll: IO[RepositoryError, List[Item]] =
@@ -42,59 +42,59 @@ object DoobieItemRepository {
                         .refineOrDie { case e: Exception =>
                           RepositoryError(e)
                         }
-            _ <-   log.info(s"Found ${result.size} results")
+            _ <-   log.info(s"Found \${result.size} results")
           } yield result
 
         override def getById(id: ItemId): ZIO[Any, RepositoryError, Option[Item]] =
           for {
-            result <- sql"""SELECT * FROM Items where id = $id"""
+            result <- sql"""SELECT * FROM Items where id = \$id"""
                         .query[Item]
                         .option
                         .transact(transactor)
                         .refineOrDie { case e: Exception =>
                           RepositoryError(e)
                         }
-            _ <-   log.info(s"Found ${result}")
+            _ <-   log.info(s"Found \${result}")
           } yield result
 
         import cats.implicits._
         override def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]] =
           for {
             result <-
-              (fr"SELECT * FROM items where " ++ fr"IN (" ++ ids.toList.map(n => fr"$n").intercalate(fr",") ++ fr")")
+              (fr"SELECT * FROM items where " ++ fr"IN (" ++ ids.toList.map(n => fr"\$n").intercalate(fr",") ++ fr")")
                 .query[Item]
                 .to[List]
                 .transact(transactor)
                 .refineOrDie { case e: Exception =>
                   RepositoryError(e)
                 }
-            _ <-   log.info(s"Found ${result.size} results ")
+            _ <-   log.info(s"Found \${result.size} results ")
           } yield result
 
         override def getByName(name: String): IO[RepositoryError, List[Item]] = for {
-          result <- sql"""SELECT * FROM items where name = $name"""
+          result <- sql"""SELECT * FROM items where name = \$name"""
                       .query[Item]
                       .to[List]
                       .transact(transactor)
                       .refineOrDie { case e: Exception =>
                         RepositoryError(e)
                       }
-          _ <-   log.info(s"Found ${result.size} results with name = $name")
+          _ <-   log.info(s"Found \${result.size} results with name = \$name")
         } yield result
 
         override def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] = for {
-          result <- sql"""SELECT * FROM items where price  < $price """
+          result <- sql"""SELECT * FROM items where price  < \$price """
                       .query[Item]
                       .to[List]
                       .transact(transactor)
                       .refineOrDie { case e: Exception =>
                         RepositoryError(e)
                       }
-          _ <-   log.info(s"Found ${result.size} results  cheaper then = $price")
+          _ <-   log.info(s"Found \${result.size} results  cheaper then = \$price")
         } yield result
 
         override def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]] = for {
-          result <-  sql"""UPDATE items SET name = ${data.name} , price =  ${data.price} where id = $id ;""".update.run
+          result <-  sql"""UPDATE items SET name = \${data.name} , price =  \${data.price} where id = \$id ;""".update.run
             .transact(transactor)
             .map {
               case 0 => None
@@ -103,7 +103,7 @@ object DoobieItemRepository {
             .refineOrDie { case e: Exception =>
               RepositoryError(e)
             }
-        _ <-   log.info(s"Updated  $result with id = $id")
+        _ <-   log.info(s"Updated  \$result with id = \$id")
         } yield result
       }
     }

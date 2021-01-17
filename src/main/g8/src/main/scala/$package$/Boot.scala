@@ -76,7 +76,7 @@ object Boot extends App {
       loggingLayer >>> EventSubscriber.live
     $endif$
 
-    $if(doobie)$
+    $if(doobie.truthy)$
     val transactorLayer: Layer[Throwable, Has[TransactorLayer]] =
       dbConfigLayer >>> DoobieDatabaseProvider.tranactorLayer
 
@@ -88,7 +88,7 @@ object Boot extends App {
 
     $endif$
 
-    $if(slick)$
+    $if(slick.truthy)$
     val dbBackendLayer = ZLayer.succeed(slick.jdbc.PostgresProfile.backend)
 
     val dbProvider: ZLayer[Any, Throwable, DatabaseProvider] =
@@ -107,14 +107,14 @@ object Boot extends App {
 
     $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
     val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = 
-      ( $if(slick)$ slickDbLayer ++     $endif$ $if(doobie)$  doobieLayer ++      $endif$ ++ subscriberLayer) >>> ApplicationService.live
+      ( $if(slick.truthy)$ slickDbLayer ++     $endif$ $if(doobie.truthy)$  doobieLayer ++      $endif$ ++ subscriberLayer) >>> ApplicationService.live
     $else$
     val applicationLayer: ZLayer[Any, Throwable, ApplicationService] =
-      $if(slick)$ slickDbLayer ++     $endif$ $if(doobie)$  doobieLayer ++      $endif$ >>> ApplicationService.live
+      $if(slick.truthy)$ slickDbLayer ++     $endif$ $if(doobie.truthy)$  doobieLayer ++      $endif$ >>> ApplicationService.live
     $endif$
 
     val apiLayer: TaskLayer[Api] = 
-      (apiConfigLayer ++ applicationLayer ++ actorSystemLayer  ++   $if(slick)$ slickHealthCheckLayer ++     $endif$ $if(doobie)$  doobieHealthCheckLayer ++      $endif$ loggingLayer) >>> Api.live
+      (apiConfigLayer ++ applicationLayer ++ actorSystemLayer  ++   $if(slick.truthy)$ slickHealthCheckLayer ++     $endif$ $if(doobie.truthy)$  doobieHealthCheckLayer ++      $endif$ loggingLayer) >>> Api.live
 
     $if(add_caliban_endpoint.truthy)$
     val graphQLApiLayer: TaskLayer[GraphQLApi] =

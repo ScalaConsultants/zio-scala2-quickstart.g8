@@ -6,7 +6,7 @@ import zio._
 import zio.interop.catz.taskConcurrentInstance
 
 object DoobieHealthCheck {
-  $if(slick)$SlickHealthCheck.scala$endif$
+  $if(slick.truthy)$SlickHealthCheck.scala$endif$
   val live: RLayer[Has[TransactorLayer], HealthCheck] =
     ZLayer.fromService[TransactorLayer, HealthCheck.Service] { transactor =>
       new HealthCheck.Service {

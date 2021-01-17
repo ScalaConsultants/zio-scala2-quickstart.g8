@@ -2,8 +2,8 @@ package $package$
 
 import $package$.domain.ItemRepository
 import $package$.infrastructure.{EventSubscriber,
-  $if(doobie)$  DoobieItemRepository, $endif$
-  $if(slick)$   SlickItemRepository,$endif$
+  $if(doobie.truthy)$  DoobieItemRepository, $endif$
+  $if(slick.truthy)$   SlickItemRepository,$endif$
   Postgres}
 import $package$.infrastructure.Postgres.SchemaAwarePostgresContainer
 import $package$.infrastructure.flyway.FlywayProvider
@@ -11,10 +11,10 @@ import com.typesafe.config.{ Config, ConfigFactory }
 import slick.interop.zio.DatabaseProvider
 import zio.blocking.Blocking
 import zio.duration.durationInt
-$if(slick)$
+$if(slick.truthy)$
 import slick.interop.zio.DatabaseProvider
 $endif$
-$if(doobie)$
+$if(doobie.truthy)$
 import zio.interop.catz.{ taskConcurrentInstance, zioContextShift }
 import doobie.util.transactor.Transactor
 import doobie.util.transactor.Transactor.Aux
@@ -71,7 +71,7 @@ object ITSpec {
           )
           config
         }
-      $if(doobie)$
+      $if(doobie.truthy)$
       val tranactor: Layer[Throwable, Has[TransactorLayer]] =
       config >>> DoobieDatabaseProvider.tranactorLayer
 
@@ -80,7 +80,7 @@ object ITSpec {
         (tranactor ++ Logging.ignore) >>> DoobieItemRepository.live
 
       $endif$
-      $if(slick)$
+      $if(slick.truthy)$
       val dbProvider: Layer[Throwable, DatabaseProvider] =
         postgresLayer >>> config ++ ZLayer.succeed(slick.jdbc.PostgresProfile.backend) >>> DatabaseProvider.live
 
@@ -98,7 +98,7 @@ object ITSpec {
 
       val flyWayProvider = config >>> FlywayProvider.live
 
-      zio.test.environment.testEnvironment ++ flyWayProvider ++ logging      $if(doobie)$ ++ doobieWithContainerRepository   $endif$     $if(slick)$ ++ slickWithContainerRepository   $endif$
+      zio.test.environment.testEnvironment ++ flyWayProvider ++ logging      $if(doobie.truthy)$ ++ doobieWithContainerRepository   $endif$     $if(slick.truthy)$ ++ slickWithContainerRepository   $endif$
     }.orDie
 
      $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
