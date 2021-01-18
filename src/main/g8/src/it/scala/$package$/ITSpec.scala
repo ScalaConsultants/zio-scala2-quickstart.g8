@@ -11,7 +11,7 @@ $if(slick.truthy)$
 import slick.interop.zio.DatabaseProvider
 $endif$
 $if(doobie.truthy)$
-import com.example.infrastructure.utilities.TransactorLayer£
+import com.example.infrastructure.utilities.TransactorLayer
 $endif$
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
