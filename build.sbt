@@ -7,7 +7,7 @@ $endif$
 val zioVersion            = "1.0.3"
 val zioLoggingVersion     = "0.5.4"
 val zioConfigVersion      = "1.0.0-RC31-1"
-val flywayVersion         = "7.3.2"
+val flywayVersion         = "7.5.0"
 val testContainersVersion = "0.38.8"
 val calibanVersion        = "0.9.4"
 $if(doobie.truthy)$
@@ -45,7 +45,7 @@ val root = (project in file("."))
       "org.tpolecat" %% "doobie-core"      % doobieVersion,
       "org.tpolecat" %% "doobie-postgres"  %doobieVersion,
       "com.typesafe.akka"     %% "akka-http"                       % akkaHttpVersion,
-      "de.heikoseeberger"     %% "akka-http-play-json"             % "1.35.2",
+      "de.heikoseeberger"     %% "akka-http-play-json"             % "1.35.3",
       "com.typesafe.akka"     %% "akka-actor-typed"                % akkaVersion,
       "com.typesafe.akka"     %% "akka-stream"                     % akkaVersion,
       $if(slick.truthy)$
