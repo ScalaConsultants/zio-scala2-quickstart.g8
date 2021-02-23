@@ -1,6 +1,6 @@
 // Dependencies are needed for Scala Steward to check if there are newer versions
 val akkaHttpVersion       = "10.2.2"
-val akkaVersion           = "2.6.10"
+val akkaVersion           = "2.6.13"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.3"
 val zioLoggingVersion     = "0.5.4"
