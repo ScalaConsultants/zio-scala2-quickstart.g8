@@ -1,13 +1,13 @@
 // Dependencies are needed for Scala Steward to check if there are newer versions
 val akkaHttpVersion       = "10.2.4"
-val akkaVersion           = "2.6.14"
+val akkaVersion           = "2.6.12"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.3"
 val zioLoggingVersion     = "0.5.4"
 val zioConfigVersion      = "1.0.0-RC31-1"
 val flywayVersion         = "7.5.4"
 val testContainersVersion = "0.38.9"
-val calibanVersion        = "0.9.4"
+val calibanVersion        = "0.9.5"
 
 lazy val It = config("it").extend(Test)
 
