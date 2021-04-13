@@ -4,8 +4,8 @@ val akkaVersion           = "2.6.12"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.6"
 val zioLoggingVersion     = "0.5.8"
-val zioConfigVersion      = "1.0.0-RC31-1"
-val flywayVersion         = "7.5.4"
+val zioConfigVersion      = "1.0.4"
+val flywayVersion         = "7.7.3"
 val testContainersVersion = "0.38.9"
 val calibanVersion        = "0.9.5"
 
@@ -32,7 +32,7 @@ val root = (project in file("."))
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka"     %% "akka-http"                       % akkaHttpVersion,
-      "de.heikoseeberger"     %% "akka-http-play-json"             % "1.35.3",
+      "de.heikoseeberger"     %% "akka-http-play-json"             % "1.36.0",
       "com.typesafe.akka"     %% "akka-actor-typed"                % akkaVersion,
       "com.typesafe.akka"     %% "akka-stream"                     % akkaVersion,
       "com.typesafe.slick"    %% "slick"                           % slickVersion,
