@@ -1,12 +1,12 @@
 // Dependencies are needed for Scala Steward to check if there are newer versions
-val akkaHttpVersion       = "10.2.2"
+val akkaHttpVersion       = "10.2.4"
 val akkaVersion           = "2.6.14"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.3"
 val zioLoggingVersion     = "0.5.4"
 val zioConfigVersion      = "1.0.0-RC31-1"
 val flywayVersion         = "7.5.4"
-val testContainersVersion = "0.38.8"
+val testContainersVersion = "0.38.9"
 val calibanVersion        = "0.9.4"
 
 lazy val It = config("it").extend(Test)
@@ -48,7 +48,7 @@ val root = (project in file("."))
       "ch.qos.logback"         % "logback-classic"                 % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
-      "org.postgresql"         % "postgresql"                      % "42.2.18",
+      "org.postgresql"         % "postgresql"                      % "42.2.19",
       "org.flywaydb"           % "flyway-core"                     % flywayVersion,
       "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
       "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
