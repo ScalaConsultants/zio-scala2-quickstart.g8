@@ -1,12 +1,9 @@
 package $package$.domain
 
-import zio.{ UIO }
+import zio.UIO
 
-object HealthCheck {
+trait HealthCheck {
 
-  trait Service {
+  val healthCheck: UIO[DbStatus]
 
-    val healthCheck: UIO[DbStatus]
-
-  }
 }

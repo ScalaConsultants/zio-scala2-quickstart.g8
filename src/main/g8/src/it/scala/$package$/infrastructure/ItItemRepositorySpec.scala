@@ -3,10 +3,11 @@ package $package$.infrastructure
 import $package$.ITSpec.ITSpec
 import $package$.domain.{ ItemRepository, _ }
 import $package$.infrastructure.flyway.FlywayProvider
-import zio.ZIO
+import zio.{ Has, ZIO }
 import zio.test.Assertion._
 import zio.test.{ suite, testM, _ }
 import zio.test.TestAspect.before
+
 object ItItemRepositorySpec extends ITSpec(Some("items")) {
 
   val migrateDbSchema =
@@ -19,7 +20,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
       "Flipping failed! The referred effect was successful with `" + value + "` result of `" + value.getClass + "` type!"
     )
 
-  private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ItemRepository.getAll.mapError(_.asThrowable)
+  private def allItems: ZIO[Has[ItemRepository], Throwable, List[Item]] = ItemRepository.getAll.mapError(_.asThrowable)
 
   migrateDbSchema.useNow
   val spec: ITSpec =

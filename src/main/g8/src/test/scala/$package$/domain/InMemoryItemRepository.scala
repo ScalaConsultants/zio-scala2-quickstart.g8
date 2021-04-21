@@ -2,7 +2,7 @@ package $package$.domain
 
 import zio._
 
-final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemRepository.Service {
+final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemRepository {
   def add(data: ItemData): IO[RepositoryError, ItemId] =
     storage.modify { items =>
       val nextId = ItemId(
@@ -49,7 +49,7 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
 
 object InMemoryItemRepository {
 
-  val test: Layer[Nothing, ItemRepository] =
+  val test: Layer[Nothing, Has[ItemRepository]] =
     (for {
       storage <- Ref.make(List.empty[Item])
     } yield new InMemoryItemRepository(storage)).toLayer
