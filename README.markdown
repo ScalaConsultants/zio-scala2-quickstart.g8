@@ -19,8 +19,6 @@ Other notable integrations include:
 * `zio-config` for typesafe configuration.
 * `zio-test` for testing.
 
-Leverages [ZLayer][zlayer] and [ZManaged][zmanaged] to build dependency graph in a very visible, resource and type-safe way.
-
 ### Setting up the project
 
 ```bash
