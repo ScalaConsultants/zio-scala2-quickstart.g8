@@ -2,7 +2,7 @@ package $package$.api.graphql
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
-import $package$.api.GraphQLApi
+import $package$.api.graphql.GraphQLApi
 import $package$.application.ApplicationService
 import $package$.domain.{ InMemoryItemRepository, Item, ItemId }
 import $package$.infrastructure.InMemoryEventSubscriber
@@ -210,12 +210,12 @@ object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
     ZManaged.make(ZIO.effect(system).orDie)(s => ZIO.fromFuture(_ => s.terminate()).either)
   }
 
-  private val env: ULayer[GraphQLApi] =
+  private val env: ULayer[Has[GraphQLApi]] =
       ((InMemoryEventSubscriber.test ++ InMemoryItemRepository.test) >>> ApplicationService.live ++ systemLayer ++ Clock.live ++ Logging.ignore)  >>> GraphQLApi.live.orDie
 
   private def sendQueryAndCheckResult(query: String)(
     assertion: (StatusCode, ContentType, JsObject) => TestResult
-  ): ZIO[Blocking with GraphQLApi, Throwable, TestResult] =
+  ): ZIO[Blocking with Has[GraphQLApi], Throwable, TestResult] =
     for {
       routes  <- GraphQLApi.routes
       request = Post("/api/graphql").withEntity(HttpEntity(ContentTypes.`application/json`, query))

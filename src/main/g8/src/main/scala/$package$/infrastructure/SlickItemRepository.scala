@@ -11,9 +11,9 @@ import zio._
 
 object SlickItemRepository {
 
-  val live: RLayer[DatabaseProvider with Logging, ItemRepository] =
-    ZLayer.fromServices[DatabaseProvider.Service, Logger[String], ItemRepository.Service] { case (db, log) => 
-      new ItemRepository.Service with ItemsTable with Profile {
+  val live: RLayer[DatabaseProvider with Logging, Has[ItemRepository]] =
+    ZLayer.fromServices[DatabaseProvider.Service, Logger[String], ItemRepository] { case (db, log) => 
+      new ItemRepository with ItemsTable with Profile {
         type P = PostgresProfile
         override lazy val profile = PostgresProfile
         import profile.api._

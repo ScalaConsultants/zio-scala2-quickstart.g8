@@ -4,11 +4,10 @@ import zio._
 import zio.logging._
 import zio.stream.ZStream
 
-class EventSubscriber(env: Logging, deletedEventsSubscribers: Ref[List[Queue[ItemId]]]) extends Subscriber.Service {
+class EventSubscriber(env: Logging, deletedEventsSubscribers: Ref[List[Queue[ItemId]]]) extends Subscriber {
 
   def showDeleteEvents: ZStream[Any, Nothing, ItemId] = ZStream.unwrap {
     for {
-//      _                    <- log.info("unbounding Item with id ")
       queue: Queue[ItemId] <- Queue.unbounded[ItemId]
       _                    <- deletedEventsSubscribers.update(queue :: _)
     } yield ZStream.fromQueue(queue)
@@ -34,6 +33,6 @@ class EventSubscriber(env: Logging, deletedEventsSubscribers: Ref[List[Queue[Ite
 }
 object EventSubscriber {
 
-  val live: RLayer[Logging,Subscriber] =
+  val live: RLayer[Logging, Has[Subscriber]] =
     ZLayer.fromFunctionM(env => Ref.make(List.empty[Queue[ItemId]]).map(new EventSubscriber(env, _)))
 }

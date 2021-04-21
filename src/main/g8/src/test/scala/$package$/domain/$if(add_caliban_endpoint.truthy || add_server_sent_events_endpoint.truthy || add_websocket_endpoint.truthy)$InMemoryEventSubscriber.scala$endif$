@@ -3,7 +3,7 @@ import $package$.domain.{ Subscriber, ItemId }
 import zio._
 import zio.stream.ZStream
 
-class InMemoryEventSubscriber(deletedEventsSubscribers: Ref[List[Queue[ItemId]]]) extends Subscriber.Service {
+class InMemoryEventSubscriber(deletedEventsSubscribers: Ref[List[Queue[ItemId]]]) extends Subscriber {
 
   def showDeleteEvents: ZStream[Any, Nothing, ItemId] = ZStream.unwrap {
     for {
@@ -27,7 +27,7 @@ class InMemoryEventSubscriber(deletedEventsSubscribers: Ref[List[Queue[ItemId]]]
 }
 object InMemoryEventSubscriber {
 
-  val test: Layer[Nothing, Subscriber] = (for {
+  val test: Layer[Nothing, Has[Subscriber]] = (for {
     deleted <- Ref.make(List.empty[Queue[ItemId]])
   } yield new InMemoryEventSubscriber(deleted)).toLayer
 }
