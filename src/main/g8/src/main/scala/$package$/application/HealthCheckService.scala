@@ -1,11 +1,11 @@
 package $package$.application
 
-import zio.ZIO
+import zio.{ Has, ZIO }
 import $package$.domain._
 
 object HealthCheckService {
 
-  val healthCheck: ZIO[HealthCheck, Nothing, DbStatus] =
+  val healthCheck: ZIO[Has[HealthCheck], Nothing, DbStatus] =
     ZIO.accessM(_.get.healthCheck)
 
 }

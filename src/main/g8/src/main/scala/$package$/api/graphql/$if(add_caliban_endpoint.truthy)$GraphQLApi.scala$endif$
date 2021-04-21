@@ -12,7 +12,6 @@ import caliban.schema.GenericSchema
 import caliban.wrappers.ApolloTracing.apolloTracing
 import caliban.wrappers.Wrappers._
 import caliban.{ AkkaHttpAdapter, CalibanError, GraphQL, RootResolver }
-import $package$.api._
 import $package$.application.ApplicationService
 import $package$.domain._
 import zio._
@@ -22,11 +21,11 @@ import zio.logging._
 
 import scala.language.postfixOps
 
-object GraphQLApi extends GenericSchema[ApplicationService] {
+trait GraphQLApi {
+  def routes: Route
+}
 
-  trait Service {
-    def routes: Route
-  }
+object GraphQLApi extends GenericSchema[Has[ApplicationService]] {
 
   private final case class ItemName(name: String)
   private final case class ItemPrice(price: BigDecimal)
@@ -34,18 +33,18 @@ object GraphQLApi extends GenericSchema[ApplicationService] {
 
   private final case class Queries(
     @GQLDescription("Find items by name")
-    itemByName: ItemName => RIO[ApplicationService, List[Item]],
+    itemByName: ItemName => RIO[Has[ApplicationService], List[Item]],
     @GQLDescription("Find items cheaper than specified price")
-    cheaperThan: ItemPrice => RIO[ApplicationService, List[Item]],
+    cheaperThan: ItemPrice => RIO[Has[ApplicationService], List[Item]],
     @GQLDescription("Get all items")
-    allItems: RIO[ApplicationService, List[Item]],
+    allItems: RIO[Has[ApplicationService], List[Item]],
     @GQLDescription("Get item by ID")
-    item: ItemId => RIO[ApplicationService, Option[Item]]
+    item: ItemId => RIO[Has[ApplicationService], Option[Item]]
   )
 
   private final case class Mutations(
-    addItem: ItemInput => RIO[ApplicationService, ItemId],
-    deleteItem: ItemId => RIO[ApplicationService, Int]
+    addItem: ItemInput => RIO[Has[ApplicationService], ItemId],
+    deleteItem: ItemId => RIO[Has[ApplicationService], Int]
   )
 
   private val slowQueriesHandler: (Duration, String) => URIO[Logging, Unit] = (time, query) => {
@@ -54,10 +53,10 @@ object GraphQLApi extends GenericSchema[ApplicationService] {
     }
   }
 
-  private def runService[A](f: ZIO[ApplicationService, DomainError, A]): RIO[ApplicationService, A] =
+  private def runService[A](f: ZIO[Has[ApplicationService], DomainError, A]): RIO[Has[ApplicationService], A] =
     f.mapError(_.asThrowable)
 
-  private val api: GraphQL[Clock with Logging with ApplicationService] = {
+  private val api: GraphQL[Clock with Logging with Has[ApplicationService]] = {
     graphQL(
       RootResolver(
         Queries(
@@ -82,29 +81,29 @@ object GraphQLApi extends GenericSchema[ApplicationService] {
   val live =
     ZLayer.fromServicesM[
       Logger[String],
-      ApplicationService.Service,
+      ApplicationService,
       ActorSystem,
       Clock with Logging,
       CalibanError.ValidationError,
-      GraphQLApi.Service
+      GraphQLApi
     ] { (logger, applicationService, actorSystem) =>
       implicit val system  = actorSystem
       implicit val ec      = system.dispatcher
       implicit val runtime = Runtime.default.map(_ ++ Has(logger) ++ Has(applicationService))
       val adapter          = AkkaHttpAdapter(new PlayJsonBackend)
       api.interpreter.map { interpreter =>
-        new Service {
+        new GraphQLApi {
           def routes: Route =
             path("api" / "graphql") {
               adapter.makeHttpService(interpreter)
             } ~
-              path("graphiql") {
-                getFromResource("graphql/graphiql.html")
-              }
+            path("graphiql") {
+              getFromResource("graphql/graphiql.html")
+            }
         }
       }
     }
 
   // accessors
-  val routes: URIO[GraphQLApi, Route] = ZIO.access[GraphQLApi](a => Route.seal(a.get.routes))
+  val routes: URIO[Has[GraphQLApi], Route] = ZIO.access[Has[GraphQLApi]](a => Route.seal(a.get.routes))
 }
