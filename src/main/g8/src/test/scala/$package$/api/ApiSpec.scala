@@ -11,6 +11,7 @@ import zio._
 import zio.blocking._
 import zio.clock.Clock
 import $package$.api.JsonSupport._
+import $package$.api.healthcheck._
 import $package$.application.ApplicationService
 import $package$.domain._
 import $package$.interop.akka.ZioRouteTest
@@ -43,7 +44,7 @@ object ApiSpec extends ZioRouteTest {
     ((InMemoryItemRepository.test$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ ++ InMemoryEventSubscriber.test$endif$) >>> ApplicationService.live) ++ 
       loggingLayer ++ 
       $if(add_websocket_endpoint.truthy)$ZLayer.succeed(system) ++ $endif$
-      InMemoryHealthCheck.test ++ 
+      InMemoryHealthCheckService.test ++ 
       ZLayer.succeed(HttpServer.Config("localhost", 8080))
   ) >>> Api.live.passthrough
 

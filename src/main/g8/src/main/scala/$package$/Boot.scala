@@ -18,12 +18,13 @@ import zio.logging._
 import zio.logging.slf4j._
 import zio._
 import $package$.api._
+import $package$.api.healthcheck.HealthCheckService
 $if(add_caliban_endpoint.truthy)$
 import $package$.api.graphql.GraphQLApi
 $endif$
 import $package$.application.ApplicationService
 import $package$.config.AppConfig
-import $package$.domain.{HealthCheck, ItemRepository}
+import $package$.domain.ItemRepository
 $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import $package$.domain.Subscriber
 $endif$
@@ -84,9 +85,9 @@ object Boot extends App {
     val dbLayer: TaskLayer[Has[ItemRepository]] =
       (dbProvider ++ loggingLayer) >>> SlickItemRepository.live
 
-    val healthCheckLayer: TaskLayer[Has[HealthCheck]] =
-      (dbProvider ++ loggingLayer) >>> SlickHealthCheck.live
-
+    val healthCheckLayer: TaskLayer[Has[HealthCheckService]] =
+      dbProvider >>> SlickHealthCheckService.live
+      
     val flywayLayer: TaskLayer[Has[FlywayProvider]] = 
       dbConfigLayer >>> FlywayProvider.live
 
