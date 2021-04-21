@@ -27,15 +27,15 @@ import akka.http.scaladsl.model.ws.{ Message, TextMessage }
 import scala.util.{ Try, Success, Failure }
 $endif$
 
+trait Api {
+  def routes: Route
+}
+
 object Api {
 
-  trait Service {
-    def routes: Route
-  }
-
   val live: ZLayer[Has[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$
-    with ApplicationService with Logging with HealthCheck, Nothing, Api] = ZLayer.fromFunction(env =>
-    new Service with JsonSupport with ZIOSupport {
+    with Has[ApplicationService] with Logging with Has[HealthCheck], Nothing, Has[Api]] = ZLayer.fromFunction(env =>
+    new Api with JsonSupport with ZIOSupport {
 
       def routes: Route = itemRoute
 
@@ -169,5 +169,5 @@ object Api {
   )
 
   // accessors
-  val routes: URIO[Api, Route] = ZIO.access[Api](a => Route.seal(a.get.routes))
+  val routes: URIO[Has[Api], Route] = ZIO.access[Has[Api]](a => Route.seal(a.get.routes))
 }

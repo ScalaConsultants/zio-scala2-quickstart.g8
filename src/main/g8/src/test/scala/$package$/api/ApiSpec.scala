@@ -49,9 +49,9 @@ object ApiSpec extends ZioRouteTest {
 
   private val env = apiLayer ++ Blocking.live ++ Clock.live ++ Annotations.live
 
-  private def allItems: ZIO[ApplicationService, Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
+  private def allItems: ZIO[Has[ApplicationService], Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
 
-  private val specs: Spec[ApplicationService with Blocking with Api with Clock with Annotations, TestFailure[Throwable], TestSuccess] =
+  private val specs: Spec[Has[ApplicationService] with Blocking with Has[Api] with Clock with Annotations, TestFailure[Throwable], TestSuccess] =
     suite("Api")(
       testM("Health check on Get to '/healthcheck'") {
         for {
