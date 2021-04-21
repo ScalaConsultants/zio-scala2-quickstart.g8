@@ -9,7 +9,8 @@ import akka.http.scaladsl.model.StatusCodes.NoContent
 import play.api.libs.json.JsObject
 import zio._
 import zio.logging._
-import $package$.application.{ ApplicationService, HealthCheckService }
+import $package$.api.healthcheck.HealthCheckService
+import $package$.application.ApplicationService
 import $package$.domain._
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import zio.interop.reactivestreams._
@@ -34,7 +35,7 @@ trait Api {
 object Api {
 
   val live: ZLayer[Has[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$
-    with Has[ApplicationService] with Logging with Has[HealthCheck], Nothing, Has[Api]] = ZLayer.fromFunction(env =>
+    with Has[ApplicationService] with Logging with Has[HealthCheckService], Nothing, Has[Api]] = ZLayer.fromFunction(env =>
     new Api with JsonSupport with ZIOSupport {
 
       def routes: Route = itemRoute
