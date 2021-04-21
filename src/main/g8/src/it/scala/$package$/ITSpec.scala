@@ -21,8 +21,9 @@ import scala.jdk.CollectionConverters.MapHasAsJava
 
 object ITSpec {
   type Postgres = Has[SchemaAwarePostgresContainer]
-  type ITEnv    = TestEnvironment with FlywayProvider with Logging with ItemRepository
-  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ with Subscriber
+  type ITEnv    = TestEnvironment with Has[FlywayProvider] with Logging with Has[ItemRepository]
+  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$  with Has[Subscriber]
+  
   $endif$
 
   abstract class ITSpec(schema: Option[String] = None) extends RunnableSpec[ITEnv, Any] {
@@ -37,12 +38,12 @@ object ITSpec {
     val blockingLayer: Layer[Nothing, Blocking]       = Blocking.live
     val postgresLayer: ZLayer[Any, Nothing, Postgres] = blockingLayer >>> Postgres.postgres(schema)
     $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-    val subscriberLayer: ZLayer[Any, Nothing, Subscriber] = Logging.ignore  >>> EventSubscriber.live.orDie
+    val subscriberLayer: ZLayer[Any, Nothing, Has[Subscriber]] = Logging.ignore  >>> EventSubscriber.live.orDie
     $endif$
     val dbLayer: ZLayer[
       Any with Postgres with Blocking,
       Nothing,
-      TestEnvironment with FlywayProvider with Logging with ItemRepository
+      TestEnvironment with Has[FlywayProvider] with Logging with Has[ItemRepository]
     ] = {
 
       val config: ZLayer[Postgres, Nothing, Has[Config]] = ZLayer
@@ -72,7 +73,7 @@ object ITSpec {
       val containerDatabaseProvider: ZLayer[Blocking, Throwable, DatabaseProvider] =
         blockingLayer >>> postgresLayer >>> dbProvider
 
-      val containerRepository: ZLayer[Blocking, Throwable, ItemRepository] =
+      val containerRepository: ZLayer[Blocking, Throwable, Has[ItemRepository]] =
         (Logging.ignore ++ containerDatabaseProvider) >>> SlickItemRepository.live
 
       val logging = Slf4jLogger.make { (context, message) =>

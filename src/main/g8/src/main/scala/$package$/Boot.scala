@@ -37,7 +37,7 @@ object Boot extends App {
       .flatMap(rawConfig => program.provideCustomLayer(prepareEnvironment(rawConfig)))
       .exitCode
 
-  private val program: RIO[HttpServer with FlywayProvider with ZEnv, Unit] = {
+  private val program: RIO[HttpServer with Has[FlywayProvider] with ZEnv, Unit] = {
     val startHttpServer =
       HttpServer.start.tapM(_ => putStrLn("Server online."))
 
@@ -51,7 +51,7 @@ object Boot extends App {
     (startHttpServer *> migrateDbSchema).useForever
   }
 
-  private def prepareEnvironment(rawConfig: Config): TaskLayer[HttpServer with FlywayProvider] = {
+  private def prepareEnvironment(rawConfig: Config): TaskLayer[HttpServer with Has[FlywayProvider]] = {
     val configLayer = TypesafeConfig.fromTypesafeConfig(rawConfig, AppConfig.descriptor)
 
     // using raw config since it's recommended and the simplest to work with slick
@@ -74,43 +74,45 @@ object Boot extends App {
     }
 
     $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-    val subscriberLayer: TaskLayer[Subscriber] = 
+    val subscriberLayer: TaskLayer[Has[Subscriber]] = 
       loggingLayer >>> EventSubscriber.live
     $endif$
 
     val dbProvider: ZLayer[Any, Throwable, DatabaseProvider] =
       (dbConfigLayer ++ dbBackendLayer) >>> DatabaseProvider.live
 
-    val dbLayer: TaskLayer[ItemRepository] =
+    val dbLayer: TaskLayer[Has[ItemRepository]] =
       (dbProvider ++ loggingLayer) >>> SlickItemRepository.live
 
-    val healthCheckLayer: TaskLayer[HealthCheck] =
+    val healthCheckLayer: TaskLayer[Has[HealthCheck]] =
       (dbProvider ++ loggingLayer) >>> SlickHealthCheck.live
 
-    val flywayLayer: TaskLayer[FlywayProvider] = 
+    val flywayLayer: TaskLayer[Has[FlywayProvider]] = 
       dbConfigLayer >>> FlywayProvider.live
 
     $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-    val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = 
+    val applicationLayer: ZLayer[Any, Throwable, Has[ApplicationService]] = 
       (dbLayer ++ subscriberLayer) >>> ApplicationService.live
+
     $else$
-    val applicationLayer: ZLayer[Any, Throwable, ApplicationService] = 
+    val applicationLayer: ZLayer[Any, Throwable, Has[ApplicationService]] = 
       dbLayer >>> ApplicationService.live
     $endif$
 
-    val apiLayer: TaskLayer[Api] = 
+    val apiLayer: TaskLayer[Has[Api]] = 
       (apiConfigLayer ++ applicationLayer ++ actorSystemLayer ++ healthCheckLayer ++ loggingLayer) >>> Api.live
 
     $if(add_caliban_endpoint.truthy)$
-    val graphQLApiLayer: TaskLayer[GraphQLApi] =
+    val graphQLApiLayer: TaskLayer[Has[GraphQLApi]] =
       (applicationLayer ++ actorSystemLayer ++ loggingLayer ++ Clock.live) >>> GraphQLApi.live
     $endif$
 
-    val routesLayer: URLayer[Api$if(add_caliban_endpoint.truthy)$ with GraphQLApi$endif$, Has[Route]] =
+    val routesLayer: URLayer[Has[Api]$if(add_caliban_endpoint.truthy)$ with Has[GraphQLApi]$endif$, Has[Route]] =
     $if(add_caliban_endpoint.truthy)$
-      ZLayer.fromServices[Api.Service, api.graphql.GraphQLApi.Service, Route] { (api, gApi) =>
+      ZLayer.fromServices[Api, GraphQLApi, Route] { (api, gApi) =>
         api.routes ~ gApi.routes
       }
+
     $else$
       ZLayer.fromService(_.routes)
     $endif$

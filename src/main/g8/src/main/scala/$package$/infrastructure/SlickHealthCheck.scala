@@ -9,7 +9,7 @@ import zio.logging._
 import zio._
 
 final class SlickHealthCheck(env: DatabaseProvider with Logging)
-    extends HealthCheck.Service
+    extends HealthCheck
     with ItemsTable
     with Profile {
   type P = PostgresProfile
@@ -33,6 +33,6 @@ final class SlickHealthCheck(env: DatabaseProvider with Logging)
 
 object SlickHealthCheck {
 
-  val live: RLayer[DatabaseProvider with Logging, HealthCheck] =
+  val live: RLayer[DatabaseProvider with Logging, Has[HealthCheck]] =
     ZLayer.fromFunctionM(env => ZIO.succeed(new SlickHealthCheck(env)))
 }
