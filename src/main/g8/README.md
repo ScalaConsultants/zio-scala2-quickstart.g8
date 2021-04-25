@@ -2,7 +2,7 @@
 
 The application server expects a PostgresQL database to run Flyway migrations. If it can't find one it'll retry forever until successful. This way it doesn't matter what is started first - the application or the database.
 
-### Database server
+#### Database server
 
 Run the local development database with docker. Replace values for `POSTGRES_DB` and `POSTGRES_PASSWORD` according to your settings.
 ```bash
@@ -19,7 +19,7 @@ Connect with docker:
 docker exec -it testdb psql -U postgres -d items
 ```
 
-### Application server
+#### Application server
 
 To run the application locally:
 ```bash
@@ -39,3 +39,60 @@ You can override the defaults with the following environment variables:
 - DB_NAME
 - DB_USER
 - DB_PASSWORD
+
+## Calling the endpoints
+
+Add new Item:
+
+```bash
+curl --request POST \
+  --url http://localhost:8080/items \
+  --header 'content-type: application/json' \
+  --data '{
+	"name":"BigMac",
+	"price": 10.0
+}'
+```
+
+Get all Items:
+
+```bash
+curl --request GET \
+  --url http://localhost:8080/items
+```
+
+Get single Item:
+
+```bash
+curl --request GET \
+  --url http://localhost:8080/items/1
+```
+
+Update Item:
+
+```bash
+curl --request PUT \
+  --url http://localhost:8080/items/1 \
+  --header 'content-type: application/json' \
+  --data '{
+	"name":"BigKing",
+	"price": 12.0
+}'
+```
+
+Detele Item:
+
+```bash
+curl --request DELETE \
+  --url http://localhost:8080/items/1
+```
+
+## Database schema evolution
+
+Schema evolution is done using Flyway. The scripts are kept in `resources/db/migration`.
+
+Read more [here](https://flywaydb.org/documentation/)
+
+## Creating a docker image
+
+//TODO
