@@ -8,6 +8,7 @@ $endif$
 import akka.http.scaladsl.server.Route
 import com.typesafe.config.{ Config, ConfigFactory }
 import slick.interop.zio.DatabaseProvider
+import slick.jdbc.JdbcProfile
 $if(add_caliban_endpoint.truthy)$
 import zio.clock.Clock
 $endif$
@@ -57,7 +58,7 @@ object Boot extends App {
 
     // using raw config since it's recommended and the simplest to work with slick
     val dbConfigLayer  = ZLayer.fromEffect(ZIO(rawConfig.getConfig("db")))
-    val dbBackendLayer = ZLayer.succeed(slick.jdbc.PostgresProfile.backend)
+    val dbBackendLayer = ZLayer.succeed[JdbcProfile](slick.jdbc.PostgresProfile)
 
     // narrowing down to the required part of the config to ensure separation of concerns
     val apiConfigLayer = configLayer.map(c => Has(c.get.api))
@@ -79,7 +80,7 @@ object Boot extends App {
       loggingLayer >>> EventSubscriber.live
     $endif$
 
-    val dbProvider: ZLayer[Any, Throwable, DatabaseProvider] =
+    val dbProvider: ZLayer[Any, Throwable, Has[DatabaseProvider]] =
       (dbConfigLayer ++ dbBackendLayer) >>> DatabaseProvider.live
 
     val dbLayer: TaskLayer[Has[ItemRepository]] =
