@@ -4,8 +4,7 @@ import $package$.domain.ItemId
 import slick.jdbc.JdbcProfile
 
 trait Profile {
-  type P <: JdbcProfile
-  val profile: P
+  val profile: JdbcProfile
 }
 
 trait EntityIdMappers {
