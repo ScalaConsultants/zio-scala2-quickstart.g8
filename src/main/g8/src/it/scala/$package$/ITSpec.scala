@@ -6,6 +6,7 @@ import $package$.infrastructure.Postgres.SchemaAwarePostgresContainer
 import $package$.infrastructure.flyway.FlywayProvider
 import com.typesafe.config.{ Config, ConfigFactory }
 import slick.interop.zio.DatabaseProvider
+import slick.jdbc.JdbcProfile
 import zio.blocking.Blocking
 import zio.duration.durationInt
 import zio.logging._
@@ -62,15 +63,15 @@ object ITSpec {
           config
         }
 
-      val dbProvider: ZLayer[Postgres with Any, Throwable, DatabaseProvider] =
-        config ++ ZLayer.succeed(slick.jdbc.PostgresProfile.backend) >>> DatabaseProvider.live
+      val dbProvider: ZLayer[Postgres with Any, Throwable, Has[DatabaseProvider]] =
+        config ++ ZLayer.succeed[JdbcProfile](slick.jdbc.PostgresProfile) >>> DatabaseProvider.live
 
       val flyWayProvider = config >>> FlywayProvider.live
 
       val postgresLayer = Postgres.postgres(schema)
       val blockingLayer = Blocking.live
 
-      val containerDatabaseProvider: ZLayer[Blocking, Throwable, DatabaseProvider] =
+      val containerDatabaseProvider: ZLayer[Blocking, Throwable, Has[DatabaseProvider]] =
         blockingLayer >>> postgresLayer >>> dbProvider
 
       val containerRepository: ZLayer[Blocking, Throwable, Has[ItemRepository]] =
