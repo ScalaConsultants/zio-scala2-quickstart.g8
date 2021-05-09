@@ -40,6 +40,20 @@ You can override the defaults with the following environment variables:
 - DB_USER
 - DB_PASSWORD
 
+## Testing
+
+Run unit tests: 
+```
+sbt test
+```
+
+Run integration tests:
+```
+sbt it:test
+```
+
+The integration tests are using [testcontainers](https://www.testcontainers.org/) to run dockerized PostgrSQL instance and Flyway to apply schema evolutions before running the tests.
+
 ## Calling the endpoints
 
 Add new Item:
@@ -89,10 +103,16 @@ curl --request DELETE \
 
 ## Database schema evolution
 
-Schema evolution is done using Flyway. The scripts are kept in `resources/db/migration`.
+Schema evolution is done using Flyway.
 
-Read more [here](https://flywaydb.org/documentation/)
+To add more evolutions add the new scripts to `resources/db/migration`.
+
+Read more about Flyway [here](https://flywaydb.org/documentation/).
 
 ## Creating a docker image
 
-//TODO
+This project is configured with [sbt-native-packager](https://www.scala-sbt.org/sbt-native-packager/). To publish a docker image to your local docker repository run:
+```
+sbt docker:publishLocal
+```
+This will create an image with name `$name$:<version>`.
