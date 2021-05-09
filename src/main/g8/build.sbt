@@ -1,7 +1,7 @@
 val akkaHttpVersion       = "10.2.4"
 val akkaVersion           = "2.6.12"
 val slickVersion          = "3.3.3"
-val zioVersion            = "1.0.6"
+val zioVersion            = "1.0.7"
 val zioLoggingVersion     = "0.5.8"
 val zioConfigVersion      = "1.0.4"
 val flywayVersion         = "7.8.2"
@@ -44,7 +44,7 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-config-typesafe"             % zioConfigVersion,
       "io.scalac"             %% "zio-akka-http-interop"           % "0.4.0",
       "io.scalac"             %% "zio-slick-interop"               % "0.3.0",
-      "dev.zio"               %% "zio-interop-reactivestreams"     % "1.3.3",
+      "dev.zio"               %% "zio-interop-reactivestreams"     % "1.3.4",
       "ch.qos.logback"        % "logback-classic"                  % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
