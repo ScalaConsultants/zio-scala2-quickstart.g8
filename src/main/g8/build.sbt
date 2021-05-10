@@ -7,7 +7,7 @@ val zioConfigVersion      = "1.0.4"
 val flywayVersion         = "7.8.2"
 val testContainersVersion = "0.39.3"
 $if(add_caliban_endpoint.truthy)$
-val calibanVersion        = "0.9.5"
+val calibanVersion        = "0.10.0"
 $endif$
 
 val dockerReleaseSettings = Seq(
