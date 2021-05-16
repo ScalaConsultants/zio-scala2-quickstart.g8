@@ -3,9 +3,9 @@ val akkaVersion           = "2.6.12"
 val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.7"
 val zioLoggingVersion     = "0.5.8"
-val zioConfigVersion      = "1.0.4"
-val flywayVersion         = "7.8.2"
-val testContainersVersion = "0.39.3"
+val zioConfigVersion      = "1.0.5"
+val flywayVersion         = "7.9.0"
+val testContainersVersion = "0.39.4"
 $if(add_caliban_endpoint.truthy)$
 val calibanVersion        = "0.10.0"
 $endif$
