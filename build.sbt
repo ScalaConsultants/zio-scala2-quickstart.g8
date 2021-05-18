@@ -44,7 +44,7 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-config-typesafe"             % zioConfigVersion,
       "io.scalac"             %% "zio-akka-http-interop"           % "0.4.0",
       "io.scalac"             %% "zio-slick-interop"               % "0.3.0",
-      "dev.zio"               %% "zio-interop-reactivestreams"     % "1.3.4",
+      "dev.zio"               %% "zio-interop-reactivestreams"     % "1.3.5",
       "ch.qos.logback"         % "logback-classic"                 % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
