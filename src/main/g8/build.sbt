@@ -4,7 +4,7 @@ val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.8"
 val zioLoggingVersion     = "0.5.8"
 val zioConfigVersion      = "1.0.5"
-val flywayVersion         = "7.9.0"
+val flywayVersion         = "7.9.1"
 val testContainersVersion = "0.39.4"
 $if(add_caliban_endpoint.truthy)$
 val calibanVersion        = "0.9.5"
@@ -44,7 +44,7 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-config-typesafe"             % zioConfigVersion,
       "io.scalac"             %% "zio-akka-http-interop"           % "0.4.0",
       "io.scalac"             %% "zio-slick-interop"               % "0.3.0",
-      "dev.zio"               %% "zio-interop-reactivestreams"     % "1.3.4",
+      "dev.zio"               %% "zio-interop-reactivestreams"     % "1.3.5",
       "ch.qos.logback"        % "logback-classic"                  % "1.2.3",
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
