@@ -15,7 +15,7 @@ object SlickHealthCheckService {
           import profile.api._
 
           val healthCheck: UIO[DbStatus] = {
-            val query = sqlu"""select 1"""
+            val query = sql"""select 1""".as[Int]
             ZIO
               .fromDBIO(query)
               .provide(Has(db))
