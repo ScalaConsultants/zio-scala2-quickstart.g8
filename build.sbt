@@ -2,10 +2,10 @@
 val akkaHttpVersion       = "10.2.4"
 val akkaVersion           = "2.6.14"
 val slickVersion          = "3.3.3"
-val zioVersion            = "1.0.8"
+val zioVersion            = "1.0.9"
 val zioLoggingVersion     = "0.5.10"
 val zioConfigVersion      = "1.0.6"
-val flywayVersion         = "7.9.1"
+val flywayVersion         = "7.9.2"
 val testContainersVersion = "0.39.5"
 val calibanVersion        = "1.0.1"
 
