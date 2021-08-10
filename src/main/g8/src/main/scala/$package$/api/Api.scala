@@ -148,7 +148,7 @@ object Api {
                           unsafeRunToFuture(
                             ApplicationService
                               .getItem(ItemId(value))
-                              .bimap(
+                              .mapBoth(
                                 _.asThrowable,
                                 o => Source(o.toList.map(i => TextMessage(i.toString)))
                               )
