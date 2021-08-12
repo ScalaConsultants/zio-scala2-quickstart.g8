@@ -16,7 +16,7 @@ psql -h localhost -U postgres -d items
 
 Connect with docker:
 ```bash
-docker exec -it testdb psql -U postgres -d items
+docker exec -it devdb psql -U postgres -d items
 ```
 
 #### Application server
