@@ -6,7 +6,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.{Framing, Sink, Source}
 import akka.util.ByteString
-import play.api.libs.json.JsObject
+import de.heikoseeberger.akkahttpziojson.ZioJsonSupport
 import zio._
 import zio.blocking._
 import zio.clock.Clock
@@ -31,7 +31,7 @@ import $package$.infrastructure.InMemoryEventSubscriber
 $endif$
 
 object ApiSpec extends ZioRouteTest {
-
+  import ZioJsonSupport._
   private val loggingLayer: ULayer[Logging] = Slf4jLogger.make { (context, message) =>
       val logFormat = "[correlation-id = %s] %s"
       val correlationId = LogAnnotation.CorrelationId.render(
@@ -107,7 +107,7 @@ object ApiSpec extends ZioRouteTest {
         } yield resultCheck && contentsCheck
       },
       testM("Not allow malformed json on POST to '/items'") {
-        val item = JsObject.empty
+        val item = EmptyResponse()
         for {
           routes  <- Api.routes
           entity  <- ZIO.fromFuture(_ => Marshal(item).to[MessageEntity])

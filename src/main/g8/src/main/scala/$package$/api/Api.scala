@@ -6,9 +6,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.interop._
 import akka.http.scaladsl.model.StatusCodes.NoContent
-import play.api.libs.json.JsObject
 import zio._
 import zio.logging._
+import de.heikoseeberger.akkahttpziojson.ZioJsonSupport
 import $package$.api.healthcheck.HealthCheckService
 import $package$.application.ApplicationService
 import $package$.domain._
@@ -33,7 +33,7 @@ trait Api {
 }
 
 object Api {
-
+  import ZioJsonSupport._
   val live: ZLayer[Has[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$
     with Has[ApplicationService] with Logging with Has[HealthCheckService], Nothing, Has[Api]] = ZLayer.fromFunction(env =>
     new Api with JsonSupport with ZIOSupport {
@@ -76,7 +76,7 @@ object Api {
                     ApplicationService
                       .deleteItem(ItemId(itemId))
                       .provide(env)
-                      .as(JsObject.empty)
+                      .as(EmptyResponse())
                   )
                 } ~
                 get {
@@ -88,7 +88,7 @@ object Api {
                       ApplicationService
                         .partialUpdateItem(ItemId(itemId), req.name, req.price)
                         .provide(env)
-                        .as(JsObject.empty)
+                        .as(EmptyResponse())
                     )
                   }
                 } ~
@@ -98,7 +98,7 @@ object Api {
                       ApplicationService
                         .updateItem(ItemId(itemId), req.name, req.price)
                         .provide(env)
-                        .as(JsObject.empty)
+                        .as(EmptyResponse())
                     )
                   }
                 }

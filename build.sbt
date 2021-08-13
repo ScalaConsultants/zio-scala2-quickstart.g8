@@ -13,7 +13,8 @@ val postgresVersion       = "42.2.23"
 val logbackClassicVersion = "1.2.5"
 val zioSlickInterop       = "0.3.0"
 val zioAkkaHttpInterop    = "0.4.0"
-val akkaHttpPlayJson      = "1.37.0"
+val zioJsonVersion        = "0.1.5"
+val akkaHttpZioJson       = "1.37.0"
 
 lazy val It = config("it").extend(Test)
 
@@ -38,11 +39,12 @@ val root = (project in file("."))
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
       "com.typesafe.akka"     %% "akka-http"                       % akkaHttpVersion,
-      "de.heikoseeberger"     %% "akka-http-play-json"             % akkaHttpPlayJson,
       "com.typesafe.akka"     %% "akka-actor-typed"                % akkaVersion,
       "com.typesafe.akka"     %% "akka-stream"                     % akkaVersion,
       "com.typesafe.slick"    %% "slick"                           % slickVersion,
       "com.typesafe.slick"    %% "slick-hikaricp"                  % slickVersion,
+      "dev.zio"               %% "zio-json"                        % zioJsonVersion,
+      "de.heikoseeberger"     %% "akka-http-zio-json"              % akkaHttpZioJson,
       "dev.zio"               %% "zio"                             % zioVersion,
       "dev.zio"               %% "zio-streams"                     % zioVersion,
       "dev.zio"               %% "zio-config"                      % zioConfigVersion,
