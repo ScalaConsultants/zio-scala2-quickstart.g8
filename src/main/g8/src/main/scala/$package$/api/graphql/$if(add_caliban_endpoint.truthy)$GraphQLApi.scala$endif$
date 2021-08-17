@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import caliban.GraphQL.graphQL
-import caliban.interop.play.PlayJsonBackend
+import caliban.interop.ziojson.ZioJsonBackend
 import caliban.schema.Annotations.GQLDescription
 import caliban.schema.GenericSchema
 import caliban.wrappers.ApolloTracing.apolloTracing
@@ -90,7 +90,7 @@ object GraphQLApi extends GenericSchema[Has[ApplicationService]] {
       implicit val system  = actorSystem
       implicit val ec      = system.dispatcher
       implicit val runtime = Runtime.default.map(_ ++ Has(logger) ++ Has(applicationService))
-      val adapter          = AkkaHttpAdapter(new PlayJsonBackend)
+      val adapter          = AkkaHttpAdapter(new ZioJsonBackend)
       api.interpreter.map { interpreter =>
         new GraphQLApi {
           def routes: Route =
