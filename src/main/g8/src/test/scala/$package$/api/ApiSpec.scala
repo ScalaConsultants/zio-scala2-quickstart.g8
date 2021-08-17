@@ -6,7 +6,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.{Framing, Sink, Source}
 import akka.util.ByteString
-import de.heikoseeberger.akkahttpziojson.ZioJsonSupport
 import zio._
 import zio.blocking._
 import zio.clock.Clock
@@ -31,7 +30,6 @@ import $package$.infrastructure.InMemoryEventSubscriber
 $endif$
 
 object ApiSpec extends ZioRouteTest {
-  import ZioJsonSupport._
   private val loggingLayer: ULayer[Logging] = Slf4jLogger.make { (context, message) =>
       val logFormat = "[correlation-id = %s] %s"
       val correlationId = LogAnnotation.CorrelationId.render(

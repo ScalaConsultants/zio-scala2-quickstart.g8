@@ -8,7 +8,6 @@ import akka.http.interop._
 import akka.http.scaladsl.model.StatusCodes.NoContent
 import zio._
 import zio.logging._
-import de.heikoseeberger.akkahttpziojson.ZioJsonSupport
 import $package$.api.healthcheck.HealthCheckService
 import $package$.application.ApplicationService
 import $package$.domain._
@@ -33,7 +32,6 @@ trait Api {
 }
 
 object Api {
-  import ZioJsonSupport._
   val live: ZLayer[Has[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$
     with Has[ApplicationService] with Logging with Has[HealthCheckService], Nothing, Has[Api]] = ZLayer.fromFunction(env =>
     new Api with JsonSupport with ZIOSupport {

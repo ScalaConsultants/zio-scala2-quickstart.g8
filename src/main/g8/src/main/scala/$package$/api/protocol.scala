@@ -2,6 +2,7 @@ package $package$.api
 
 import $package$.api.healthcheck.DbStatus
 import $package$.domain.{ Item, ItemId }
+import de.heikoseeberger.akkahttpziojson.ZioJsonSupport
 import zio.json._
 
 final case class CreateItemRequest(name: String, price: BigDecimal)
@@ -9,7 +10,7 @@ final case class UpdateItemRequest(name: String, price: BigDecimal)
 final case class PartialUpdateItemRequest(name: Option[String], price: Option[BigDecimal])
 final case class EmptyResponse()
 
-trait JsonSupport {
+trait JsonSupport extends ZioJsonSupport {
   implicit val itemIdDecoder: JsonDecoder[ItemId] = JsonDecoder[Long].map(ItemId)
   implicit val itemIdEncoder: JsonEncoder[ItemId] = JsonEncoder[Long].contramap(_.value)
 
@@ -23,14 +24,10 @@ trait JsonSupport {
   implicit val createItemRequestEncoder: JsonEncoder[CreateItemRequest] = DeriveJsonEncoder.gen[CreateItemRequest]
 
   implicit val updateItemRequestDecoder: JsonDecoder[UpdateItemRequest] = DeriveJsonDecoder.gen[UpdateItemRequest]
-  implicit val updateItemRequestEncoder: JsonEncoder[UpdateItemRequest] = DeriveJsonEncoder.gen[UpdateItemRequest]
 
   implicit val partialUpdateItemRequestDecoder: JsonDecoder[PartialUpdateItemRequest] =
     DeriveJsonDecoder.gen[PartialUpdateItemRequest]
-  implicit val partialUpdateItemRequestEncoder: JsonEncoder[PartialUpdateItemRequest] =
-    DeriveJsonEncoder.gen[PartialUpdateItemRequest]
 
-  implicit val emptyResponseDecoder: JsonDecoder[EmptyResponse] = DeriveJsonDecoder.gen[EmptyResponse]
   implicit val emptyResponseEncoder: JsonEncoder[EmptyResponse] = DeriveJsonEncoder.gen[EmptyResponse]
 }
 

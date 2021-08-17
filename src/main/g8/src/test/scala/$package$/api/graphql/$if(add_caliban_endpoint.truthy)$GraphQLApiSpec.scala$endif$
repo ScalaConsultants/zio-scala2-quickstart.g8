@@ -24,7 +24,7 @@ object GraphQLApiSpecOperation {
   case class CheaperThan(cheaperThan: List[Item])
 }
 
-trait GraphQLApiSpecJsonProtocol {
+trait GraphQLApiSpecJsonProtocol extends ZioJsonSupport {
   implicit val itemIdDecoder: JsonDecoder[ItemId]           = JsonDecoder[Long].map(ItemId)
   implicit val itemDecoder: JsonDecoder[Item]               = DeriveJsonDecoder.gen[Item]
   implicit val itemsDecoder: JsonDecoder[AllItems]          = DeriveJsonDecoder.gen[AllItems]
@@ -33,7 +33,6 @@ trait GraphQLApiSpecJsonProtocol {
 }
 
 object GraphQLApiSpec extends ZioRouteTest with GraphQLApiSpecJsonProtocol {
-  import ZioJsonSupport._
   def spec =
     (suite("GraphQLApi must")(
       testM("Add item on call to 'addItem'") {
