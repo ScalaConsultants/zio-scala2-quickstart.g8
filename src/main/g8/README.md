@@ -8,6 +8,11 @@ Run the local development database with docker. Replace values for `POSTGRES_DB`
 ```bash
 docker run --name devdb --network host -e POSTGRES_DB=items -e POSTGRES_PASSWORD=12345 -d postgres
 ```
+if you are using docker on Windows or Mac please use the following command, because the host networking driver only work on Linux hosts.
+reference at https://docs.docker.com/network/host/
+```bash
+docker run --name devdb -p 5432:5432 -e POSTGRES_DB=items -e POSTGRES_PASSWORD=12345 -d postgres
+```
 
 Connect with `psql`:
 ```bash
