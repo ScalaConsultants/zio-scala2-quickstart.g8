@@ -10,7 +10,7 @@ val testContainersVersion = "0.39.5"
 val postgresVersion       = "42.2.23"
 val logbackClassicVersion = "1.2.5"
 val zioSlickInterop       = "0.3.0"
-val zioAkkaHttpInterop    = "0.4.0"
+val zioAkkaHttpInterop    = "0.5.0"
 val zioJsonVersion        = "0.1.5"
 val akkaHttpZioJson       = "1.37.0"
 $if(add_caliban_endpoint.truthy)$

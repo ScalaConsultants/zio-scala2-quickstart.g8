@@ -12,7 +12,7 @@ val calibanVersion        = "1.1.1"
 val postgresVersion       = "42.2.23"
 val logbackClassicVersion = "1.2.5"
 val zioSlickInterop       = "0.3.0"
-val zioAkkaHttpInterop    = "0.4.0"
+val zioAkkaHttpInterop    = "0.5.0"
 val zioJsonVersion        = "0.1.5"
 val akkaHttpZioJson       = "1.37.0"
 
