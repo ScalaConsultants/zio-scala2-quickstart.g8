@@ -14,7 +14,7 @@ val logbackClassicVersion = "1.2.5"
 val zioSlickInterop       = "0.4"
 val zioAkkaHttpInterop    = "0.5.0"
 val zioJsonVersion        = "0.1.5"
-val akkaHttpZioJson       = "1.37.0"
+val akkaHttpZioJson       = "1.38.2"
 
 lazy val It = config("it").extend(Test)
 
