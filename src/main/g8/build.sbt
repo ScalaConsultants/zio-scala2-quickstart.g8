@@ -14,7 +14,7 @@ val zioAkkaHttpInterop    = "0.5.0"
 val zioJsonVersion        = "0.1.5"
 val akkaHttpZioJson       = "1.37.0"
 $if(add_caliban_endpoint.truthy)$
-val calibanVersion        = "1.1.1"
+val calibanVersion        = "1.2.4"
 $endif$
 
 val dockerReleaseSettings = Seq(
