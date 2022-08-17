@@ -18,6 +18,7 @@ lazy val It = config("it").extend(Test)
 
 val root = (project in file("."))
   .enablePlugins(ScriptedPlugin)
+  .configs(It)
   .settings(
     name := "zio-akka-quickstart",
     Test / test := {
