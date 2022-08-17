@@ -8,7 +8,6 @@ This template integrates [ZIO][zio] with [Akka HTTP][akka-http] and [Slick][slic
 
 Other notable integrations include:
 * (Optional) WebSocket endpoint
-* (Optional) SSE endpoint
 * `Testcontainers` for integration tests
 * `Flyway migrations`
 * `sbt-native-packager` for docker images

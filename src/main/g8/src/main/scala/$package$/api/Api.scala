@@ -11,13 +11,9 @@ import zio.logging._
 import $package$.api.healthcheck.HealthCheckService
 import $package$.application.ApplicationService
 import $package$.domain._
-$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+$if(add_websocket_endpoint.truthy)$
 import zio.interop.reactivestreams._
 import akka.stream.scaladsl.Source
-$endif$
-$if(add_server_sent_events_endpoint.truthy)$
-import akka.http.scaladsl.model.sse.ServerSentEvent
-import scala.concurrent.duration._
 $endif$
 $if(add_websocket_endpoint.truthy)$
 import akka.stream.scaladsl.{ Flow, Sink }
@@ -102,27 +98,7 @@ object Api {
                 }
             }
           }
-        } $if(add_server_sent_events_endpoint.truthy)$ ~
-          pathPrefix("sse" / "items") {
-            import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
-
-            logRequestResult(("sse/items", InfoLevel)) {
-              pathPrefix("deleted") {
-                get {
-                  complete {
-                    ApplicationService.deletedEvents.toPublisher
-                      .map(p =>
-                        Source
-                          .fromPublisher(p)
-                          .map(itemId => ServerSentEvent(itemId.value.toString))
-                          .keepAlive(1.second, () => ServerSentEvent.heartbeat)
-                      )
-                      .provide(env)
-                  }
-                }
-              }
-            }
-          } $endif$ $if(add_websocket_endpoint.truthy)$ ~
+        } $if(add_websocket_endpoint.truthy)$ ~
           pathPrefix("ws" / "items") {
             logRequestResult(("ws/items", InfoLevel)) {
               val greeterWebSocketService =

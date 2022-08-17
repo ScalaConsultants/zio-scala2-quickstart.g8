@@ -17,7 +17,7 @@ import $package$.api.healthcheck.HealthCheckService
 import $package$.application.ApplicationService
 import $package$.config.AppConfig
 import $package$.domain.ItemRepository
-$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+$if(add_websocket_endpoint.truthy)$
 import $package$.domain.Subscriber
 $endif$
 import $package$.infrastructure._
@@ -66,7 +66,7 @@ object Boot extends App {
       logFormat.format(correlationId, message)
     }
 
-    $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    $if(add_websocket_endpoint.truthy)$
     val subscriberLayer: TaskLayer[Has[Subscriber]] = 
       loggingLayer >>> EventSubscriber.live
     $endif$
@@ -83,7 +83,7 @@ object Boot extends App {
     val flywayLayer: TaskLayer[Has[FlywayProvider]] = 
       dbConfigLayer >>> FlywayProvider.live
 
-    $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+    $if(add_websocket_endpoint.truthy)$
     val applicationLayer: ZLayer[Any, Throwable, Has[ApplicationService]] = 
       (dbLayer ++ subscriberLayer) >>> ApplicationService.live
 

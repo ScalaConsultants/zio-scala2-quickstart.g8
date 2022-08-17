@@ -16,16 +16,16 @@ import $package$.domain._
 import $package$.interop.akka.ZioRouteTest
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
-$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+$if(add_websocket_endpoint.truthy)$
 import zio.test.TestAspect.ignore
 import zio.duration.Duration
 $endif$
 import zio.test.Assertion._
 import zio.test._
-$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+$if(add_websocket_endpoint.truthy)$
 import scala.concurrent.duration._
 $endif$
-$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+$if(add_websocket_endpoint.truthy)$
 import $package$.infrastructure.InMemoryEventSubscriber
 $endif$
 
@@ -39,7 +39,7 @@ object ApiSpec extends ZioRouteTest {
     }
 
   val apiLayer = (
-    ((InMemoryItemRepository.test$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ ++ InMemoryEventSubscriber.test$endif$) >>> ApplicationService.live) ++
+    ((InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ InMemoryEventSubscriber.test$endif$) >>> ApplicationService.live) ++
       loggingLayer ++ 
       $if(add_websocket_endpoint.truthy)$ZLayer.succeed(system) ++ $endif$
       InMemoryHealthCheckService.test ++ 
@@ -149,21 +149,7 @@ object ApiSpec extends ZioRouteTest {
 
 
      //TODO: In this moment Delete event is not working at all need to be fixed
-      } $if(add_server_sent_events_endpoint.truthy)$ ,
-      testM("Notify about deleted items via SSE endpoint") {
-
-        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
-
-        for {
-          _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-          routes <- Api.routes
-          fiber    <- firstNElements(Get("/sse/items/deleted"), routes)(3).fork
-          _        <- ZIO.sleep(Duration.fromScala(1.second))
-          _        <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
-          _        <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
-          messages <- fiber.join
-        } yield assert(messages.filterNot(_ == "data:"))(hasSameElements(List("data:1", "data:2")))
-      }@@ ignore $endif$ $if(add_websocket_endpoint.truthy)$,
+      } $if(add_websocket_endpoint.truthy)$,
       testM("Notify about deleted items via WS endpoint") {
         import akka.http.scaladsl.testkit.WSProbe
         val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
