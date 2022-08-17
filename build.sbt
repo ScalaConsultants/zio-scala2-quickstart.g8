@@ -8,7 +8,6 @@ val zioConfigVersion      = "1.0.6"
 val zioRSVersion          = "1.3.12"
 val flywayVersion         = "7.14.1"
 val testContainersVersion = "0.39.5"
-val calibanVersion        = "1.1.1"
 val postgresVersion       = "42.2.23"
 val logbackClassicVersion = "1.2.11"
 val zioSlickInterop       = "0.4"
@@ -58,8 +57,6 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
       "org.postgresql"         % "postgresql"                      % postgresVersion,
       "org.flywaydb"           % "flyway-core"                     % flywayVersion,
-      "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
-      "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
       "com.typesafe.akka"     %% "akka-http-testkit"               % akkaHttpVersion       % Test,
       "com.typesafe.akka"     %% "akka-stream-testkit"             % akkaVersion           % Test,
       "com.typesafe.akka"     %% "akka-actor-testkit-typed"        % akkaVersion           % Test,

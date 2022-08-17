@@ -25,7 +25,7 @@ import zio.test._
 $if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import scala.concurrent.duration._
 $endif$
-$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
+$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
 import $package$.infrastructure.InMemoryEventSubscriber
 $endif$
 
@@ -39,7 +39,7 @@ object ApiSpec extends ZioRouteTest {
     }
 
   val apiLayer = (
-    ((InMemoryItemRepository.test$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ ++ InMemoryEventSubscriber.test$endif$) >>> ApplicationService.live) ++ 
+    ((InMemoryItemRepository.test$if(add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$ ++ InMemoryEventSubscriber.test$endif$) >>> ApplicationService.live) ++
       loggingLayer ++ 
       $if(add_websocket_endpoint.truthy)$ZLayer.succeed(system) ++ $endif$
       InMemoryHealthCheckService.test ++ 

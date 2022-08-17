@@ -7,7 +7,6 @@ A [Giter8][g8] template for a fully functional, ready to deploy microservice (or
 This template integrates [ZIO][zio] with [Akka HTTP][akka-http] and [Slick][slick], so that you can seamlessly use all the power of ZIO in a familiar environment of battle tested Akka HTTP routes and Slick query DSL. Out of the box there's a set of REST endpoints for example CRUD operations ready to refactor.
 
 Other notable integrations include:
-* (Optional) GraphQL endpoint with GraphQL console
 * (Optional) WebSocket endpoint
 * (Optional) SSE endpoint
 * `Testcontainers` for integration tests
@@ -79,14 +78,6 @@ This sample app has several key components:
 * `ApplicationService` - a more higher level service, that works with different error type and uses ZIO environment.
 * `Boot` - wiring all the components together using `ZLayer`.
 * `ApiSpec` - akka-http endpoint spec using zio-test.
-
-### GraphQL
-
-During initialization step, there is a possibility to add GraphQL endpoint managed by Caliban library. 
-It adds two endpoints to the api: `/api/graphql` which is responsible for GraphQL queries and `/graphiql` with simple 
-GraphiQL console to play with the API.
-
-To try out this feature open the browser http://localhost:8080/graphiql
 
 ### What in the world is ZLayer?
 

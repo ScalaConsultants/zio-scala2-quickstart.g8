@@ -14,12 +14,6 @@ trait ItemRepository {
 
   def getByIds(ids: Set[ItemId]): IO[RepositoryError, List[Item]]
 
-  $if(add_caliban_endpoint.truthy)$
-  def getByName(name: String): IO[RepositoryError, List[Item]]
-
-  def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]]
-  $endif$
-
   def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]]
 
 }
@@ -35,12 +29,6 @@ object ItemRepository {
   def getById(id: ItemId): ZIO[Has[ItemRepository], RepositoryError, Option[Item]] = ZIO.accessM(_.get.getById(id))
 
   def getByIds(ids: Set[ItemId]): ZIO[Has[ItemRepository], RepositoryError, List[Item]] = ZIO.accessM(_.get.getByIds(ids))
-
-  $if(add_caliban_endpoint.truthy)$
-  def getByName(name: String): ZIO[Has[ItemRepository], RepositoryError, List[Item]] = ZIO.accessM(_.get.getByName(name))
-
-  def getCheaperThan(price: BigDecimal): ZIO[Has[ItemRepository], RepositoryError, List[Item]] = ZIO.accessM(_.get.getCheaperThan(price))
-  $endif$
 
   def update(id: ItemId, data: ItemData): ZIO[Has[ItemRepository], RepositoryError, Option[Unit]] = ZIO.accessM(_.get.update(id, data))
 

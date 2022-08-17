@@ -50,38 +50,6 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           error <- ItemRepository.add(ItemData(name, price)).flip.orDieWith(flippingFailure)
         } yield assert(error.toString)(equalTo("RepositoryError(java.lang.NullPointerException)"))
       },
-      $if(add_caliban_endpoint.truthy) $
-      // def getItemByName
-      testM("Get correct item by name ") {
-        val name: String      = "name"
-        val price: BigDecimal = 100.0
-        for {
-          _: ItemId <- ItemRepository.add(ItemData(name, price))
-          _: ItemId <- ItemRepository.add(ItemData(name, price + 5))
-          item      <- ItemRepository.getByName(name)
-        } yield assert(item)(equalTo(List(Item(ItemId(1), name, 100.00), Item(ItemId(2), name, 105.00))))
-      },
-      testM("Return nothing if there is no item with the same name") {
-        for {
-          item <- ItemRepository.getByName("name")
-        } yield assert(item)(equalTo(List()))
-      },
-      // def getItemsCheaperThan
-      testM("Get cheaper items") {
-        val name: String = "name"
-        val price: BigDecimal = 100.0
-        for {
-          _: ItemId <- ItemRepository.add(ItemData(name, price))
-          _: ItemId <- ItemRepository.add(ItemData(name, price + 5))
-          _: ItemId <- ItemRepository.add(ItemData(name, price + 15))
-          _: ItemId <- ItemRepository.add(ItemData(name, price + 45))
-          _: ItemId <- ItemRepository.add(ItemData(name, price + 75))
-          item      <- ItemRepository.getCheaperThan(120.0)
-        } yield assert(item)(
-          equalTo(List(Item(ItemId(1), name, 100.00), Item(ItemId(2), name, 105.00), Item(ItemId(3), name, 115.00)))
-        )
-      },
-      $endif$
       // def getItem
       testM ("Get correct item ") {
         val name: String      = "name"

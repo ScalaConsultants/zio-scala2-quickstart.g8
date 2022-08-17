@@ -13,9 +13,6 @@ val zioSlickInterop       = "0.4"
 val zioAkkaHttpInterop    = "0.5.0"
 val zioJsonVersion        = "0.1.5"
 val akkaHttpZioJson       = "1.37.0"
-$if(add_caliban_endpoint.truthy)$
-val calibanVersion        = "1.1.1"
-$endif$
 
 val dockerReleaseSettings = Seq(
   dockerExposedPorts := Seq(8080),
@@ -58,10 +55,6 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,
       "org.postgresql"        % "postgresql"                       % postgresVersion,
       "org.flywaydb"          % "flyway-core"                      % flywayVersion,
-      $if(add_caliban_endpoint.truthy)$
-      "com.github.ghostdogpr" %% "caliban"                         % calibanVersion,
-      "com.github.ghostdogpr" %% "caliban-akka-http"               % calibanVersion,
-      $endif$
       "com.typesafe.akka"     %% "akka-http-testkit"               % akkaHttpVersion % Test,
       "com.typesafe.akka"     %% "akka-stream-testkit"             % akkaVersion % Test,
       "com.typesafe.akka"     %% "akka-actor-testkit-typed"        % akkaVersion % Test,
