@@ -57,12 +57,12 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
         for {
           _: ItemId <- ItemRepository.add(ItemData(name, price))
           item      <- ItemRepository.getById(ItemId(1))
-        } yield assert(item)(equalTo(Some(Item(ItemId(1), name, 100.00))))
+        } yield assert(item)(isSome(equalTo(Item(ItemId(1), name, 100.00))))
       },
       testM("Get error if item not exist") {
         for {
           error <- ItemRepository.getById(ItemId(1))
-        } yield assert(error)(equalTo(None))
+        } yield assert(error)(isNone)
       },
       //  def getItems
       testM("Get all items") {
@@ -119,7 +119,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
       testM("Get None if tried to update not existing item") {
         for {
           update <- ItemRepository.update(ItemId(1), ItemData("dummy", 123.2))
-        } yield assert(update)(equalTo(None))
+        } yield assert(update)(isNone)
       }
     ) @@ before(FlywayProvider.flyway.flatMap(_.migrate).orDie)
 }
