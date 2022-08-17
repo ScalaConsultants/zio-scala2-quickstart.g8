@@ -34,7 +34,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           contentsCheck <- assertM(allItems)(equalTo(List(Item(ItemId(1), "name", 100.0))))
         } yield contentsCheck
       },
-      testM("Should add different item and fail in assertion ") {
+      testM("Should add different item and fail in assertion") {
         val name: String = "name1"
         val price: BigDecimal = 100.0
         for {
@@ -51,7 +51,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
         } yield assert(error.toString)(startsWithString("RepositoryError(java.lang.NullPointerException"))
       },
       // def getItem
-      testM ("Get correct item ") {
+      testM ("Get correct item") {
         val name: String      = "name"
         val price: BigDecimal = 100.0
         for {
@@ -59,13 +59,13 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           item      <- ItemRepository.getById(ItemId(1))
         } yield assert(item)(equalTo(Some(Item(ItemId(1), name, 100.00))))
       },
-      testM("Get error if  item not exist ") {
+      testM("Get error if item not exist") {
         for {
           error <- ItemRepository.getById(ItemId(1))
         } yield assert(error)(equalTo(None))
       },
       //  def getItems
-      testM("Get all items ") {
+      testM("Get all items") {
         val name: String = "name"
         val price: BigDecimal = 100.0
         for {
@@ -78,7 +78,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
         } yield contentsCheck
       },
       //  def getItems
-      testM("Get empty item list ") {
+      testM("Get empty item list") {
         val name: String = "name"
         val price: BigDecimal = 100.0
         for {
@@ -91,7 +91,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
         } yield contentsCheck
       },
       //  def deleteItem
-      testM("Delete item ") {
+      testM("Delete item") {
         val name: String = "name"
         val price: BigDecimal = 100.0
         for {
@@ -101,7 +101,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           contentsCheck <- assertM(allItems)(equalTo(List(Item(ItemId(2), "name", 100.0))))
         } yield contentsCheck
       },
-      testM("Get Unit if tried to delete not existing item ") {
+      testM("Get Unit if tried to delete not existing item") {
         for {
           delete <- ItemRepository.delete(ItemId(1))
         } yield assert(delete)(equalTo((0)))
@@ -116,7 +116,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
           contentsCheck <- assertM(allItems)(equalTo(List(Item(ItemId(1), "dummy", 123.2))))
         } yield contentsCheck
       },
-      testM("Get None if tried to update not existing item ") {
+      testM("Get None if tried to update not existing item") {
         for {
           update <- ItemRepository.update(ItemId(1), ItemData("dummy", 123.2))
         } yield assert(update)(equalTo(None))
