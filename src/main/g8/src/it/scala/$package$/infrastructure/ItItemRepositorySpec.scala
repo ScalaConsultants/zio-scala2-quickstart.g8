@@ -48,7 +48,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
         migrateDbSchema.useNow
         for {
           error <- ItemRepository.add(ItemData(name, price)).flip.orDieWith(flippingFailure)
-        } yield assert(error.toString)(equalTo("RepositoryError(java.lang.NullPointerException)"))
+        } yield assert(error.toString)(startsWithString("RepositoryError(java.lang.NullPointerException"))
       },
       // def getItem
       testM ("Get correct item ") {
