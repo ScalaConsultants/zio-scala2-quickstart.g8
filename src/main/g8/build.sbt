@@ -4,7 +4,6 @@ val slickVersion          = "3.3.3"
 val zioVersion            = "1.0.10"
 val zioLoggingVersion     = "0.5.11"
 val zioConfigVersion      = "1.0.6"
-val zioRSVersion          = "1.3.12"
 val flywayVersion         = "7.14.1"
 val testContainersVersion = "0.39.5"
 val postgresVersion       = "42.2.23"
@@ -43,13 +42,11 @@ val root = (project in file("."))
       "dev.zio"               %% "zio-json"                        % zioJsonVersion,
       "de.heikoseeberger"     %% "akka-http-zio-json"              % akkaHttpZioJson,
       "dev.zio"               %% "zio"                             % zioVersion,
-      "dev.zio"               %% "zio-streams"                     % zioVersion,
       "dev.zio"               %% "zio-config"                      % zioConfigVersion,
       "dev.zio"               %% "zio-config-magnolia"             % zioConfigVersion,
       "dev.zio"               %% "zio-config-typesafe"             % zioConfigVersion,
       "io.scalac"             %% "zio-akka-http-interop"           % zioAkkaHttpInterop,
       "io.scalac"             %% "zio-slick-interop"               % zioSlickInterop,
-      "dev.zio"               %% "zio-interop-reactivestreams"     % zioRSVersion,
       "ch.qos.logback"        % "logback-classic"                  % logbackClassicVersion,
       "dev.zio"               %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"               %% "zio-logging-slf4j"               % zioLoggingVersion,

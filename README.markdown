@@ -7,7 +7,6 @@ A [Giter8][g8] template for a fully functional, ready to deploy microservice (or
 This template integrates [ZIO][zio] with [Akka HTTP][akka-http] and [Slick][slick], so that you can seamlessly use all the power of ZIO in a familiar environment of battle tested Akka HTTP routes and Slick query DSL. Out of the box there's a set of REST endpoints for example CRUD operations ready to refactor.
 
 Other notable integrations include:
-* (Optional) WebSocket endpoint
 * `Testcontainers` for integration tests
 * `Flyway migrations`
 * `sbt-native-packager` for docker images

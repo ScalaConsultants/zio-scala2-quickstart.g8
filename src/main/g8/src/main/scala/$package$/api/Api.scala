@@ -11,24 +11,13 @@ import zio.logging._
 import $package$.api.healthcheck.HealthCheckService
 import $package$.application.ApplicationService
 import $package$.domain._
-$if(add_websocket_endpoint.truthy)$
-import zio.interop.reactivestreams._
-import akka.stream.scaladsl.Source
-$endif$
-$if(add_websocket_endpoint.truthy)$
-import akka.stream.scaladsl.{ Flow, Sink }
-import akka.actor.ActorSystem
-import akka.http.javadsl.model.ws.BinaryMessage
-import akka.http.scaladsl.model.ws.{ Message, TextMessage }
-import scala.util.{ Try, Success, Failure }
-$endif$
 
 trait Api {
   def routes: Route
 }
 
 object Api {
-  val live: ZLayer[Has[HttpServer.Config]$if(add_websocket_endpoint.truthy)$ with Has[ActorSystem]$endif$
+  val live: ZLayer[Has[HttpServer.Config]
     with Has[ApplicationService] with Logging with Has[HealthCheckService], Nothing, Has[Api]] = ZLayer.fromFunction(env =>
     new Api with JsonSupport with ZIOSupport {
 
@@ -98,48 +87,7 @@ object Api {
                 }
             }
           }
-        } $if(add_websocket_endpoint.truthy)$ ~
-          pathPrefix("ws" / "items") {
-            logRequestResult(("ws/items", InfoLevel)) {
-              val greeterWebSocketService =
-                Flow[Message].flatMapConcat {
-                  case tm: TextMessage if tm.getStrictText == "deleted" =>
-                    Source.futureSource(
-                      unsafeRunToFuture(
-                        ApplicationService.deletedEvents.toPublisher
-                          .map(p =>
-                            Source
-                              .fromPublisher(p)
-                              .map(itemId => TextMessage(s"deleted: \${itemId.value}"))
-                          )
-                          .provide(env)
-                      )
-                    )
-                  case tm: TextMessage =>
-                    Try(tm.getStrictText.toLong) match {
-                      case Success(value) =>
-                        Source.futureSource(
-                          unsafeRunToFuture(
-                            ApplicationService
-                              .getItem(ItemId(value))
-                              .mapBoth(
-                                _.asThrowable,
-                                o => Source(o.toList.map(i => TextMessage(i.toString)))
-                              )
-                              .provide(env)
-                          )
-                        )
-                      case Failure(_) => Source.empty
-                    }
-                  case bm: BinaryMessage =>
-                    bm.getStreamedData.runWith(Sink.ignore, env.get[ActorSystem])
-                    Source.empty
-                }
-
-              handleWebSocketMessages(greeterWebSocketService)
-            }
-          }
-       $endif$
+        }
     }
   )
 

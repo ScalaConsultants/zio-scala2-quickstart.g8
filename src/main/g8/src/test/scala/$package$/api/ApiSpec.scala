@@ -16,18 +16,8 @@ import $package$.domain._
 import $package$.interop.akka.ZioRouteTest
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
-$if(add_websocket_endpoint.truthy)$
-import zio.test.TestAspect.ignore
-import zio.duration.Duration
-$endif$
 import zio.test.Assertion._
 import zio.test._
-$if(add_websocket_endpoint.truthy)$
-import scala.concurrent.duration._
-$endif$
-$if(add_websocket_endpoint.truthy)$
-import $package$.infrastructure.InMemoryEventSubscriber
-$endif$
 
 object ApiSpec extends ZioRouteTest {
   private val loggingLayer: ULayer[Logging] = Slf4jLogger.make { (context, message) =>
@@ -39,10 +29,9 @@ object ApiSpec extends ZioRouteTest {
     }
 
   val apiLayer = (
-    ((InMemoryItemRepository.test$if(add_websocket_endpoint.truthy)$ ++ InMemoryEventSubscriber.test$endif$) >>> ApplicationService.live) ++
+    (InMemoryItemRepository.test >>> ApplicationService.live) ++
       loggingLayer ++ 
-      $if(add_websocket_endpoint.truthy)$ZLayer.succeed(system) ++ $endif$
-      InMemoryHealthCheckService.test ++ 
+      InMemoryHealthCheckService.test ++
       ZLayer.succeed(HttpServer.Config("localhost", 8080))
   ) >>> Api.live.passthrough
 
@@ -146,34 +135,7 @@ object ApiSpec extends ZioRouteTest {
           })
           contentsCheck <- assertM(allItems)(hasSameElements(items.take(1)))
         } yield resultCheck && contentsCheck
-
-
-     //TODO: In this moment Delete event is not working at all need to be fixed
-      } $if(add_websocket_endpoint.truthy)$,
-      testM("Notify about deleted items via WS endpoint") {
-        import akka.http.scaladsl.testkit.WSProbe
-        val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
-        val wsClient = WSProbe()
-        for {
-          _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-          routes <- Api.routes
-
-          resultFiber <- effectBlocking {
-                          WS("/ws/items", wsClient.flow) ~> routes ~> check {
-                            val isUpgrade = isWebSocketUpgrade
-
-                            wsClient.sendMessage("deleted")
-                            wsClient.expectMessage("deleted: 1")
-                            wsClient.expectMessage("deleted: 2")
-                            assert(isUpgrade)(isTrue)
-                          }
-                        }.fork
-          _      <- ZIO.sleep(Duration.fromScala(1.second))
-          _      <- ApplicationService.deleteItem(ItemId(1)).mapError(_.asThrowable)
-          _      <- ApplicationService.deleteItem(ItemId(2)).mapError(_.asThrowable)
-          result <- resultFiber.join
-        } yield result
-      } @@ ignore $endif$
+      }
     ) @@ TestAspect.sequential
   def firstNElements(request: HttpRequest, route: Route)(n: Long): Task[Seq[String]] =
     ZIO.fromFuture(_ =>
