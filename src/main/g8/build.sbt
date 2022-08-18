@@ -11,7 +11,7 @@ val logbackClassicVersion = "1.2.11"
 val zioSlickInterop       = "0.4"
 val zioAkkaHttpInterop    = "0.5.0"
 val zioJsonVersion        = "0.1.5"
-val akkaHttpZioJson       = "1.37.0"
+val akkaHttpZioJson       = "1.39.2"
 
 val dockerReleaseSettings = Seq(
   dockerExposedPorts := Seq(8080),
