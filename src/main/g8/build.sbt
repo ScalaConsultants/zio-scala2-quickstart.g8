@@ -16,7 +16,7 @@ val akkaHttpZioJson       = "1.39.2"
 val dockerReleaseSettings = Seq(
   dockerExposedPorts := Seq(8080),
   dockerExposedVolumes := Seq("/opt/docker/logs"),
-  dockerBaseImage := "adoptopenjdk/openjdk12:x86_64-ubuntu-jre-12.0.2_10"
+  dockerBaseImage := "eclipse-temurin:17.0.4_8-jre"
 )
 
 lazy val It = config("it").extend(Test)
