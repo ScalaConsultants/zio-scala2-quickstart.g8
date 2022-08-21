@@ -6,3 +6,4 @@ logs/
 lib_managed/
 src_managed/
 project/plugins/project/
+*.swp

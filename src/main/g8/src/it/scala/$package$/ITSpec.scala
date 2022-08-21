@@ -14,18 +14,11 @@ import zio.logging.slf4j.Slf4jLogger
 import zio.test._
 import zio.test.environment.TestEnvironment
 import zio.{ Has, Layer, ULayer, ZLayer }
-$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-import $package$.domain.Subscriber
-import $package$.infrastructure.EventSubscriber
-$endif$
 import scala.jdk.CollectionConverters.MapHasAsJava
 
 object ITSpec {
   type Postgres = Has[SchemaAwarePostgresContainer]
   type ITEnv    = TestEnvironment with Has[FlywayProvider] with Logging with Has[ItemRepository]
-  $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$  with Has[Subscriber]
-  
-  $endif$
 
   abstract class ITSpec(schema: Option[String] = None) extends RunnableSpec[ITEnv, Any] {
     type ITSpec = ZSpec[ITEnv, Any]
@@ -38,9 +31,6 @@ object ITSpec {
 
     val blockingLayer: Layer[Nothing, Blocking]       = Blocking.live
     val postgresLayer: ZLayer[Any, Nothing, Postgres] = blockingLayer >>> Postgres.postgres(schema)
-    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-    val subscriberLayer: ZLayer[Any, Nothing, Has[Subscriber]] = Logging.ignore  >>> EventSubscriber.live.orDie
-    $endif$
     val dbLayer: ZLayer[
       Any with Postgres with Blocking,
       Nothing,
@@ -87,11 +77,6 @@ object ITSpec {
       zio.test.environment.testEnvironment ++ flyWayProvider ++ logging ++ containerRepository
     }.orDie
 
-     $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-    val itLayer: ULayer[ITEnv] =
-      (zio.test.environment.testEnvironment ++ postgresLayer ++ blockingLayer) >+> dbLayer ++ subscriberLayer
-    $else$
     val itLayer: ULayer[ITEnv] = postgresLayer ++ blockingLayer >>> dbLayer
-    $endif$
   }
 }

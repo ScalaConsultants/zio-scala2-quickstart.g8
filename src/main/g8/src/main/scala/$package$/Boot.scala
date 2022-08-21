@@ -2,16 +2,10 @@ package $package$
 
 import akka.actor.ActorSystem
 import akka.http.interop._
-$if(add_caliban_endpoint.truthy)$
-import akka.http.scaladsl.server.RouteConcatenation._
-$endif$
 import akka.http.scaladsl.server.Route
 import com.typesafe.config.{ Config, ConfigFactory }
 import slick.interop.zio.DatabaseProvider
 import slick.jdbc.JdbcProfile
-$if(add_caliban_endpoint.truthy)$
-import zio.clock.Clock
-$endif$
 import zio.config.typesafe.TypesafeConfig
 import zio.console._
 import zio.duration._
@@ -20,15 +14,9 @@ import zio.logging.slf4j._
 import zio._
 import $package$.api._
 import $package$.api.healthcheck.HealthCheckService
-$if(add_caliban_endpoint.truthy)$
-import $package$.api.graphql.GraphQLApi
-$endif$
 import $package$.application.ApplicationService
 import $package$.config.AppConfig
 import $package$.domain.ItemRepository
-$if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-import $package$.domain.Subscriber
-$endif$
 import $package$.infrastructure._
 import $package$.infrastructure.flyway.FlywayProvider
 
@@ -75,11 +63,6 @@ object Boot extends App {
       logFormat.format(correlationId, message)
     }
 
-    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-    val subscriberLayer: TaskLayer[Has[Subscriber]] = 
-      loggingLayer >>> EventSubscriber.live
-    $endif$
-
     val dbProvider: ZLayer[Any, Throwable, Has[DatabaseProvider]] =
       (dbConfigLayer ++ dbBackendLayer) >>> DatabaseProvider.live
 
@@ -92,35 +75,17 @@ object Boot extends App {
     val flywayLayer: TaskLayer[Has[FlywayProvider]] = 
       dbConfigLayer >>> FlywayProvider.live
 
-    $if(add_caliban_endpoint.truthy || add_server_sent_events_endpoint.truthy || add_websocket_endpoint.truthy)$
-    val applicationLayer: ZLayer[Any, Throwable, Has[ApplicationService]] = 
-      (dbLayer ++ subscriberLayer) >>> ApplicationService.live
-
-    $else$
-    val applicationLayer: ZLayer[Any, Throwable, Has[ApplicationService]] = 
+    val applicationLayer: ZLayer[Any, Throwable, Has[ApplicationService]] =
       dbLayer >>> ApplicationService.live
-    $endif$
 
     val apiLayer: TaskLayer[Has[Api]] = 
       (apiConfigLayer ++ applicationLayer ++ actorSystemLayer ++ healthCheckLayer ++ loggingLayer) >>> Api.live
 
-    $if(add_caliban_endpoint.truthy)$
-    val graphQLApiLayer: TaskLayer[Has[GraphQLApi]] =
-      (applicationLayer ++ actorSystemLayer ++ loggingLayer ++ Clock.live) >>> GraphQLApi.live
-    $endif$
-
-    val routesLayer: URLayer[Has[Api]$if(add_caliban_endpoint.truthy)$ with Has[GraphQLApi]$endif$, Has[Route]] =
-    $if(add_caliban_endpoint.truthy)$
-      ZLayer.fromServices[Api, GraphQLApi, Route] { (api, gApi) =>
-        api.routes ~ gApi.routes
-      }
-
-    $else$
+    val routesLayer: URLayer[Has[Api], Has[Route]] =
       ZLayer.fromService(_.routes)
-    $endif$
 
     val serverEnv: TaskLayer[HttpServer] =
-      (actorSystemLayer ++ apiConfigLayer ++ (apiLayer$if(add_caliban_endpoint.truthy)$ ++ graphQLApiLayer$endif$ >>> routesLayer)) >>> HttpServer.live
+      (actorSystemLayer ++ apiConfigLayer ++ (apiLayer >>> routesLayer)) >>> HttpServer.live
 
     serverEnv ++ flywayLayer
   }

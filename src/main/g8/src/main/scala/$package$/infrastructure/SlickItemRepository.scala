@@ -60,24 +60,6 @@ object SlickItemRepository {
             }
           }
 
-          $if(add_caliban_endpoint.truthy)$
-          def getByName(name: String): IO[RepositoryError, List[Item]] = {
-            val query = items.filter(_.name === name).result
-  
-            ZIO.fromDBIO(query).provideLayer(ZLayer.succeed(db)).map(_.toList).refineOrDie {
-              case e: Exception => RepositoryError(e)
-            }
-          }
-
-          def getCheaperThan(price: BigDecimal): IO[RepositoryError, List[Item]] = {
-            val query = items.filter(_.price < price).result
-  
-            ZIO.fromDBIO(query).provideLayer(ZLayer.succeed(db)).map(_.toList).refineOrDie {
-              case e: Exception => RepositoryError(e)
-            }
-          }
-          $endif$
-
           def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]] = {
             val q      = items.filter(_.id === id).map(item => (item.name, item.price))
             val update = q.update((data.name, data.price))
