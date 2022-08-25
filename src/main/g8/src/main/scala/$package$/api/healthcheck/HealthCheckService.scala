@@ -1,6 +1,6 @@
 package $package$.api.healthcheck
 
-import zio.{ Has, UIO, ZIO }
+import zio.{ UIO, ZIO }
 
 trait HealthCheckService {
   def healthCheck: UIO[DbStatus]
@@ -8,7 +8,7 @@ trait HealthCheckService {
 
 object HealthCheckService {
 
-  val healthCheck: ZIO[Has[HealthCheckService], Nothing, DbStatus] =
-    ZIO.accessM(_.get.healthCheck)
+  val healthCheck: ZIO[HealthCheckService, Nothing, DbStatus] =
+    ZIO.environmentWithZIO(_.get.healthCheck)
 
 }
