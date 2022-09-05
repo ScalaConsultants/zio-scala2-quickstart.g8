@@ -4,139 +4,147 @@ import akka.http.interop.HttpServer
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
-import akka.stream.scaladsl.{Framing, Sink, Source}
+import akka.stream.scaladsl.{ Framing, Sink, Source }
 import akka.util.ByteString
+
 import zio._
-import zio.blocking._
-import zio.clock.Clock
+import zio.test._
+import zio.test.Assertion._
+import zio.logging.backend.SLF4J
+
+import $package$.domain._
 import $package$.api.JsonSupport._
 import $package$.api.healthcheck._
 import $package$.application.ApplicationService
-import $package$.domain._
 import $package$.interop.akka.ZioRouteTest
-import zio.logging._
-import zio.logging.slf4j.Slf4jLogger
-import zio.test.Assertion._
-import zio.test._
 
 object ApiSpec extends ZioRouteTest {
-  private val loggingLayer: ULayer[Logging] = Slf4jLogger.make { (context, message) =>
-      val logFormat = "[correlation-id = %s] %s"
-      val correlationId = LogAnnotation.CorrelationId.render(
-        context.get(LogAnnotation.CorrelationId)
-      )
-      logFormat.format(correlationId, message)
-    }
 
-  val apiLayer = (
-    (InMemoryItemRepository.test >>> ApplicationService.live) ++
-      loggingLayer ++ 
-      InMemoryHealthCheckService.test ++
-      ZLayer.succeed(HttpServer.Config("localhost", 8080))
-  ) >>> Api.live.passthrough
+  private implicit val rt: Runtime[Any] = Runtime.default
 
-  private val env = apiLayer ++ Blocking.live ++ Clock.live ++ Annotations.live
+  val testLayers
+    : ULayer[HttpServer.Config with ApplicationService with HealthCheckService with Api with Annotations] = {
 
-  private def allItems: ZIO[Has[ApplicationService], Throwable, List[Item]] = ApplicationService.getItems.mapError(_.asThrowable)
+    val logging: ULayer[Unit] = ZLayer.make[Unit](
+      Runtime.removeDefaultLoggers,
+      SLF4J.slf4j
+    )
 
-  private val specs: Spec[Has[ApplicationService] with Blocking with Has[Api] with Clock with Annotations, TestFailure[Throwable], TestSuccess] =
+    val config: ULayer[HttpServer.Config] = ZLayer.succeed(HttpServer.Config("localhost", 8080))
+
+    ZLayer.make[HttpServer.Config with ApplicationService with HealthCheckService with Api with Annotations](
+      logging,
+      config,
+      InMemoryItemRepository.test,
+      ApplicationService.live,
+      InMemoryHealthCheckService.test,
+      Api.live,
+      Annotations.live
+    )
+  }
+
+  private def allItems: ZIO[ApplicationService, Throwable, List[Item]] =
+    ApplicationService.getItems.mapError(_.asThrowable)
+
+  private val specs =
     suite("Api")(
-      testM("Health check on Get to '/healthcheck'") {
+      test("Health check on Get to '/healthcheck'") {
         for {
           routes <- Api.routes
 
-          request = Get("/healthcheck")
-          resultCheck <- effectBlocking(request ~> routes ~> check {
-            // Here and in other tests we have to evaluate response on the spot before passing anything to `assert`.
-            // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
-            val theStatus = status
-            val theCT     = contentType
-            val theBody   = entityAs[DbStatus]
-            assert(theStatus)(equalTo(StatusCodes.OK)) &&
-              assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
-              assert(theBody)(equalTo(DbStatus(true)))
-          })
+          request      = Get("/healthcheck")
+          resultCheck <- ZIO.attemptBlocking(request ~> routes ~> check {
+                           // Here and in other tests we have to evaluate response on the spot before passing anything to `assert`.
+                           // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
+                           val theStatus = status
+                           val theCT     = contentType
+                           val theBody   = entityAs[DbStatus]
+                           assert(theStatus)(equalTo(StatusCodes.OK)) &&
+                           assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
+                           assert(theBody)(equalTo(DbStatus(true)))
+                         })
         } yield resultCheck
       },
-      testM("Health check on Head to '/healthcheck'") {
+      test("Health check on Head to '/healthcheck'") {
         for {
           routes <- Api.routes
 
-          request = Head("/healthcheck")
-          resultCheck <- effectBlocking(request ~> routes ~> check {
-            // Here and in other tests we have to evaluate response on the spot before passing anything to `assert`.
-            // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
-            val theStatus = status
-            val theCT     = contentType
-            assert(theStatus)(equalTo(StatusCodes.NoContent)) &&
-              assert(theCT)(equalTo(ContentTypes.NoContentType))
-          })
+          request      = Head("/healthcheck")
+          resultCheck <- ZIO.attemptBlocking(request ~> routes ~> check {
+                           // Here and in other tests we have to evaluate response on the spot before passing anything to `assert`.
+                           // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
+                           val theStatus = status
+                           val theCT     = contentType
+                           assert(theStatus)(equalTo(StatusCodes.NoContent)) &&
+                           assert(theCT)(equalTo(ContentTypes.NoContentType))
+                         })
         } yield resultCheck
       },
-      testM("Add item on POST to '/items'") {
+      test("Add item on POST to '/items'") {
         val item = CreateItemRequest("name", 100.0)
 
         for {
-          routes  <- Api.routes
-          entity  <- ZIO.fromFuture(_ => Marshal(item).to[MessageEntity])
-          request = Post("/items").withEntity(entity)
-          resultCheck <- effectBlocking(request ~> routes ~> check {
-                          // Here and in other tests we have to evaluate response on the spot before passing anything to `assert`.
-                          // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
-                          val theStatus = status
-                          val theCT     = contentType
-                          val theBody   = entityAs[Item]
-                          assert(theStatus)(equalTo(StatusCodes.OK)) &&
-                          assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
-                          assert(theBody)(equalTo(Item(ItemId(0), "name", 100.0)))
-                        })
-          contentsCheck <- assertM(allItems)(equalTo(List(Item(ItemId(0), "name", 100.0))))
+          routes        <- Api.routes
+          entity        <- ZIO.fromFuture(_ => Marshal(item).to[MessageEntity])
+          request        = Post("/items").withEntity(entity)
+          resultCheck   <- ZIO.attemptBlocking(request ~> routes ~> check {
+                             // Here and in other tests we have to evaluate response on the spot before passing anything to `assert`.
+                             // This is due to really tricky nature of how `check` works with the result (no simple workaround found so far)
+                             val theStatus = status
+                             val theCT     = contentType
+                             val theBody   = entityAs[Item]
+                             assert(theStatus)(equalTo(StatusCodes.OK)) &&
+                             assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
+                             assert(theBody)(equalTo(Item(ItemId(0), "name", 100.0)))
+                           })
+          contentsCheck <- assertZIO(allItems)(equalTo(List(Item(ItemId(0), "name", 100.0))))
         } yield resultCheck && contentsCheck
       },
-      testM("Not allow malformed json on POST to '/items'") {
+      test("Not allow malformed json on POST to '/items'") {
         val item = EmptyResponse()
         for {
-          routes  <- Api.routes
-          entity  <- ZIO.fromFuture(_ => Marshal(item).to[MessageEntity])
-          request = Post("/items").withEntity(entity)
-          resultCheck <- effectBlocking(request ~> routes ~> check {
-                          val r = response
-                          assert(r.status)(equalTo(StatusCodes.BadRequest))
-                        })
-          contentsCheck <- assertM(allItems)(isEmpty)
+          routes        <- Api.routes
+          entity        <- ZIO.fromFuture(_ => Marshal(item).to[MessageEntity])
+          request        = Post("/items").withEntity(entity)
+          resultCheck   <- ZIO.attemptBlocking(request ~> routes ~> check {
+                             val r = response
+                             assert(r.status)(equalTo(StatusCodes.BadRequest))
+                           })
+          contentsCheck <- assertZIO(allItems)(isEmpty)
         } yield resultCheck && contentsCheck
       },
-      testM("Return all items on GET to '/items'") {
+      test("Return all items on GET to '/items'") {
         val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
 
         for {
-          _      <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-          routes <- Api.routes
-          resultCheck <- effectBlocking(Get("/items") ~> routes ~> check {
-                          val theStatus = status
-                          val theCT     = contentType
-                          val theBody   = entityAs[List[Item]]
-                          assert(theStatus)(equalTo(StatusCodes.OK)) &&
-                          assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
-                          assert(theBody)(hasSameElements(items))
-                        })
-          contentsCheck <- assertM(allItems)(hasSameElements(items))
+          _             <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
+          routes        <- Api.routes
+          resultCheck   <- ZIO.attemptBlocking(Get("/items") ~> routes ~> check {
+                             val theStatus = status
+                             val theCT     = contentType
+                             val theBody   = entityAs[List[Item]]
+                             assert(theStatus)(equalTo(StatusCodes.OK)) &&
+                             assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
+                             assert(theBody)(hasSameElements(items))
+                           })
+          contentsCheck <- assertZIO(allItems)(hasSameElements(items))
         } yield resultCheck && contentsCheck
       },
-      testM("Delete item on DELETE to '/items/:id'") {
+      test("Delete item on DELETE to '/items/:id'") {
         val items = List(Item(ItemId(0), "name", 100.0), Item(ItemId(1), "name2", 200.0))
 
         for {
-          _ <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-          routes <- Api.routes
-          resultCheck <- effectBlocking(Delete("/items/1") ~> routes ~> check {
-            val s = status
-            assert(s)(equalTo(StatusCodes.OK))
-          })
-          contentsCheck <- assertM(allItems)(hasSameElements(items.take(1)))
+          _             <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
+          routes        <- Api.routes
+          resultCheck   <- ZIO.attemptBlocking(Delete("/items/1") ~> routes ~> check {
+                             val s = status
+                             assert(s)(equalTo(StatusCodes.OK))
+                           })
+          contentsCheck <- assertZIO(allItems)(hasSameElements(items.take(1)))
         } yield resultCheck && contentsCheck
       }
     ) @@ TestAspect.sequential
+
   def firstNElements(request: HttpRequest, route: Route)(n: Long): Task[Seq[String]] =
     ZIO.fromFuture(_ =>
       Source
@@ -152,5 +160,5 @@ object ApiSpec extends ZioRouteTest {
         .runWith(Sink.seq)
     )
 
-  def spec = specs.provideLayer(env)
+  override def spec = specs.provideLayer(testLayers)
 }
