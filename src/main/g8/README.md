@@ -33,7 +33,7 @@ sbt run
 
 After you run the application Flyway will run the migrations.
 
-By default the server is started at `http://localhost:8080`. Expects the databse at `localhost:5432` with database name `items` and user/password `postgres/12345`.
+By default the server is started at `http://localhost:8080`. Expects the database at `localhost:5432` with database name `items` and user/password `postgres/12345`.
 
 You can override the defaults with the following environment variables:
 
