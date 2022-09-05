@@ -2,6 +2,7 @@ package $package$.infrastructure.flyway
 
 import com.typesafe.config.Config
 import org.flywaydb.core.api.FlywayException
+
 import zio._
 
 trait FlywayProvider {
@@ -10,18 +11,18 @@ trait FlywayProvider {
 
 object FlywayProvider {
 
-  val live: RLayer[Has[Config], Has[FlywayProvider]] =
-    ZLayer.fromServiceM { cfg =>
-      for {
-        url  <- Task(cfg.getString("url"))
-        user <- Task(cfg.getString("user"))
-        pwd  <- Task(cfg.getString("password"))
-      } yield new FlywayProvider {
-        val flyway: IO[FlywayException, Flyway] = Flyway(url, user, pwd)
-      }
+  val live: RLayer[Config, FlywayProvider] = ZLayer {
+    for {
+      cfg  <- ZIO.service[Config]
+      url  <- ZIO.attempt(cfg.getString("url"))
+      user <- ZIO.attempt(cfg.getString("user"))
+      pwd  <- ZIO.attempt(cfg.getString("password"))
+    } yield new FlywayProvider {
+      override val flyway: IO[FlywayException, Flyway] = Flyway(url, user, pwd)
     }
+  }
 
-  def flyway: ZIO[Has[FlywayProvider], FlywayException, Flyway] =
-    ZIO.accessM[Has[FlywayProvider]](_.get.flyway)
+  def flyway: ZIO[FlywayProvider, FlywayException, Flyway] =
+    ZIO.environmentWithZIO[FlywayProvider](_.get.flyway)
 
 }
