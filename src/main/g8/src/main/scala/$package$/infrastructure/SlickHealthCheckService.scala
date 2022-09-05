@@ -1,30 +1,41 @@
 package $package$.infrastructure
 
+import slick.jdbc.JdbcProfile
 import slick.interop.zio.DatabaseProvider
 import slick.interop.zio.syntax._
-import $package$.api.healthcheck.{ DbStatus, HealthCheckService }
+
 import zio._
+
+import $package$.api.healthcheck.{ DbStatus, HealthCheckService }
+
+class SlickHealthCheckService(databaseProvider: DatabaseProvider, jdbcProfile: JdbcProfile)
+    extends HealthCheckService
+    with Profile {
+
+  override val profile = jdbcProfile
+
+  private val healthCheckQuery = {
+    import profile.api._
+    sql"""select 1""".as[Int]
+  }
+
+  override def healthCheck: UIO[DbStatus] =
+    ZIO
+      .fromDBIO(healthCheckQuery)
+      .provideLayer(ZLayer.succeed(databaseProvider))
+      .fold(
+        _ => DbStatus(false),
+        _ => DbStatus(true)
+      )
+}
 
 object SlickHealthCheckService {
 
-  val live: RLayer[Has[DatabaseProvider], Has[HealthCheckService]] =
-    ZLayer.fromServiceM { db =>
-      db.profile.map { jdbcProfile =>
-        new HealthCheckService with Profile {
-          override lazy val profile = jdbcProfile
-          import profile.api._
+  val live: RLayer[DatabaseProvider, HealthCheckService] = ZLayer {
+    for {
+      databaseProvider <- ZIO.service[DatabaseProvider]
+      jdbcProfile      <- databaseProvider.profile
+    } yield new SlickHealthCheckService(databaseProvider, jdbcProfile)
+  }
 
-          val healthCheck: UIO[DbStatus] = {
-            val query = sql"""select 1""".as[Int]
-            ZIO
-              .fromDBIO(query)
-              .provide(Has(db))
-              .fold(
-                _ => DbStatus(false),
-                _ => DbStatus(true)
-              )
-          }
-        }
-      }
-    }
 }
