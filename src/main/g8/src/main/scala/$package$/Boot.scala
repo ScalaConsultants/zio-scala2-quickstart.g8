@@ -70,13 +70,8 @@ object Boot extends ZIOAppDefault {
   }
 
   object DBConfig {
-    val live: TaskLayer[Config] =
-      // using raw config since it's recommended and the simplest to work with slick
-      ZLayer.fromZIO {
-        for {
-          config <- Config.effect
-        } yield config.getConfig("db")
-      }
+    // using raw config since it's recommended and the simplest to work with slick
+    val live: TaskLayer[Config] = ZLayer.fromZIO(Config.effect.map(_.getConfig("db")))
   }
 
   object AkkaActorSystem {
@@ -90,11 +85,7 @@ object Boot extends ZIOAppDefault {
   }
 
   object ApiRoutes {
-    val live: URLayer[Api, Route] = ZLayer {
-      for {
-        api <- ZIO.service[Api]
-      } yield api.routes
-    }
+    val live: URLayer[Api, Route] = ZLayer(ZIO.service[Api].map(_.routes))
   }
 
   object JdbcProfile {

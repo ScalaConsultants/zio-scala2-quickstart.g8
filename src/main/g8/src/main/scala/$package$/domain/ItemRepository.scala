@@ -26,7 +26,7 @@ object ItemRepository {
   def delete(id: ItemId): ZIO[ItemRepository, RepositoryError, Int] =
     ZIO.environmentWithZIO(_.get.delete(id))
 
-  def getAll: ZIO[ItemRepository, RepositoryError, List[Item]] =
+  val getAll: ZIO[ItemRepository, RepositoryError, List[Item]] =
     ZIO.environmentWithZIO(_.get.getAll)
 
   def getById(id: ItemId): ZIO[ItemRepository, RepositoryError, Option[Item]] =
