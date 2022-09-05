@@ -8,19 +8,49 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        add-caliban-endpoint: [yes, no]
-        add-server-sent-events-endpoint: [yes, no]
-        add-websocket-endpoint: [yes, no]
+        java: [temurin@8, temurin@11, temurin@17]
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
+    - name: Checkout source code
+      uses: actions/checkout@v2
       with:
-        java-version: 1.8
-    - name: Run tests add_caliban_endpoint=${{ matrix.add-caliban-endpoint }}, add_server_sent_events_endpoint=${{ matrix.add-server-sent-events-endpoint }}, add_websocket_endpoint=${{ matrix.add-websocket-endpoint }}
-      run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("add_caliban_endpoint" -> "${{ matrix.add-caliban-endpoint }}", "add_server_sent_events_endpoint" -> "${{ matrix.add-server-sent-events-endpoint }}", "add_websocket_endpoint" -> "${{ matrix.add-websocket-endpoint }}") }; test'
+        fetch-depth: 0
+
+    - name: Setup JDK (temurin@8)
+      if: matrix.java == 'temurin@8'
+      uses: actions/setup-java@v2
+      with:
+        distribution: temurin
+        java-version: 8
+
+    - name: Setup JDK (temurin@11)
+      if: matrix.java == 'temurin@11'
+      uses: actions/setup-java@v2
+      with:
+        distribution: temurin
+        java-version: 11
+
+    - name: Setup JDK (temurin@17)
+      if: matrix.java == 'temurin@17'
+      uses: actions/setup-java@v2
+      with:
+        distribution: temurin
+        java-version: 17
+
+    - name: Cache sbt
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.sbt
+          ~/.ivy2/cache
+          ~/.coursier/cache/v1
+          ~/.cache/coursier/v1
+          ~/AppData/Local/Coursier/Cache/v1
+          ~/Library/Caches/Coursier/v1
+        key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+
+    - name: Run tests
+      run: sbt test
 
