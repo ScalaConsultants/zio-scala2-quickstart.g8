@@ -16,8 +16,7 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
   def delete(id: ItemId): IO[RepositoryError, Int] =
     for {
       out <- getAll.map(_.find(_.id == id).size)
-      _ <- storage
-        .modify(items => () -> items.filterNot(_.id == id))
+      _   <- storage.modify(items => () -> items.filterNot(_.id == id))
     } yield (out)
 
   val getAll: IO[RepositoryError, List[Item]] =
@@ -49,8 +48,11 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
 
 object InMemoryItemRepository {
 
-  val test: Layer[Nothing, Has[ItemRepository]] =
-    (for {
+  val test: ULayer[ItemRepository] = ZLayer {
+    for {
       storage <- Ref.make(List.empty[Item])
-    } yield new InMemoryItemRepository(storage)).toLayer
+      repo    <- ZIO.succeed(new InMemoryItemRepository(storage))
+    } yield repo
+  }
+
 }

@@ -2,8 +2,8 @@ package $package$.infrastructure
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.testcontainers.utility.{ DockerImageName, DockerLoggerFactory }
+
 import zio._
-import zio.blocking._
 
 object Postgres {
 
@@ -21,23 +21,36 @@ object Postgres {
         pgPassword,
         mountPostgresDataToTmpfs
       ) {
-    override def jdbcUrl: String =
-      currentSchema.fold(super.jdbcUrl)(schema => s"\${super.jdbcUrl}&currentSchema=" + schema)
+    override def jdbcUrl: String = currentSchema.fold(super.jdbcUrl) { schema =>
+      s"\${super.jdbcUrl}&currentSchema=" + schema
+    }
   }
 
-  type Postgres = Has[SchemaAwarePostgresContainer]
+  def postgres(currentSchema: Option[String] = None): URLayer[Scope, SchemaAwarePostgresContainer] = {
 
-  def postgres(currentSchema: Option[String] = None): ZLayer[Blocking, Nothing, Postgres] =
-    ZManaged.make {
-      effectBlocking {
-        val container = new SchemaAwarePostgresContainer(
-          dockerImageNameOverride = Some(DockerImageName.parse("postgres")),
-          currentSchema = currentSchema
-        )
-        container.start()
-        DockerLoggerFactory.getLogger(container.container.getDockerImageName).info(container.jdbcUrl)
-        container
-      }.orDie
-    }(container => effectBlocking(container.stop()).orDie).toLayer
+    val acquire: UIO[SchemaAwarePostgresContainer] = ZIO.attemptBlocking {
+
+      val container: SchemaAwarePostgresContainer = new SchemaAwarePostgresContainer(
+        dockerImageNameOverride = Some(DockerImageName.parse("postgres")),
+        currentSchema = currentSchema
+      )
+
+      container.start()
+
+      DockerLoggerFactory
+        .getLogger(container.container.getDockerImageName)
+        .info(container.jdbcUrl)
+
+      container
+
+    }.orDie
+
+    ZLayer {
+      ZIO.acquireRelease(acquire) { container =>
+        ZIO.attemptBlocking(container.stop()).orDie
+      }
+    }
+
+  }
 
 }
