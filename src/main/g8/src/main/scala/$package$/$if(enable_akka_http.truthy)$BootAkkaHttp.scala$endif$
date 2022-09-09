@@ -4,13 +4,10 @@ import akka.actor.ActorSystem
 import akka.http.interop._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import com.typesafe.config.{ Config, ConfigFactory }
 import slick.interop.zio.DatabaseProvider
 import slick.jdbc.JdbcProfile
 
 import zio._
-import zio.config.ReadError
-import zio.config.typesafe.TypesafeConfig
 import zio.logging.backend.SLF4J
 
 import $package$.api._
@@ -19,7 +16,7 @@ import $package$.config.AppConfig
 import $package$.infrastructure._
 import $package$.infrastructure.flyway.FlywayProvider
 
-object Boot extends ZIOAppDefault {
+object BootAkkaHttp extends ZIOAppDefault {
 
   def run: RIO[Scope, Nothing] = program.provideSomeLayer(Layers.live)
 
@@ -42,36 +39,20 @@ object Boot extends ZIOAppDefault {
   object Layers {
     val live: ZLayer[Scope, Throwable, HttpServer with FlywayProvider] =
       ZLayer.makeSome[Scope, HttpServer with FlywayProvider](
-        ApiConfig.live,
-        DBConfig.live,
+        AppConfig.Database.live,
+        HttpServerConfig.live,
         AkkaActorSystem.live,
         JdbcProfile.live,
         DatabaseProvider.live,
         SlickHealthCheckService.live,
         SlickItemRepository.live,
         ApplicationService.live,
-        Api.live,
+        ApiAkkaHttp.live,
         ApiRoutes.live,
         HttpServer.live,
         FlywayProvider.live,
         Logger.live
       )
-  }
-
-  object Config {
-    val effect: Task[Config] = ZIO.attempt(ConfigFactory.load.resolve)
-  }
-
-  object ApiConfig {
-    val live: Layer[ReadError[String], HttpServer.Config] =
-      TypesafeConfig
-        .fromTypesafeConfig[AppConfig](Config.effect, AppConfig.descriptor)
-        .flatMap(c => ZLayer.succeed(c.get.api))
-  }
-
-  object DBConfig {
-    // using raw config since it's recommended and the simplest to work with slick
-    val live: TaskLayer[Config] = ZLayer.fromZIO(Config.effect.map(_.getConfig("db")))
   }
 
   object AkkaActorSystem {
@@ -85,11 +66,19 @@ object Boot extends ZIOAppDefault {
   }
 
   object ApiRoutes {
-    val live: URLayer[Api, Route] = ZLayer(ZIO.service[Api].map(_.routes))
+    val live: URLayer[ApiAkkaHttp, Route] = ZLayer(ZIO.service[ApiAkkaHttp].map(_.routes))
   }
 
   object JdbcProfile {
     val live: ULayer[JdbcProfile] = ZLayer.succeed[JdbcProfile](slick.jdbc.PostgresProfile)
+  }
+
+  object HttpServerConfig {
+    val live: ULayer[HttpServer.Config] =
+      AppConfig.Api.live.flatMap { appConfigEnv: ZEnvironment[AppConfig.ApiConfig] =>
+        val appConfig = appConfigEnv.get
+        ZLayer.succeed(HttpServer.Config(appConfig.host, appConfig.port))
+      }
   }
 
   object Logger {

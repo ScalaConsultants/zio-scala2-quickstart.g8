@@ -1,12 +1,32 @@
 package $package$.config
 
-import akka.http.interop.HttpServer
+import com.typesafe.config.{ Config, ConfigFactory }
 
-import zio.config
+import zio._
 import zio.config.magnolia
-
-final case class AppConfig(api: HttpServer.Config)
+import zio.config.typesafe.TypesafeConfig
 
 object AppConfig {
-  val descriptor: config.ConfigDescriptor[AppConfig] = magnolia.descriptor[AppConfig]
+
+  final case class RootConfig(api: ApiConfig)
+  final case class ApiConfig(host: String, port: Int)
+
+  val descriptor: config.ConfigDescriptor[RootConfig] = magnolia.descriptor[RootConfig]
+
+  val effect: UIO[Config] = ZIO.attempt(ConfigFactory.load.resolve).orDie
+
+  val root: ULayer[RootConfig] =
+    TypesafeConfig
+      .fromTypesafeConfig[RootConfig](effect, descriptor)
+      .orDie
+
+  object Api {
+    val live: ULayer[ApiConfig] = AppConfig.root.flatMap(cfg => ZLayer.succeed(cfg.get.api))
+  }
+
+  object Database {
+    // using raw config since it's recommended and the simplest to work with slick
+    val live: ULayer[Config] = ZLayer(effect.map(_.getConfig("db")))
+  }
+
 }
