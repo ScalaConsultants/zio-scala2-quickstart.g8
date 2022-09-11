@@ -17,7 +17,22 @@ import $package$.infrastructure.flyway.FlywayProvider
 
 object BootAkkaHttp extends ZIOAppDefault {
 
-  def run: RIO[Scope, Nothing] = program.provideSomeLayer(Layers.live)
+  def run: Task[Nothing] = program.provide(
+    Scope.default,
+    AppConfig.Database.live,
+    HttpServerConfig.live,
+    AkkaActorSystem.live,
+    JdbcProfile.live,
+    DatabaseProvider.live,
+    SlickHealthCheckService.live,
+    SlickItemRepository.live,
+    ApplicationService.live,
+    ApiAkkaHttp.live,
+    ApiRoutes.live,
+    HttpServer.live,
+    FlywayProvider.live,
+    Logger.live
+  )
 
   private val program: RIO[Scope with FlywayProvider with HttpServer, Nothing] = {
 
@@ -33,25 +48,6 @@ object BootAkkaHttp extends ZIOAppDefault {
     startHttpServer *>
     migrateDbSchema *>
     ZIO.never
-  }
-
-  object Layers {
-    val live: ZLayer[Scope, Throwable, HttpServer with FlywayProvider] =
-      ZLayer.makeSome[Scope, HttpServer with FlywayProvider](
-        AppConfig.Database.live,
-        HttpServerConfig.live,
-        AkkaActorSystem.live,
-        JdbcProfile.live,
-        DatabaseProvider.live,
-        SlickHealthCheckService.live,
-        SlickItemRepository.live,
-        ApplicationService.live,
-        ApiAkkaHttp.live,
-        ApiRoutes.live,
-        HttpServer.live,
-        FlywayProvider.live,
-        Logger.live
-      )
   }
 
   object AkkaActorSystem {
