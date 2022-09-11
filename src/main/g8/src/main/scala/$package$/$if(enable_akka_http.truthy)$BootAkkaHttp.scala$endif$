@@ -5,11 +5,10 @@ import akka.http.interop._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import slick.interop.zio.DatabaseProvider
-import slick.jdbc.JdbcProfile
 
 import zio._
-import zio.logging.backend.SLF4J
 
+import $package$.Layers._
 import $package$.api._
 import $package$.application.ApplicationService
 import $package$.config.AppConfig
@@ -69,10 +68,6 @@ object BootAkkaHttp extends ZIOAppDefault {
     val live: URLayer[ApiAkkaHttp, Route] = ZLayer(ZIO.service[ApiAkkaHttp].map(_.routes))
   }
 
-  object JdbcProfile {
-    val live: ULayer[JdbcProfile] = ZLayer.succeed[JdbcProfile](slick.jdbc.PostgresProfile)
-  }
-
   object HttpServerConfig {
     val live: ULayer[HttpServer.Config] =
       AppConfig.Api.live.flatMap { appConfigEnv: ZEnvironment[AppConfig.ApiConfig] =>
@@ -81,10 +76,4 @@ object BootAkkaHttp extends ZIOAppDefault {
       }
   }
 
-  object Logger {
-    val live: ULayer[Unit] = ZLayer.make[Unit](
-      Runtime.removeDefaultLoggers,
-      SLF4J.slf4j
-    )
-  }
 }
