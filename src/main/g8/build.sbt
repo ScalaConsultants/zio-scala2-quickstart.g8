@@ -12,6 +12,9 @@ val zioSlickInterop       = "0.5.0"
 val zioAkkaHttpInterop    = "0.6.0"
 val zioJsonVersion        = "0.3.0-RC11"
 val akkaHttpZioJson       = "1.40.0-RC3"
+$if(enable_zio_http.truthy)$
+val zioHttpVersion        = "2.0.0-RC10"
+$endif$
 
 val dockerReleaseSettings = Seq(
   dockerExposedPorts   := Seq(8080),
@@ -34,6 +37,7 @@ val root = (project in file("."))
     name           := "$name$",
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
+      $if(enable_zio_http.truthy)$"io.d11"             %% "zhttp"                           % zioHttpVersion,$endif$
       "com.typesafe.akka"  %% "akka-http"                       % akkaHttpVersion,
       "com.typesafe.akka"  %% "akka-actor-typed"                % akkaVersion,
       "com.typesafe.akka"  %% "akka-stream"                     % akkaVersion,

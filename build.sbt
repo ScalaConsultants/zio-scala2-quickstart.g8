@@ -13,6 +13,7 @@ val zioSlickInterop       = "0.5.0"
 val zioAkkaHttpInterop    = "0.6.0"
 val zioJsonVersion        = "0.3.0-RC11"
 val akkaHttpZioJson       = "1.40.0-RC3"
+val zioHttpVersion        = "2.0.0-RC10"
 
 lazy val It = config("it").extend(Test)
 
@@ -37,6 +38,7 @@ val root = (project in file("."))
     )(Resolver.ivyStylePatterns),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
+      "io.d11"             %% "zhttp"                           % zioHttpVersion,
       "com.typesafe.akka"  %% "akka-http"                       % akkaHttpVersion,
       "com.typesafe.akka"  %% "akka-actor-typed"                % akkaVersion,
       "com.typesafe.akka"  %% "akka-stream"                     % akkaVersion,
