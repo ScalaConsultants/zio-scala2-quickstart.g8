@@ -29,6 +29,7 @@ object ApiAkkaHttp {
     private implicit val domainErrorResponse: ErrorResponse[DomainError] = {
       case RepositoryError(_) => HttpResponse(StatusCodes.InternalServerError)
       case ValidationError(_) => HttpResponse(StatusCodes.BadRequest)
+      case NotFoundError(_)   => HttpResponse(StatusCodes.NotFound)
     }
 
     private implicit val rt: Runtime[Any] = Runtime.default
