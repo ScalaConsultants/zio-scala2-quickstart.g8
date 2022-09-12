@@ -14,6 +14,7 @@ val zioAkkaHttpInterop    = "0.6.0"
 val zioJsonVersion        = "0.3.0-RC11"
 val akkaHttpZioJson       = "1.40.0-RC3"
 val zioHttpVersion        = "2.0.0-RC10"
+val jansiVersion          = "2.4.0"
 
 lazy val It = config("it").extend(Test)
 
@@ -61,7 +62,10 @@ val root = (project in file("."))
       "com.typesafe.akka"  %% "akka-stream-testkit"             % akkaVersion           % Test,
       "com.typesafe.akka"  %% "akka-actor-testkit-typed"        % akkaVersion           % Test,
       "dev.zio"            %% "zio-test-sbt"                    % zioVersion            % Test,
-      "com.dimafeng"       %% "testcontainers-scala-postgresql" % testContainersVersion % It
+      "com.dimafeng"       %% "testcontainers-scala-postgresql" % testContainersVersion % It,
+
+      // jansi
+      "org.fusesource.jansi" % "jansi" % jansiVersion
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )

@@ -21,6 +21,7 @@ $endif$
 $if(enable_zio_http.truthy)$
 val zioHttpVersion        = "2.0.0-RC10"
 $endif$
+val jansiVersion          = "2.4.0"
 
 val dockerReleaseSettings = Seq(
   dockerExposedPorts   := Seq(8080),
@@ -66,7 +67,10 @@ val root = (project in file("."))
       $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-stream-testkit"             % akkaVersion           % Test,$endif$
       $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-actor-testkit-typed"        % akkaVersion           % Test,$endif$
       "dev.zio"            %% "zio-test-sbt"                    % zioVersion            % Test,
-      "com.dimafeng"       %% "testcontainers-scala-postgresql" % testContainersVersion % It
+      "com.dimafeng"       %% "testcontainers-scala-postgresql" % testContainersVersion % It,
+
+      // jansi
+      "org.fusesource.jansi" % "jansi" % jansiVersion
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     dockerReleaseSettings
