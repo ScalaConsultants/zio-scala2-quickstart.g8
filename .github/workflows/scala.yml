@@ -11,6 +11,8 @@ jobs:
     strategy:
       matrix:
         java: [temurin@8, temurin@11, temurin@17]
+        enable-zio-http: [yes, no]
+        enable-akka-http: [yes, no]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout source code
@@ -51,6 +53,6 @@ jobs:
           ~/Library/Caches/Coursier/v1
         key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
-    - name: Run tests
-      run: sbt test
+    - name: Run | enable_zio_http=${{ matrix.enable-zio-http}}, enable_akka_http=${{ matrix.enable-akka-http }}
+      run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("enable_zio_http" -> "${{ matrix.enable-zio-http }}", "enable_akka_http" -> "${{ matrix.enable-akka-http }}") }; test'
 
