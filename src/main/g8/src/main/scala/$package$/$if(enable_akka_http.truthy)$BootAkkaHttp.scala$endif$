@@ -1,0 +1,75 @@
+package $package$
+
+import akka.actor.ActorSystem
+import akka.http.interop._
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.Route
+import slick.interop.zio.DatabaseProvider
+
+import zio._
+
+import $package$.Layers._
+import $package$.api._
+import $package$.application.ApplicationService
+import $package$.config.AppConfig
+import $package$.infrastructure._
+import $package$.infrastructure.flyway.FlywayProvider
+
+object BootAkkaHttp extends ZIOAppDefault {
+
+  def run: Task[Nothing] = program.provide(
+    Scope.default,
+    AppConfig.Database.live,
+    HttpServerConfig.live,
+    AkkaActorSystem.live,
+    JdbcProfile.live,
+    DatabaseProvider.live,
+    SlickHealthCheckService.live,
+    SlickItemRepository.live,
+    ApplicationService.live,
+    ApiAkkaHttp.live,
+    ApiRoutes.live,
+    HttpServer.live,
+    FlywayProvider.live,
+    Logger.live
+  )
+
+  private val program: RIO[Scope with FlywayProvider with HttpServer, Nothing] = {
+
+    val startHttpServer: RIO[Scope with HttpServer, Http.ServerBinding] =
+      HttpServer.start.tap(_ => Console.printLine("Server online."))
+
+    val migrateDbSchema: RIO[FlywayProvider, Unit] =
+      FlywayProvider.flyway
+        .flatMap(_.migrate)
+        .retry(Schedule.exponential(200.millis))
+        .flatMap(res => Console.printLine(s"Flyway migration completed with: \$res"))
+
+    startHttpServer *>
+    migrateDbSchema *>
+    ZIO.never
+  }
+
+  object AkkaActorSystem {
+    val live: RLayer[Scope, ActorSystem] = {
+      val effect = ZIO.acquireRelease(ZIO.attempt(ActorSystem("$name$-system")))(actorSystem =>
+        ZIO.fromFuture(_ => actorSystem.terminate()).either
+      )
+
+      ZLayer.fromZIO(effect)
+    }
+  }
+
+  object ApiRoutes {
+    val live: URLayer[ApiAkkaHttp, Route] = ZLayer(ZIO.service[ApiAkkaHttp].map(_.routes))
+  }
+
+  object HttpServerConfig {
+    val live: ULayer[HttpServer.Config] =
+      AppConfig.Api.live.flatMap { appConfigEnv: ZEnvironment[AppConfig.ApiConfig] =>
+        val appConfig = appConfigEnv.get
+        ZLayer.succeed(HttpServer.Config(appConfig.host, appConfig.port))
+      }
+  }
+
+}

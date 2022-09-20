@@ -13,14 +13,14 @@ import $package$.domain._
 import $package$.application.ApplicationService
 import $package$.api.healthcheck.HealthCheckService
 
-trait Api {
+trait ApiAkkaHttp {
   def routes: Route
 }
 
-object Api {
+object ApiAkkaHttp {
 
   class Impl(healthCheck: HealthCheckService, application: ApplicationService)
-      extends Api
+      extends ApiAkkaHttp
       with JsonSupport
       with ZIOSupport {
 
@@ -29,6 +29,7 @@ object Api {
     private implicit val domainErrorResponse: ErrorResponse[DomainError] = {
       case RepositoryError(_) => HttpResponse(StatusCodes.InternalServerError)
       case ValidationError(_) => HttpResponse(StatusCodes.BadRequest)
+      case NotFoundError(_)   => HttpResponse(StatusCodes.NotFound)
     }
 
     private implicit val rt: Runtime[Any] = Runtime.default
@@ -98,9 +99,10 @@ object Api {
   }
 
   // accessors
-  val routes: URIO[Api, Route] = ZIO.environmentWithZIO[Api](api => ZIO.succeed(Route.seal(api.get.routes)))
+  val routes: URIO[ApiAkkaHttp, Route] =
+    ZIO.environmentWithZIO[ApiAkkaHttp](api => ZIO.succeed(Route.seal(api.get.routes)))
 
-  val live: URLayer[HttpServer.Config with ApplicationService with HealthCheckService, Api] = ZLayer {
+  val live: URLayer[HttpServer.Config with ApplicationService with HealthCheckService, ApiAkkaHttp] = ZLayer {
     for {
       healthCheck <- ZIO.service[HealthCheckService]
       application <- ZIO.service[ApplicationService]

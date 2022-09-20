@@ -2,7 +2,9 @@ package $package$.api
 
 import $package$.api.healthcheck.DbStatus
 import $package$.domain.{ Item, ItemId }
+$if(enable_akka_http.truthy)$
 import de.heikoseeberger.akkahttpziojson.ZioJsonSupport
+$endif$
 import zio.json._
 
 final case class CreateItemRequest(name: String, price: BigDecimal)
@@ -10,7 +12,7 @@ final case class UpdateItemRequest(name: String, price: BigDecimal)
 final case class PartialUpdateItemRequest(name: Option[String], price: Option[BigDecimal])
 final case class EmptyResponse()
 
-trait JsonSupport extends ZioJsonSupport {
+trait JsonSupport $if(enable_akka_http.truthy)$extends ZioJsonSupport $endif${
   implicit val itemIdDecoder: JsonDecoder[ItemId] = JsonDecoder[Long].map(ItemId)
   implicit val itemIdEncoder: JsonEncoder[ItemId] = JsonEncoder[Long].contramap(_.value)
 

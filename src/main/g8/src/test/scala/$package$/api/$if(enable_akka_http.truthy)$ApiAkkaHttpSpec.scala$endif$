@@ -18,12 +18,12 @@ import $package$.api.healthcheck._
 import $package$.application.ApplicationService
 import $package$.interop.akka.ZioRouteTest
 
-object ApiSpec extends ZioRouteTest {
+object ApiAkkaHttpSpec extends ZioRouteTest {
 
   private implicit val rt: Runtime[Any] = Runtime.default
 
   val testLayers
-    : ULayer[HttpServer.Config with ApplicationService with HealthCheckService with Api with Annotations] = {
+    : ULayer[HttpServer.Config with ApplicationService with HealthCheckService with ApiAkkaHttp with Annotations] = {
 
     val logging: ULayer[Unit] = ZLayer.make[Unit](
       Runtime.removeDefaultLoggers,
@@ -32,13 +32,13 @@ object ApiSpec extends ZioRouteTest {
 
     val config: ULayer[HttpServer.Config] = ZLayer.succeed(HttpServer.Config("localhost", 8080))
 
-    ZLayer.make[HttpServer.Config with ApplicationService with HealthCheckService with Api with Annotations](
+    ZLayer.make[HttpServer.Config with ApplicationService with HealthCheckService with ApiAkkaHttp with Annotations](
       logging,
       config,
       InMemoryItemRepository.test,
       ApplicationService.live,
       InMemoryHealthCheckService.test,
-      Api.live,
+      ApiAkkaHttp.live,
       Annotations.live
     )
   }
@@ -50,7 +50,7 @@ object ApiSpec extends ZioRouteTest {
     suite("Api")(
       test("Health check on Get to '/healthcheck'") {
         for {
-          routes <- Api.routes
+          routes <- ApiAkkaHttp.routes
 
           request      = Get("/healthcheck")
           resultCheck <- ZIO.attemptBlocking(request ~> routes ~> check {
@@ -67,7 +67,7 @@ object ApiSpec extends ZioRouteTest {
       },
       test("Health check on Head to '/healthcheck'") {
         for {
-          routes <- Api.routes
+          routes <- ApiAkkaHttp.routes
 
           request      = Head("/healthcheck")
           resultCheck <- ZIO.attemptBlocking(request ~> routes ~> check {
@@ -84,7 +84,7 @@ object ApiSpec extends ZioRouteTest {
         val item = CreateItemRequest("name", 100.0)
 
         for {
-          routes        <- Api.routes
+          routes        <- ApiAkkaHttp.routes
           entity        <- ZIO.fromFuture(_ => Marshal(item).to[MessageEntity])
           request        = Post("/items").withEntity(entity)
           resultCheck   <- ZIO.attemptBlocking(request ~> routes ~> check {
@@ -103,7 +103,7 @@ object ApiSpec extends ZioRouteTest {
       test("Not allow malformed json on POST to '/items'") {
         val item = EmptyResponse()
         for {
-          routes        <- Api.routes
+          routes        <- ApiAkkaHttp.routes
           entity        <- ZIO.fromFuture(_ => Marshal(item).to[MessageEntity])
           request        = Post("/items").withEntity(entity)
           resultCheck   <- ZIO.attemptBlocking(request ~> routes ~> check {
@@ -118,7 +118,7 @@ object ApiSpec extends ZioRouteTest {
 
         for {
           _             <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-          routes        <- Api.routes
+          routes        <- ApiAkkaHttp.routes
           resultCheck   <- ZIO.attemptBlocking(Get("/items") ~> routes ~> check {
                              val theStatus = status
                              val theCT     = contentType
@@ -135,7 +135,7 @@ object ApiSpec extends ZioRouteTest {
 
         for {
           _             <- ZIO.foreach(items)(i => ApplicationService.addItem(i.name, i.price)).mapError(_.asThrowable)
-          routes        <- Api.routes
+          routes        <- ApiAkkaHttp.routes
           resultCheck   <- ZIO.attemptBlocking(Delete("/items/1") ~> routes ~> check {
                              val s = status
                              assert(s)(equalTo(StatusCodes.OK))
