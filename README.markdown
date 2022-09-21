@@ -1,17 +1,19 @@
 ![Scala CI](https://github.com/ScalaConsultants/zio-akka-quickstart.g8/workflows/Scala%20CI/badge.svg)
 
-## zio-akka-quickstart
+## zio-scala2-quickstart
 
 A [Giter8][g8] template for a fully functional, ready to deploy microservice (or monolith - it's up to you).
 
-This template integrates [ZIO][zio] with [Akka HTTP][akka-http] and [Slick][slick], so that you can seamlessly use all the power of ZIO in a familiar environment of battle tested Akka HTTP routes and Slick query DSL. Out of the box there's a set of REST endpoints for example CRUD operations ready to refactor.
+This template will result in Scala 2.13.x compatible code. For Scala 3 use [zio-scala3-quickstart][zio-scala3-quickstart].
+
+Out of the box you get a set of CRUD endpoints in the framework of you choice (currently [ZIO HTTP][zio-http] or [Akka HTTP][akka-http]) that integrate with a PostgreSQL database (currently [Slick][slick] but more coming in the near future).
 
 Other notable integrations include:
 * `Testcontainers` for integration tests
 * `Flyway migrations`
 * `sbt-native-packager` for docker images
 * `scalafmt`
-* `play-json` for JSON processing.
+* `zio-json` for JSON processing.
 * `zio-logging` for logging.
 * `zio-config` for typesafe configuration.
 * `zio-test` for testing.
@@ -19,7 +21,7 @@ Other notable integrations include:
 ### Setting up the project
 
 ```bash
-sbt new ScalaConsultants/zio-akka-quickstart.g8
+sbt new ScalaConsultants/zio-scala2-quickstart.g8
 # then follow interactive process to choose project name and other parameters
 ```
 
@@ -49,8 +51,6 @@ curl --request GET \
   --url http://localhost:8080/items
 ```
 
-Check out more routes in [Api.scala](https://github.com/ScalaConsultants/zio-akka-quickstart.g8/blob/master/src/main/g8/src/main/scala/%24package%24/api/Api.scala)
-
 ### Docker image
 
 Template provides packaging as docker image out of the box, using [sbt-native-packager](https://sbt-native-packager.readthedocs.io/en/stable/) plugin.
@@ -77,10 +77,6 @@ This sample app has several key components:
 * `Boot` - wiring all the components together using `ZLayer`.
 * `ApiSpec` - akka-http endpoint spec using zio-test.
 
-### What in the world is ZLayer?
-
-If you're new to `ZIO` you might be confused about what's happening in `Boot.scala` and what is `ZLayer`, please check out ebook about this subject [Mastering ZLayer](TODO) as well as [the latest official documentation](https://zio.dev/docs/howto/howto_use_layers).
-
 Template license
 ----------------
 Written in 2020 by [Scalac Sp. z o.o.](https://scalac.io/?utm_source=scalac_github&utm_campaign=scalac1&utm_medium=web)
@@ -93,6 +89,6 @@ This template is distributed without any warranty. See <http://creativecommons.o
 [scalac]: https://scalac.io/
 [zio]: https://zio.dev/
 [akka-http]: https://doc.akka.io/docs/akka-http/current/index.html
+[zio-http]: https://zio.github.io/zio-http/
 [slick]: https://scala-slick.org/
-[zlayer]: https://zio.dev/docs/howto/howto_use_layers#unleash-zio-environment-with-zlayer
-[zmanaged]: https://zio.dev/docs/datatypes/datatypes_managed#managed-with-zio-environment
+[zio-scala3-quickstart]: https://github.com/ScalaConsultants/zio-scala3-quickstart.g8
