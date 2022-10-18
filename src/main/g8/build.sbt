@@ -9,7 +9,7 @@ val zioConfigVersion      = "3.0.2"
 val flywayVersion         = "9.3.0"
 val testContainersVersion = "0.40.10"
 val postgresVersion       = "42.5.0"
-val logbackClassicVersion = "1.2.11"
+val logbackClassicVersion = "1.4.4"
 val zioSlickInterop       = "0.5.0"
 $if(enable_akka_http.truthy)$
 val zioAkkaHttpInterop    = "0.6.0"
