@@ -1,7 +1,5 @@
 package $package$
 
-import slick.interop.zio.DatabaseProvider
-
 import zio._
 import zhttp.service.{ EventLoopGroup, Server, ServerChannelFactory }
 import zhttp.service.server.ServerChannelFactory
@@ -20,16 +18,15 @@ object BootZioHttp extends ZIOAppDefault {
   override def run: Task[Nothing] = program.provide(
     Scope.default,
     AppConfig.Api.live,
+    DatabaseInfra.live,
     SlickItemRepository.live,
     ApplicationService.live,
-    JdbcProfile.live,
-    DatabaseProvider.live,
     SlickHealthCheckService.live,
     ApiZioHttp.live,
     EventLoopGroup.auto(0),
     ServerChannelFactory.auto,
     HttpService.live,
-    AppConfig.Database.live,
+    AppConfig.RawConfig.live,
     FlywayProvider.live,
     Logger.live
   )

@@ -1,8 +1,6 @@
 package $package$
 
 import com.typesafe.config.{ Config, ConfigFactory }
-import slick.jdbc.PostgresProfile
-import slick.interop.zio.DatabaseProvider
 
 import zio._
 import zio.test.ZIOSpecDefault
@@ -32,25 +30,36 @@ abstract class ITSpec(schema: Option[String]) extends ZIOSpecDefault {
         container <- ZIO.service[SchemaAwarePostgresContainer]
       } yield ConfigFactory.parseMap(
         Map(
-          "url"            -> container.jdbcUrl,
-          "user"           -> container.username,
-          "password"       -> container.password,
-          "driver"         -> "org.postgresql.Driver",
-          "connectionPool" -> "HikariCP",
-          "numThreads"     -> 1,
-          "queueSize"      -> 100
+          "db.url"            -> container.jdbcUrl,
+          "db.user"           -> container.username,
+          "db.password"       -> container.password,
+          "db.driver"         -> "org.postgresql.Driver",
+          "db.connectionPool" -> "HikariCP",
+          "db.numThreads"     -> 1,
+          "db.queueSize"      -> 100
         ).asJava
       )
     }
 
-    val jdbcProfile: ULayer[PostgresProfile] = ZLayer.succeed(PostgresProfile)
+    object DatabaseInfra {
+      import slick.jdbc.PostgresProfile
+      import slick.interop.zio.DatabaseProvider
+
+      val jdbcProfileLayer: ULayer[PostgresProfile] = ZLayer.succeed(PostgresProfile)
+
+      val dbConfigLayer: RLayer[SchemaAwarePostgresContainer, Config] = config.flatMap { rawConfig =>
+        ZLayer.succeed(rawConfig.get.getConfig("db"))
+      }
+
+      val live: RLayer[SchemaAwarePostgresContainer, DatabaseProvider] =
+        (jdbcProfileLayer ++ dbConfigLayer) >>> DatabaseProvider.live.orDie
+    }
 
     ZLayer.makeSome[Scope, FlywayProvider with ItemRepository](
       logging,
-      jdbcProfile,
       config,
       postgres,
-      DatabaseProvider.live,
+      DatabaseInfra.live,
       SlickItemRepository.live,
       FlywayProvider.live
     )

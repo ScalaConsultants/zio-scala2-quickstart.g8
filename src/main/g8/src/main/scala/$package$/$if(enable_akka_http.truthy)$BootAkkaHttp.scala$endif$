@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.http.interop._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import slick.interop.zio.DatabaseProvider
 
 import zio._
 
@@ -19,17 +18,16 @@ object BootAkkaHttp extends ZIOAppDefault {
 
   def run: Task[Nothing] = program.provide(
     Scope.default,
-    AppConfig.Database.live,
+    DatabaseInfra.live,
     HttpServerConfig.live,
     AkkaActorSystem.live,
-    JdbcProfile.live,
-    DatabaseProvider.live,
     SlickHealthCheckService.live,
     SlickItemRepository.live,
     ApplicationService.live,
     ApiAkkaHttp.live,
     ApiRoutes.live,
     HttpServer.live,
+    AppConfig.RawConfig.live,
     FlywayProvider.live,
     Logger.live
   )
