@@ -8,7 +8,6 @@ import $package$.Layers._
 import $package$.api.ApiZioHttp
 import $package$.application.ApplicationService
 import $package$.config.AppConfig
-import $package$.infrastructure.slick.{ SlickHealthCheckService, SlickItemRepository }
 import $package$.infrastructure.flyway.FlywayProvider
 
 object BootZioHttp extends ZIOAppDefault {
@@ -19,9 +18,9 @@ object BootZioHttp extends ZIOAppDefault {
     Scope.default,
     AppConfig.Api.live,
     DatabaseInfra.live,
-    SlickItemRepository.live,
+    Repository.itemRepository,
+    Repository.healthCheckService,
     ApplicationService.live,
-    SlickHealthCheckService.live,
     ApiZioHttp.live,
     EventLoopGroup.auto(0),
     ServerChannelFactory.auto,

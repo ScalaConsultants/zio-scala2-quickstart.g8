@@ -2,7 +2,9 @@ $if(enable_akka_http.truthy)$
 val akkaHttpVersion       = "10.2.10"
 val akkaVersion           = "2.6.20"
 $endif$
+$if(enable_slick.truthy)$
 val slickVersion          = "3.4.0"
+$endif$
 val zioVersion            = "2.0.2"
 val zioLoggingVersion     = "2.1.0"
 val zioConfigVersion      = "3.0.2"
@@ -10,7 +12,9 @@ val flywayVersion         = "9.3.0"
 val testContainersVersion = "0.40.10"
 val postgresVersion       = "42.5.0"
 val logbackClassicVersion = "1.2.11"
+$if(enable_slick.truthy)$
 val zioSlickInterop       = "0.5.0"
+$endif$
 $if(enable_akka_http.truthy)$
 val zioAkkaHttpInterop    = "0.6.0"
 $endif$
@@ -48,8 +52,8 @@ val root = (project in file("."))
       $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-http"                       % akkaHttpVersion,$endif$
       $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-actor-typed"                % akkaVersion,$endif$
       $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-stream"                     % akkaVersion,$endif$
-      "com.typesafe.slick" %% "slick"                           % slickVersion,
-      "com.typesafe.slick" %% "slick-hikaricp"                  % slickVersion,
+      $if(enable_slick.truthy)$"com.typesafe.slick" %% "slick"                           % slickVersion,$endif$
+      $if(enable_slick.truthy)$"com.typesafe.slick" %% "slick-hikaricp"                  % slickVersion,$endif$
       "dev.zio"            %% "zio-json"                        % zioJsonVersion,
       $if(enable_akka_http.truthy)$"de.heikoseeberger"  %% "akka-http-zio-json"              % akkaHttpZioJson,$endif$
       "dev.zio"            %% "zio"                             % zioVersion,
@@ -57,7 +61,7 @@ val root = (project in file("."))
       "dev.zio"            %% "zio-config-magnolia"             % zioConfigVersion,
       "dev.zio"            %% "zio-config-typesafe"             % zioConfigVersion,
       $if(enable_akka_http.truthy)$"io.scalac"          %% "zio-akka-http-interop"           % zioAkkaHttpInterop,$endif$
-      "io.scalac"          %% "zio-slick-interop"               % zioSlickInterop,
+      $if(enable_slick.truthy)$"io.scalac"          %% "zio-slick-interop"               % zioSlickInterop,$endif$
       "ch.qos.logback"      % "logback-classic"                 % logbackClassicVersion,
       "dev.zio"            %% "zio-logging"                     % zioLoggingVersion,
       "dev.zio"            %% "zio-logging-slf4j"               % zioLoggingVersion,

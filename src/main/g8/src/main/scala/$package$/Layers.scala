@@ -13,6 +13,7 @@ object Layers {
     )
   }
 
+$if(enable_slick.truthy)$
   object DatabaseInfra {
 
     import com.typesafe.config.Config
@@ -30,5 +31,16 @@ object Layers {
     val live: ULayer[DatabaseProvider] = (jdbcProfileLayer ++ dbConfigLayer) >>> DatabaseProvider.live.orDie
 
   }
+
+  object Repository {
+    import slick.interop.zio.DatabaseProvider
+    import $package$.infrastructure.slick.{ SlickHealthCheckService, SlickItemRepository }
+    import $package$.api.healthcheck.HealthCheckService
+    import $package$.domain.ItemRepository
+
+    val itemRepository: RLayer[DatabaseProvider, ItemRepository] = SlickItemRepository.live
+    val healthCheckService: RLayer[DatabaseProvider, HealthCheckService] = SlickHealthCheckService.live
+  }
+$endif$
 
 }

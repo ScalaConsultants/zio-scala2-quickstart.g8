@@ -7,7 +7,6 @@ import zio.test.ZIOSpecDefault
 import zio.logging.backend.SLF4J
 
 import $package$.domain.ItemRepository
-import $package$.infrastructure.slick.SlickItemRepository
 import $package$.infrastructure.Postgres
 import $package$.infrastructure.Postgres.SchemaAwarePostgresContainer
 import $package$.infrastructure.flyway.FlywayProvider
@@ -41,6 +40,7 @@ abstract class ITSpec(schema: Option[String]) extends ZIOSpecDefault {
       )
     }
 
+$if(enable_slick.truthy)$
     object DatabaseInfra {
       import slick.jdbc.PostgresProfile
       import slick.interop.zio.DatabaseProvider
@@ -55,12 +55,21 @@ abstract class ITSpec(schema: Option[String]) extends ZIOSpecDefault {
         (jdbcProfileLayer ++ dbConfigLayer) >>> DatabaseProvider.live.orDie
     }
 
+    object Repository {
+      import slick.interop.zio.DatabaseProvider
+      import $package$.infrastructure.slick.SlickItemRepository
+      import $package$.domain.ItemRepository
+
+      val itemRepository: RLayer[DatabaseProvider, ItemRepository] = SlickItemRepository.live
+    }
+$endif$
+
     ZLayer.makeSome[Scope, FlywayProvider with ItemRepository](
       logging,
       config,
       postgres,
       DatabaseInfra.live,
-      SlickItemRepository.live,
+      Repository.itemRepository,
       FlywayProvider.live
     )
   }
