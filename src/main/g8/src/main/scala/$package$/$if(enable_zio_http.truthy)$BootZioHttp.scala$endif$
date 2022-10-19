@@ -10,7 +10,7 @@ import $package$.Layers._
 import $package$.api.ApiZioHttp
 import $package$.application.ApplicationService
 import $package$.config.AppConfig
-import $package$.infrastructure.{ SlickHealthCheckService, SlickItemRepository }
+import $package$.infrastructure.slick.{ SlickHealthCheckService, SlickItemRepository }
 import $package$.infrastructure.flyway.FlywayProvider
 
 object BootZioHttp extends ZIOAppDefault {

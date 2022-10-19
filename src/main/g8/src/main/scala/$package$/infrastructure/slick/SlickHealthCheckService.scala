@@ -1,4 +1,4 @@
-package $package$.infrastructure
+package $package$.infrastructure.slick
 
 import slick.jdbc.JdbcProfile
 import slick.interop.zio.DatabaseProvider

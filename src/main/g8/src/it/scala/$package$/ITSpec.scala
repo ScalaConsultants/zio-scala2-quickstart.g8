@@ -9,7 +9,8 @@ import zio.test.ZIOSpecDefault
 import zio.logging.backend.SLF4J
 
 import $package$.domain.ItemRepository
-import $package$.infrastructure.{ Postgres, SlickItemRepository }
+import $package$.infrastructure.slick.SlickItemRepository
+import $package$.infrastructure.Postgres
 import $package$.infrastructure.Postgres.SchemaAwarePostgresContainer
 import $package$.infrastructure.flyway.FlywayProvider
 

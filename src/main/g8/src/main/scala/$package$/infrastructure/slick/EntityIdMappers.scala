@@ -1,4 +1,4 @@
-package $package$.infrastructure
+package $package$.infrastructure.slick
 
 import $package$.domain.ItemId
 import slick.jdbc.JdbcProfile
