@@ -39,4 +39,40 @@ $if(enable_slick.truthy)$
     val healthCheckService: RLayer[Config, HealthCheckService] = (slickLayer >>> SlickHealthCheckService.live).orDie
   }
 $endif$
+$if(enable_quill.truthy)$
+  object Repository {
+    import com.typesafe.config.Config
+    import com.typesafe.config.ConfigFactory
+    import io.getquill.jdbczio.Quill
+    import io.getquill.Literal
+    import javax.sql.DataSource
+    import scala.jdk.CollectionConverters.MapHasAsJava
+    import $package$.infrastructure.quill.{QuillHealthCheckService, QuillItemRepository}
+    import $package$.api.healthcheck.HealthCheckService
+    import $package$.domain.ItemRepository
+
+    val quillDataSourceLayer: RLayer[Config, DataSource] = ZLayer {
+      for {
+        config <- ZIO.service[Config]
+        dbConfig = config.getConfig("db")
+      } yield Quill.DataSource.fromConfig(
+        ConfigFactory.parseMap(
+          Map(
+            "dataSourceClassName" -> "org.postgresql.ds.PGSimpleDataSource",
+            "dataSource.url" -> dbConfig.getString("url"),
+            "dataSource.user" -> dbConfig.getString("user"),
+            "dataSource.password" -> dbConfig.getString("password")
+          ).asJava
+        )
+      )
+    }.flatten.orDie
+
+    val quillPostgresLayer: RLayer[DataSource, Quill.Postgres[Literal]] = Quill.Postgres.fromNamingStrategy(Literal)
+
+    val quillLayer: RLayer[Config, Quill.Postgres[Literal]] = (quillDataSourceLayer >>> quillPostgresLayer).orDie
+
+    val itemRepository: RLayer[Config, ItemRepository] = (quillLayer >>> QuillItemRepository.live).orDie
+    val healthCheckService: RLayer[Config, HealthCheckService] = (quillLayer >>> QuillHealthCheckService.live).orDie
+  }
+$endif$
 }

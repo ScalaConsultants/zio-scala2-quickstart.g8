@@ -5,6 +5,9 @@ $endif$
 $if(enable_slick.truthy)$
 val slickVersion          = "3.4.0"
 $endif$
+$if(enable_quill.truthy)$
+val quillVersion          = "4.6.0"
+$endif$
 val zioVersion            = "2.0.2"
 val zioLoggingVersion     = "2.1.0"
 val zioConfigVersion      = "3.0.2"
@@ -54,6 +57,7 @@ val root = (project in file("."))
       $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-stream"                     % akkaVersion,$endif$
       $if(enable_slick.truthy)$"com.typesafe.slick" %% "slick"                           % slickVersion,$endif$
       $if(enable_slick.truthy)$"com.typesafe.slick" %% "slick-hikaricp"                  % slickVersion,$endif$
+      $if(enable_quill.truthy)$"io.getquill"        %% "quill-jdbc-zio"                  % quillVersion,$endif$
       "dev.zio"            %% "zio-json"                        % zioJsonVersion,
       $if(enable_akka_http.truthy)$"de.heikoseeberger"  %% "akka-http-zio-json"              % akkaHttpZioJson,$endif$
       "dev.zio"            %% "zio"                             % zioVersion,

@@ -60,6 +60,39 @@ $if(enable_slick.truthy)$
         slickLayer >>> SlickItemRepository.live
     }
 $endif$
+$if(enable_quill.truthy)$
+    object Repository {
+      import io.getquill.jdbczio.Quill
+      import io.getquill.Literal
+      import javax.sql.DataSource
+      import $package$.infrastructure.quill.QuillItemRepository
+      import $package$.domain.ItemRepository
+
+
+      val quillDataSourceLayer: RLayer[SchemaAwarePostgresContainer, DataSource] = config.flatMap { rawConfig =>
+        val dbConfig: Config = rawConfig.get.getConfig("db")
+
+        Quill.DataSource.fromConfig(
+          ConfigFactory.parseMap(
+            Map(
+              "dataSourceClassName" -> "org.postgresql.ds.PGSimpleDataSource",
+              "dataSource.url"      -> dbConfig.getString("url"),
+              "dataSource.user"     -> dbConfig.getString("user"),
+              "dataSource.password" -> dbConfig.getString("password")
+            ).asJava
+          )
+        )
+      }
+
+      val quillPostgresLayer: RLayer[DataSource, Quill.Postgres[Literal]] = Quill.Postgres.fromNamingStrategy(Literal)
+
+      val quillLayer: RLayer[SchemaAwarePostgresContainer, Quill.Postgres[Literal]] =
+        (quillDataSourceLayer >>> quillPostgresLayer).orDie
+
+      val itemRepositoryLayer: RLayer[SchemaAwarePostgresContainer, ItemRepository] =
+        quillLayer >>> QuillItemRepository.live
+    }
+$endif$
 
     ZLayer.makeSome[Scope, FlywayProvider with ItemRepository](
       logging,
