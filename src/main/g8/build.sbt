@@ -3,16 +3,16 @@ val akkaHttpVersion       = "10.2.10"
 val akkaVersion           = "2.6.20"
 $endif$
 $if(enable_slick.truthy)$
-val slickVersion          = "3.4.0"
+val slickVersion          = "3.4.1"
 $endif$
 $if(enable_quill.truthy)$
 val quillVersion          = "4.6.0"
 $endif$
 val zioVersion            = "2.0.2"
-val zioLoggingVersion     = "2.1.0"
+val zioLoggingVersion     = "2.1.2"
 val zioConfigVersion      = "3.0.2"
-val flywayVersion         = "9.3.0"
-val testContainersVersion = "0.40.10"
+val flywayVersion         = "9.4.0"
+val testContainersVersion = "0.40.11"
 val postgresVersion       = "42.5.0"
 val logbackClassicVersion = "1.2.11"
 $if(enable_slick.truthy)$
