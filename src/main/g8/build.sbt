@@ -1,9 +1,15 @@
 $if(enable_akka_http.truthy)$
 val akkaHttpVersion       = "10.2.10"
 val akkaVersion           = "2.6.20"
+val zioAkkaHttpInterop    = "0.6.0"
+val akkaHttpZioJson       = "1.40.0-RC3"
+$endif$
+$if(enable_zio_http.truthy)$
+val zioHttpVersion        = "2.0.0-RC10"
 $endif$
 $if(enable_slick.truthy)$
 val slickVersion          = "3.4.1"
+val zioSlickInterop       = "0.5.0"
 $endif$
 $if(enable_quill.truthy)$
 val quillVersion          = "4.6.0"
@@ -14,20 +20,8 @@ val zioConfigVersion      = "3.0.2"
 val flywayVersion         = "9.4.0"
 val testContainersVersion = "0.40.11"
 val postgresVersion       = "42.5.0"
-val logbackClassicVersion = "1.2.11"
-$if(enable_slick.truthy)$
-val zioSlickInterop       = "0.5.0"
-$endif$
-$if(enable_akka_http.truthy)$
-val zioAkkaHttpInterop    = "0.6.0"
-$endif$
 val zioJsonVersion        = "0.3.0-RC11"
-$if(enable_akka_http.truthy)$
-val akkaHttpZioJson       = "1.40.0-RC3"
-$endif$
-$if(enable_zio_http.truthy)$
-val zioHttpVersion        = "2.0.0-RC10"
-$endif$
+val logbackClassicVersion = "1.2.11"
 val jansiVersion          = "2.4.0"
 
 val dockerReleaseSettings = Seq(
