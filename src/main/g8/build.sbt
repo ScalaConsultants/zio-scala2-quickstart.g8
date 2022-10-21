@@ -45,34 +45,52 @@ val root = (project in file("."))
     name           := "$name$",
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
-      $if(enable_zio_http.truthy)$"io.d11"             %% "zhttp"                           % zioHttpVersion,$endif$
-      $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-http"                       % akkaHttpVersion,$endif$
-      $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-actor-typed"                % akkaVersion,$endif$
-      $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-stream"                     % akkaVersion,$endif$
-      $if(enable_slick.truthy)$"com.typesafe.slick" %% "slick"                           % slickVersion,$endif$
-      $if(enable_slick.truthy)$"com.typesafe.slick" %% "slick-hikaricp"                  % slickVersion,$endif$
-      $if(enable_quill.truthy)$"io.getquill"        %% "quill-jdbc-zio"                  % quillVersion,$endif$
-      "dev.zio"            %% "zio-json"                        % zioJsonVersion,
-      $if(enable_akka_http.truthy)$"de.heikoseeberger"  %% "akka-http-zio-json"              % akkaHttpZioJson,$endif$
-      "dev.zio"            %% "zio"                             % zioVersion,
-      "dev.zio"            %% "zio-config"                      % zioConfigVersion,
-      "dev.zio"            %% "zio-config-magnolia"             % zioConfigVersion,
-      "dev.zio"            %% "zio-config-typesafe"             % zioConfigVersion,
-      $if(enable_akka_http.truthy)$"io.scalac"          %% "zio-akka-http-interop"           % zioAkkaHttpInterop,$endif$
-      $if(enable_slick.truthy)$"io.scalac"          %% "zio-slick-interop"               % zioSlickInterop,$endif$
-      "ch.qos.logback"      % "logback-classic"                 % logbackClassicVersion,
-      "dev.zio"            %% "zio-logging"                     % zioLoggingVersion,
-      "dev.zio"            %% "zio-logging-slf4j"               % zioLoggingVersion,
-      "org.postgresql"      % "postgresql"                      % postgresVersion,
-      "org.flywaydb"        % "flyway-core"                     % flywayVersion,
-      $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-http-testkit"               % akkaHttpVersion       % Test,$endif$
-      $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-stream-testkit"             % akkaVersion           % Test,$endif$
-      $if(enable_akka_http.truthy)$"com.typesafe.akka"  %% "akka-actor-testkit-typed"        % akkaVersion           % Test,$endif$
-      "dev.zio"            %% "zio-test-sbt"                    % zioVersion            % Test,
-      "com.dimafeng"       %% "testcontainers-scala-postgresql" % testContainersVersion % It,
+$if(enable_zio_http.truthy)$
+      // zio-http
+      "io.d11" %% "zhttp" % zioHttpVersion,
+$endif$
+$if(enable_akka_http.truthy)$
+      // akka-http
+      "com.typesafe.akka" %% "akka-http"             % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-actor-typed"      % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream"           % akkaVersion,
+      "de.heikoseeberger" %% "akka-http-zio-json"    % akkaHttpZioJson,
+      "io.scalac"         %% "zio-akka-http-interop" % zioAkkaHttpInterop,
+$endif$
 
-      // jansi
-      "org.fusesource.jansi" % "jansi" % jansiVersion
+$if(enable_slick.truthy)$
+      // slick
+      "com.typesafe.slick" %% "slick"             % slickVersion,
+      "com.typesafe.slick" %% "slick-hikaricp"    % slickVersion,
+      "io.scalac"          %% "zio-slick-interop" % zioSlickInterop,
+$endif$
+$if(enable_quill.truthy)$
+      // quill
+      "io.getquill" %% "quill-jdbc-zio" % quillVersion,
+$endif$
+      // general
+      "dev.zio"        %% "zio-json"            % zioJsonVersion,
+      "dev.zio"        %% "zio"                 % zioVersion,
+      "dev.zio"        %% "zio-config"          % zioConfigVersion,
+      "dev.zio"        %% "zio-config-magnolia" % zioConfigVersion,
+      "dev.zio"        %% "zio-config-typesafe" % zioConfigVersion,
+      "org.postgresql"  % "postgresql"          % postgresVersion,
+      "org.flywaydb"    % "flyway-core"         % flywayVersion,
+
+      // logging
+      "dev.zio"             %% "zio-logging"       % zioLoggingVersion,
+      "dev.zio"             %% "zio-logging-slf4j" % zioLoggingVersion,
+      "ch.qos.logback"       % "logback-classic"   % logbackClassicVersion,
+      "org.fusesource.jansi" % "jansi"             % jansiVersion,
+
+      // test
+$if(enable_akka_http.truthy)$
+      "com.typesafe.akka"  %% "akka-http-testkit"               % akkaHttpVersion       % Test,
+      "com.typesafe.akka"  %% "akka-stream-testkit"             % akkaVersion           % Test,
+      "com.typesafe.akka"  %% "akka-actor-testkit-typed"        % akkaVersion           % Test,
+$endif$
+      "dev.zio"            %% "zio-test-sbt"                    % zioVersion            % Test,
+      "com.dimafeng"       %% "testcontainers-scala-postgresql" % testContainersVersion % It
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     dockerReleaseSettings
