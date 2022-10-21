@@ -28,7 +28,7 @@ abstract class ITSpec(schema: Option[String]) extends ZIOSpecDefault {
       for {
         container <- ZIO.service[SchemaAwarePostgresContainer]
       } yield ConfigFactory.parseMap(
-        Map(
+        Map[String, Any](
           "db.url"            -> container.jdbcUrl,
           "db.user"           -> container.username,
           "db.password"       -> container.password,
@@ -41,9 +41,11 @@ abstract class ITSpec(schema: Option[String]) extends ZIOSpecDefault {
     }
 
 $if(enable_slick.truthy)$
-    object DatabaseInfra {
+    object Repository {
       import slick.jdbc.PostgresProfile
       import slick.interop.zio.DatabaseProvider
+      import $package$.infrastructure.slick.SlickItemRepository
+      import $package$.domain.ItemRepository
 
       val jdbcProfileLayer: ULayer[PostgresProfile] = ZLayer.succeed(PostgresProfile)
 
@@ -51,16 +53,11 @@ $if(enable_slick.truthy)$
         ZLayer.succeed(rawConfig.get.getConfig("db"))
       }
 
-      val live: RLayer[SchemaAwarePostgresContainer, DatabaseProvider] =
+      val slickLayer: RLayer[SchemaAwarePostgresContainer, DatabaseProvider] =
         (jdbcProfileLayer ++ dbConfigLayer) >>> DatabaseProvider.live.orDie
-    }
 
-    object Repository {
-      import slick.interop.zio.DatabaseProvider
-      import $package$.infrastructure.slick.SlickItemRepository
-      import $package$.domain.ItemRepository
-
-      val itemRepository: RLayer[DatabaseProvider, ItemRepository] = SlickItemRepository.live
+      val itemRepositoryLayer: RLayer[SchemaAwarePostgresContainer, ItemRepository] =
+        slickLayer >>> SlickItemRepository.live
     }
 $endif$
 
@@ -68,8 +65,7 @@ $endif$
       logging,
       config,
       postgres,
-      DatabaseInfra.live,
-      Repository.itemRepository,
+      Repository.itemRepositoryLayer,
       FlywayProvider.live
     )
   }
