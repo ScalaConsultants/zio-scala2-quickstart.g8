@@ -48,7 +48,7 @@ final class InMemoryItemRepository(storage: Ref[List[Item]]) extends ItemReposit
 
 object InMemoryItemRepository {
 
-  val test: ULayer[ItemRepository] = ZLayer {
+  val live: ULayer[ItemRepository] = ZLayer {
     for {
       storage <- Ref.make(List.empty[Item])
       repo    <- ZIO.succeed(new InMemoryItemRepository(storage))

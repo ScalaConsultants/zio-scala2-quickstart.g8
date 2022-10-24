@@ -35,9 +35,9 @@ object ApiAkkaHttpSpec extends ZioRouteTest {
     ZLayer.make[HttpServer.Config with ApplicationService with HealthCheckService with ApiAkkaHttp with Annotations](
       logging,
       config,
-      InMemoryItemRepository.test,
+      InMemoryItemRepository.live,
       ApplicationService.live,
-      InMemoryHealthCheckService.test,
+      InMemoryHealthCheckService.live,
       ApiAkkaHttp.live,
       Annotations.live
     )
