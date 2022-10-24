@@ -83,4 +83,13 @@ $if(enable_quill.truthy)$
     val healthCheckService: RLayer[Config, HealthCheckService] = (quillLayer >>> QuillHealthCheckService.live).orDie
   }
 $endif$
+$if(!enable_quill.truthy&&!enable_slick.truthy)$
+  object Repository {
+    import $package$.api.healthcheck.{HealthCheckService, InMemoryHealthCheckService}
+    import $package$.domain.{ItemRepository, InMemoryItemRepository}
+
+    val itemRepository: ULayer[ItemRepository] = InMemoryItemRepository.live
+    val healthCheckService: ULayer[HealthCheckService] = InMemoryHealthCheckService.live
+  }
+$endif$
 }
