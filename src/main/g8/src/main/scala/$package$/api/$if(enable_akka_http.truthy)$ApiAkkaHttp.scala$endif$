@@ -64,14 +64,11 @@ object ApiAkkaHttp {
           path(LongNumber) { itemId =>
             delete {
               complete {
-                ApplicationService
-                  .deleteItem(ItemId(itemId))
-                  .flatMap { amount =>
-                    if (amount > 0) ZIO.succeed(s"\$amount item(s) with id: \$itemId were deleted")
-                    else ZIO.fail(NotFoundError(s"Item \$itemId not found"))
-                  }
-                  .provide(applicationLayer)
-                  .as(EmptyResponse())
+                for {
+                  amount <- ApplicationService.deleteItem(ItemId(itemId)).provide(applicationLayer)
+                  _      <- if (amount <= 0) ZIO.fail(NotFoundError.empty)
+                            else ZIO.unit
+                } yield StatusCodes.NoContent
               }
             } ~
             get {

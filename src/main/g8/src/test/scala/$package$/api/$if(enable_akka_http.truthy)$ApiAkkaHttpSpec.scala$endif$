@@ -138,7 +138,7 @@ object ApiAkkaHttpSpec extends ZioRouteTest {
           routes        <- ApiAkkaHttp.routes
           resultCheck   <- ZIO.attemptBlocking(Delete("/items/1") ~> routes ~> check {
                              val s = status
-                             assert(s)(equalTo(StatusCodes.OK))
+                             assert(s)(equalTo(StatusCodes.NoContent))
                            })
           contentsCheck <- assertZIO(allItems)(hasSameElements(items.take(1)))
         } yield resultCheck && contentsCheck
