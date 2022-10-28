@@ -16,7 +16,7 @@ trait ApplicationService {
 
   def partialUpdateItem(itemId: ItemId, name: Option[String], price: Option[BigDecimal]): IO[DomainError, Option[Unit]]
 
-  def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Unit]]
+  def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Item]]
 }
 
 object ApplicationService {
@@ -54,8 +54,12 @@ object ApplicationService {
         result.unsome
       }
 
-      def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Unit]] =
-        repo.update(itemId, ItemData(name, price))
+      def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Item]] =
+        for {
+          data         <- ZIO.succeed(ItemData(name, price))
+          maybeUpdated <- repo.update(itemId, data)
+          maybeItem     = maybeUpdated.map(_ => Item.withData(itemId, data))
+        } yield maybeItem
     }
   }
 
@@ -78,7 +82,7 @@ object ApplicationService {
   ): ZIO[ApplicationService, DomainError, Option[Unit]] =
     ZIO.environmentWithZIO(_.get.partialUpdateItem(itemId, name, price))
 
-  def updateItem(itemId: ItemId, name: String, price: BigDecimal): ZIO[ApplicationService, DomainError, Option[Unit]] =
+  def updateItem(itemId: ItemId, name: String, price: BigDecimal): ZIO[ApplicationService, DomainError, Option[Item]] =
     ZIO.environmentWithZIO(_.get.updateItem(itemId, name, price))
 
 }
