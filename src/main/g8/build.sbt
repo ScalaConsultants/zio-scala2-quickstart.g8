@@ -4,7 +4,7 @@ val akkaVersion           = "2.6.20"
 $endif$
 val slickVersion          = "3.4.0"
 val zioVersion            = "2.0.2"
-val zioLoggingVersion     = "2.1.0"
+val zioLoggingVersion     = "2.1.3"
 val zioConfigVersion      = "3.0.2"
 val flywayVersion         = "9.3.0"
 val testContainersVersion = "0.40.10"
