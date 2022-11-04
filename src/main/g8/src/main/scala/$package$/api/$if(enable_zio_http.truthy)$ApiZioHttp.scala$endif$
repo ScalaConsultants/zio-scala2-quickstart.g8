@@ -24,7 +24,11 @@ object ApiZioHttp {
   }
 
   implicit class RichDomain[T](val data: T) extends AnyVal {
-    def toResponseZIO(implicit ev: JsonEncoder[T]): UIO[Response] = ZIO.succeed(Response.json(data.toJson))
+    def toResponseZIO(implicit ev: JsonEncoder[T]): UIO[Response] = toResponseZIO(Status.Ok)
+
+    def toResponseZIO(status: Status)(implicit ev: JsonEncoder[T]): UIO[Response] = ZIO.succeed {
+      Response.json(data.toJson).setStatus(status)
+    }
   }
 
   def extractLong(str: String): IO[ValidationError, Long] = ZIO
@@ -62,12 +66,12 @@ object ApiZioHttp {
           .foldZIO(handleError, _.toResponseZIO)
 
       case request @ Method.POST -> !! / "items" =>
-        val effect: IO[DomainError, String] = for {
+        val effect: IO[DomainError, Item] = for {
           r  <- request.bodyAs[CreateItemRequest].mapError(ValidationError)
           id <- application.addItem(r.name, r.price)
-        } yield s"Item created with Id: \${id.value}"
+        } yield Item(id, name = r.name, price = r.price)
 
-        effect.foldZIO(handleError, _.toResponseZIO)
+        effect.foldZIO(handleError, _.toResponseZIO(Status.Created))
 
       case Method.GET -> !! / "items" / itemId =>
         val effect: IO[DomainError, Item] = for {

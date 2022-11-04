@@ -55,7 +55,7 @@ object ApiAkkaHttp {
                   .provide(applicationLayer)
                   .map { id =>
                     complete {
-                      Item(id, req.name, req.price)
+                      (StatusCodes.Created, Item(id, req.name, req.price))
                     }
                   }
               }
