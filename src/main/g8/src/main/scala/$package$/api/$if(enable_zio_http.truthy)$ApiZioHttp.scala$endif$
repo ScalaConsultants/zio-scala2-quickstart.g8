@@ -89,12 +89,12 @@ object ApiZioHttp {
         effect.foldZIO(handleError, _.toResponseZIO)
 
       case Method.DELETE -> !! / "items" / itemId =>
-        val effect: IO[DomainError, Int] = for {
+        val effect: IO[DomainError, Unit] = for {
           id     <- extractLong(itemId)
           amount <- application.deleteItem(ItemId(id))
           _      <- if (amount == 0) ZIO.fail(NotFoundError.empty)
                     else ZIO.unit
-        } yield amount
+        } yield ()
 
         effect.foldZIO(handleError, _.asNoContentResponseZIO)
 
