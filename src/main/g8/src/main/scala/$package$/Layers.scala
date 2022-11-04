@@ -1,11 +1,35 @@
 package $package$
 
+$if(enable_slick.truthy)$
+import com.typesafe.config.Config
+import slick.interop.zio.DatabaseProvider
+import slick.jdbc.JdbcProfile
+import slick.jdbc.PostgresProfile
+$endif$
+$if(enable_quill.truthy)$
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import io.getquill.jdbczio.Quill
+import io.getquill.Literal
+import javax.sql.DataSource
+import scala.jdk.CollectionConverters.MapHasAsJava
+$endif$
+
 import zio._
+import zio.logging.backend.SLF4J
+
+$if(enable_slick.truthy)$
+import $package$.infrastructure.slick.{SlickHealthCheckService, SlickItemRepository}
+$endif$
+$if(enable_quill.truthy)$
+import $package$.infrastructure.quill.{QuillHealthCheckService, QuillItemRepository}
+$endif$
+import $package$.api.healthcheck.HealthCheckService
+import $package$.domain.ItemRepository
 
 object Layers {
 
   object Logger {
-    import zio.logging.backend.SLF4J
 
     val live: ULayer[Unit] = ZLayer.make[Unit](
       Runtime.removeDefaultLoggers,
@@ -15,13 +39,6 @@ object Layers {
 
 $if(enable_slick.truthy)$
   object Repository {
-    import com.typesafe.config.Config
-    import slick.interop.zio.DatabaseProvider
-    import slick.jdbc.JdbcProfile
-    import slick.jdbc.PostgresProfile
-    import $package$.infrastructure.slick.{ SlickHealthCheckService, SlickItemRepository }
-    import $package$.api.healthcheck.HealthCheckService
-    import $package$.domain.ItemRepository
 
     val jdbcProfileLayer: ULayer[JdbcProfile] = ZLayer.succeed[JdbcProfile](PostgresProfile)
 
@@ -41,15 +58,6 @@ $if(enable_slick.truthy)$
 $endif$
 $if(enable_quill.truthy)$
   object Repository {
-    import com.typesafe.config.Config
-    import com.typesafe.config.ConfigFactory
-    import io.getquill.jdbczio.Quill
-    import io.getquill.Literal
-    import javax.sql.DataSource
-    import scala.jdk.CollectionConverters.MapHasAsJava
-    import $package$.infrastructure.quill.{QuillHealthCheckService, QuillItemRepository}
-    import $package$.api.healthcheck.HealthCheckService
-    import $package$.domain.ItemRepository
 
     val quillDataSourceLayer: RLayer[Config, DataSource] = ZLayer {
       for {
