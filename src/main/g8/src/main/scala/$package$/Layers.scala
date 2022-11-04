@@ -24,6 +24,10 @@ $endif$
 $if(enable_quill.truthy)$
 import $package$.infrastructure.quill.{QuillHealthCheckService, QuillItemRepository}
 $endif$
+$if(!enable_quill.truthy&&!enable_slick.truthy)$
+import $package$.api.healthcheck.InMemoryHealthCheckService
+import $package$.domain.InMemoryItemRepository
+$endif$
 import $package$.api.healthcheck.HealthCheckService
 import $package$.domain.ItemRepository
 
@@ -85,8 +89,6 @@ $if(enable_quill.truthy)$
 $endif$
 $if(!enable_quill.truthy&&!enable_slick.truthy)$
   object Repository {
-    import $package$.api.healthcheck.{HealthCheckService, InMemoryHealthCheckService}
-    import $package$.domain.{ItemRepository, InMemoryItemRepository}
 
     val itemRepository: ULayer[ItemRepository] = InMemoryItemRepository.live
     val healthCheckService: ULayer[HealthCheckService] = InMemoryHealthCheckService.live
