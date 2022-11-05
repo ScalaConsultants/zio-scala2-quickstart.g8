@@ -15,7 +15,7 @@ $if(enable_quill.truthy)$
 val quillVersion          = "4.6.0"
 $endif$
 val zioVersion            = "2.0.2"
-val zioLoggingVersion     = "2.1.2"
+val zioLoggingVersion     = "2.1.3"
 val zioConfigVersion      = "3.0.2"
 val flywayVersion         = "9.4.0"
 val testContainersVersion = "0.40.11"
