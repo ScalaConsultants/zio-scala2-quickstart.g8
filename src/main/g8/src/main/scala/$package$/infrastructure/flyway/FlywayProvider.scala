@@ -14,9 +14,9 @@ object FlywayProvider {
   val live: RLayer[Config, FlywayProvider] = ZLayer {
     for {
       cfg  <- ZIO.service[Config]
-      url  <- ZIO.attempt(cfg.getString("url"))
-      user <- ZIO.attempt(cfg.getString("user"))
-      pwd  <- ZIO.attempt(cfg.getString("password"))
+      url  <- ZIO.attempt(cfg.getString("db.url"))
+      user <- ZIO.attempt(cfg.getString("db.user"))
+      pwd  <- ZIO.attempt(cfg.getString("db.password"))
     } yield new FlywayProvider {
       override val flyway: IO[FlywayException, Flyway] = Flyway(url, user, pwd)
     }

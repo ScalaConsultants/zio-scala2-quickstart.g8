@@ -1,7 +1,7 @@
-package $package$.infrastructure.tables
+package $package$.infrastructure.slick.tables
 
 import $package$.domain._
-import $package$.infrastructure.{ EntityIdMappers, Profile }
+import $package$.infrastructure.slick.{ EntityIdMappers, Profile }
 
 trait ItemsTable extends EntityIdMappers {
   self: Profile =>

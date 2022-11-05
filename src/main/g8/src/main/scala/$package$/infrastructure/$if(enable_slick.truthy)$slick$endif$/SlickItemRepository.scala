@@ -1,4 +1,4 @@
-package $package$.infrastructure
+package $package$.infrastructure.slick
 
 import slick.jdbc.JdbcProfile
 import slick.interop.zio.syntax._
@@ -7,7 +7,7 @@ import slick.interop.zio.DatabaseProvider
 import zio._
 
 import $package$.domain._
-import $package$.infrastructure.tables.ItemsTable
+import $package$.infrastructure.slick.tables.ItemsTable
 
 class SlickItemRepository(databaseProvider: DatabaseProvider, jdbcProfile: JdbcProfile)
     extends ItemRepository
