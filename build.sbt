@@ -13,7 +13,7 @@ val zioConfigVersion      = "3.0.2"
 val flywayVersion         = "9.4.0"
 val testContainersVersion = "0.40.11"
 val postgresVersion       = "42.5.0"
-val zioJsonVersion        = "0.3.0-RC11"
+val zioJsonVersion        = "0.3.0"
 val logbackClassicVersion = "1.2.11"
 val jansiVersion          = "2.4.0"
 
