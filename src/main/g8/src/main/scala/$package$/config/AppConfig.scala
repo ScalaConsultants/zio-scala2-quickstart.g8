@@ -11,22 +11,23 @@ object AppConfig {
   final case class RootConfig(api: ApiConfig)
   final case class ApiConfig(host: String, port: Int)
 
-  val descriptor: config.ConfigDescriptor[RootConfig] = magnolia.descriptor[RootConfig]
+  private val effect: UIO[Config] = ZIO.attempt(ConfigFactory.load.resolve).orDie
 
-  val effect: UIO[Config] = ZIO.attempt(ConfigFactory.load.resolve).orDie
-
-  val root: ULayer[RootConfig] =
-    TypesafeConfig
-      .fromTypesafeConfig[RootConfig](effect, descriptor)
-      .orDie
-
-  object Api {
-    val live: ULayer[ApiConfig] = AppConfig.root.flatMap(cfg => ZLayer.succeed(cfg.get.api))
+  object Root {
+    val live: ULayer[RootConfig] =
+      TypesafeConfig
+        .fromTypesafeConfig[RootConfig](effect, magnolia.descriptor[RootConfig])
+        .orDie
   }
 
-  object Database {
-    // using raw config since it's recommended and the simplest to work with slick
-    val live: ULayer[Config] = ZLayer(effect.map(_.getConfig("db")))
+  object Api {
+    val live: ULayer[ApiConfig] = Root.live.flatMap { rootConfig =>
+      ZLayer.succeed(rootConfig.get.api)
+    }
+  }
+
+  object RawConfig {
+    val live: ULayer[Config] = ZLayer(effect)
   }
 
 }
