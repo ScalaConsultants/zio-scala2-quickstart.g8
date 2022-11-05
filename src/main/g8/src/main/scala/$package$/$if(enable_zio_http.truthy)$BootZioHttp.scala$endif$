@@ -1,7 +1,5 @@
 package $package$
 
-import slick.interop.zio.DatabaseProvider
-
 import zio._
 import zhttp.service.{ EventLoopGroup, Server, ServerChannelFactory }
 import zhttp.service.server.ServerChannelFactory
@@ -10,7 +8,6 @@ import $package$.Layers._
 import $package$.api.ApiZioHttp
 import $package$.application.ApplicationService
 import $package$.config.AppConfig
-import $package$.infrastructure.{ SlickHealthCheckService, SlickItemRepository }
 import $package$.infrastructure.flyway.FlywayProvider
 
 object BootZioHttp extends ZIOAppDefault {
@@ -20,16 +17,14 @@ object BootZioHttp extends ZIOAppDefault {
   override def run: Task[Nothing] = program.provide(
     Scope.default,
     AppConfig.Api.live,
-    SlickItemRepository.live,
+    Repository.itemRepository,
+    Repository.healthCheckService,
     ApplicationService.live,
-    JdbcProfile.live,
-    DatabaseProvider.live,
-    SlickHealthCheckService.live,
     ApiZioHttp.live,
     EventLoopGroup.auto(0),
     ServerChannelFactory.auto,
     HttpService.live,
-    AppConfig.Database.live,
+    AppConfig.RawConfig.live,
     FlywayProvider.live,
     Logger.live
   )

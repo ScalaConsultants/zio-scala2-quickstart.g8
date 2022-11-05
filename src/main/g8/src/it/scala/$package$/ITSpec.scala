@@ -1,15 +1,13 @@
 package $package$
 
 import com.typesafe.config.{ Config, ConfigFactory }
-import slick.jdbc.PostgresProfile
-import slick.interop.zio.DatabaseProvider
 
 import zio._
 import zio.test.ZIOSpecDefault
 import zio.logging.backend.SLF4J
 
 import $package$.domain.ItemRepository
-import $package$.infrastructure.{ Postgres, SlickItemRepository }
+import $package$.infrastructure.Postgres
 import $package$.infrastructure.Postgres.SchemaAwarePostgresContainer
 import $package$.infrastructure.flyway.FlywayProvider
 
@@ -30,27 +28,77 @@ abstract class ITSpec(schema: Option[String]) extends ZIOSpecDefault {
       for {
         container <- ZIO.service[SchemaAwarePostgresContainer]
       } yield ConfigFactory.parseMap(
-        Map(
-          "url"            -> container.jdbcUrl,
-          "user"           -> container.username,
-          "password"       -> container.password,
-          "driver"         -> "org.postgresql.Driver",
-          "connectionPool" -> "HikariCP",
-          "numThreads"     -> 1,
-          "queueSize"      -> 100
+        Map[String, Any](
+          "db.url"            -> container.jdbcUrl,
+          "db.user"           -> container.username,
+          "db.password"       -> container.password,
+          "db.driver"         -> "org.postgresql.Driver",
+          "db.connectionPool" -> "HikariCP",
+          "db.numThreads"     -> 1,
+          "db.queueSize"      -> 100
         ).asJava
       )
     }
 
-    val jdbcProfile: ULayer[PostgresProfile] = ZLayer.succeed(PostgresProfile)
+$if(enable_slick.truthy)$
+    object Repository {
+      import slick.jdbc.PostgresProfile
+      import slick.interop.zio.DatabaseProvider
+      import $package$.infrastructure.slick.SlickItemRepository
+      import $package$.domain.ItemRepository
+
+      val jdbcProfileLayer: ULayer[PostgresProfile] = ZLayer.succeed(PostgresProfile)
+
+      val dbConfigLayer: RLayer[SchemaAwarePostgresContainer, Config] = config.flatMap { rawConfig =>
+        ZLayer.succeed(rawConfig.get.getConfig("db"))
+      }
+
+      val slickLayer: RLayer[SchemaAwarePostgresContainer, DatabaseProvider] =
+        (jdbcProfileLayer ++ dbConfigLayer) >>> DatabaseProvider.live.orDie
+
+      val itemRepositoryLayer: RLayer[SchemaAwarePostgresContainer, ItemRepository] =
+        slickLayer >>> SlickItemRepository.live
+    }
+$endif$
+$if(enable_quill.truthy)$
+    object Repository {
+      import io.getquill.jdbczio.Quill
+      import io.getquill.Literal
+      import javax.sql.DataSource
+      import $package$.infrastructure.quill.QuillItemRepository
+      import $package$.domain.ItemRepository
+
+
+      val quillDataSourceLayer: RLayer[SchemaAwarePostgresContainer, DataSource] = config.flatMap { rawConfig =>
+        val dbConfig: Config = rawConfig.get.getConfig("db")
+
+        Quill.DataSource.fromConfig(
+          ConfigFactory.parseMap(
+            Map(
+              "dataSourceClassName" -> "org.postgresql.ds.PGSimpleDataSource",
+              "dataSource.url"      -> dbConfig.getString("url"),
+              "dataSource.user"     -> dbConfig.getString("user"),
+              "dataSource.password" -> dbConfig.getString("password")
+            ).asJava
+          )
+        )
+      }
+
+      val quillPostgresLayer: RLayer[DataSource, Quill.Postgres[Literal]] = Quill.Postgres.fromNamingStrategy(Literal)
+
+      val quillLayer: RLayer[SchemaAwarePostgresContainer, Quill.Postgres[Literal]] =
+        (quillDataSourceLayer >>> quillPostgresLayer).orDie
+
+      val itemRepositoryLayer: RLayer[SchemaAwarePostgresContainer, ItemRepository] =
+        quillLayer >>> QuillItemRepository.live
+    }
+$endif$
 
     ZLayer.makeSome[Scope, FlywayProvider with ItemRepository](
       logging,
-      jdbcProfile,
       config,
       postgres,
-      DatabaseProvider.live,
-      SlickItemRepository.live,
+      Repository.itemRepositoryLayer,
       FlywayProvider.live
     )
   }
