@@ -93,7 +93,7 @@ object ApiAkkaHttpSpec extends ZioRouteTest {
                              val theStatus = status
                              val theCT     = contentType
                              val theBody   = entityAs[Item]
-                             assert(theStatus)(equalTo(StatusCodes.OK)) &&
+                             assert(theStatus)(equalTo(StatusCodes.Created)) &&
                              assert(theCT)(equalTo(ContentTypes.`application/json`)) &&
                              assert(theBody)(equalTo(Item(ItemId(0), "name", 100.0)))
                            })
@@ -138,7 +138,7 @@ object ApiAkkaHttpSpec extends ZioRouteTest {
           routes        <- ApiAkkaHttp.routes
           resultCheck   <- ZIO.attemptBlocking(Delete("/items/1") ~> routes ~> check {
                              val s = status
-                             assert(s)(equalTo(StatusCodes.OK))
+                             assert(s)(equalTo(StatusCodes.NoContent))
                            })
           contentsCheck <- assertZIO(allItems)(hasSameElements(items.take(1)))
         } yield resultCheck && contentsCheck

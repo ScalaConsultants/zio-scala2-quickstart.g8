@@ -55,7 +55,7 @@ object ApiAkkaHttp {
                   .provide(applicationLayer)
                   .map { id =>
                     complete {
-                      Item(id, req.name, req.price)
+                      (StatusCodes.Created, Item(id, req.name, req.price))
                     }
                   }
               }
@@ -63,34 +63,51 @@ object ApiAkkaHttp {
           } ~
           path(LongNumber) { itemId =>
             delete {
-              complete(
-                ApplicationService
-                  .deleteItem(ItemId(itemId))
-                  .provide(applicationLayer)
-                  .as(EmptyResponse())
-              )
+              complete {
+                for {
+                  amount <- ApplicationService.deleteItem(ItemId(itemId)).provide(applicationLayer)
+                  _      <- if (amount <= 0) ZIO.fail(NotFoundError.empty)
+                            else ZIO.unit
+                } yield StatusCodes.NoContent
+              }
             } ~
             get {
-              complete(ApplicationService.getItem(ItemId(itemId)).provide(applicationLayer))
+              complete {
+                ApplicationService
+                  .getItem(ItemId(itemId))
+                  .flatMap {
+                    case Some(item) => ZIO.succeed(item)
+                    case None => ZIO.fail(NotFoundError(s"Item \$itemId not found"))
+                  }
+                  .provide(applicationLayer)
+              }
             } ~
             patch {
               entity(Directives.as[PartialUpdateItemRequest]) { req =>
-                complete(
+                complete {
                   ApplicationService
                     .partialUpdateItem(ItemId(itemId), req.name, req.price)
+                    .flatMap {
+                      case Some(()) => ZIO.unit
+                      case None => ZIO.fail(NotFoundError(s"Item \$itemId not found"))
+                    }
                     .provide(applicationLayer)
                     .as(EmptyResponse())
-                )
+                }
               }
             } ~
             put {
               entity(Directives.as[UpdateItemRequest]) { req =>
-                complete(
+                complete {
                   ApplicationService
                     .updateItem(ItemId(itemId), req.name, req.price)
+                    .flatMap {
+                      case Some(()) => ZIO.unit
+                      case None => ZIO.fail(NotFoundError(s"Item \$itemId not found"))
+                    }
                     .provide(applicationLayer)
                     .as(EmptyResponse())
-                )
+                }
               }
             }
           }
