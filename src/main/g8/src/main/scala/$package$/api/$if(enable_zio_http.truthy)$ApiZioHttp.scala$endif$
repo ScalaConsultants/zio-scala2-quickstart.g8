@@ -24,7 +24,14 @@ object ApiZioHttp {
   }
 
   implicit class RichDomain[T](val data: T) extends AnyVal {
-    def toResponseZIO(implicit ev: JsonEncoder[T]): UIO[Response] = ZIO.succeed(Response.json(data.toJson))
+
+    def toResponseZIO(implicit ev: JsonEncoder[T]): UIO[Response] = toResponseZIO(Status.Ok)
+
+    def toResponseZIO(status: Status)(implicit ev: JsonEncoder[T]): UIO[Response] = ZIO.succeed {
+      Response.json(data.toJson).setStatus(status)
+    }
+
+    def asNoContentResponseZIO: UIO[Response] = ZIO.succeed(Response.status(Status.NoContent))
   }
 
   def extractLong(str: String): IO[ValidationError, Long] = ZIO
@@ -33,9 +40,10 @@ object ApiZioHttp {
     .mapError(err => ValidationError(err.getMessage))
 
   def handleError(err: DomainError): UIO[Response] = err match {
-    case NotFoundError(msg)     => msg.toResponseZIO.map(_.setStatus(Status.NotFound))
-    case ValidationError(msg)   => msg.toResponseZIO.map(_.setStatus(Status.BadRequest))
-    case RepositoryError(cause) => cause.getMessage.toResponseZIO.map(_.setStatus(Status.InternalServerError))
+    case NotFoundError(None)      => ZIO.succeed(Response.status(Status.NotFound))
+    case NotFoundError(Some(msg)) => msg.toResponseZIO(Status.NotFound)
+    case ValidationError(msg)     => msg.toResponseZIO(Status.BadRequest)
+    case RepositoryError(cause)   => cause.getMessage.toResponseZIO(Status.InternalServerError)
   }
 
   class HealthCheckApp(healthCheck: HealthCheckService) {
@@ -62,12 +70,12 @@ object ApiZioHttp {
           .foldZIO(handleError, _.toResponseZIO)
 
       case request @ Method.POST -> !! / "items" =>
-        val effect: IO[DomainError, String] = for {
+        val effect: IO[DomainError, Item] = for {
           r  <- request.bodyAs[CreateItemRequest].mapError(ValidationError)
           id <- application.addItem(r.name, r.price)
-        } yield s"Item created with Id: \${id.value}"
+        } yield Item(id, name = r.name, price = r.price)
 
-        effect.foldZIO(handleError, _.toResponseZIO)
+        effect.foldZIO(handleError, _.toResponseZIO(Status.Created))
 
       case Method.GET -> !! / "items" / itemId =>
         val effect: IO[DomainError, Item] = for {
@@ -81,14 +89,14 @@ object ApiZioHttp {
         effect.foldZIO(handleError, _.toResponseZIO)
 
       case Method.DELETE -> !! / "items" / itemId =>
-        val effect: IO[DomainError, String] = for {
+        val effect: IO[DomainError, Unit] = for {
           id     <- extractLong(itemId)
           amount <- application.deleteItem(ItemId(id))
-          ans    <- if (amount == 0) ZIO.fail(NotFoundError(s"Item \$id not found"))
-                    else ZIO.succeed(s"\$amount item(s) with id: \$id were deleted")
-        } yield ans
+          _      <- if (amount == 0) ZIO.fail(NotFoundError.empty)
+                    else ZIO.unit
+        } yield ()
 
-        effect.foldZIO(handleError, _.toResponseZIO)
+        effect.foldZIO(handleError, _.asNoContentResponseZIO)
 
       case request @ Method.PATCH -> !! / "items" / itemId =>
         val effect: IO[DomainError, String] = for {
