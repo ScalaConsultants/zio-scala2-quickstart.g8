@@ -112,7 +112,7 @@ object ApiZioHttp {
 
       case request @ Method.PUT -> !! / "items" / itemId =>
         val effect: IO[DomainError, Item] = for {
-          id        <- extractLong(id)
+          id        <- extractLong(itemId)
           r         <- request.bodyAs[UpdateItemRequest].mapError(ValidationError)
           maybeItem <- application.updateItem(ItemId(id), r.name, r.price)
           item      <- maybeItem
