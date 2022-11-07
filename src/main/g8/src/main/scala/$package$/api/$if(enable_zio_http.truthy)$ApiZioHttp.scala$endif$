@@ -99,14 +99,14 @@ object ApiZioHttp {
         effect.foldZIO(handleError, _.asNoContentResponseZIO)
 
       case request @ Method.PATCH -> !! / "items" / itemId =>
-        val effect: IO[DomainError, String] = for {
-          id           <- extractLong(itemId)
-          r            <- request.bodyAs[PartialUpdateItemRequest].mapError(ValidationError)
-          maybeUpdated <- application.partialUpdateItem(ItemId(id), r.name, r.price)
-          ans          <- maybeUpdated
-                            .map(_ => ZIO.succeed(s"Item \$id was updated"))
-                            .getOrElse(ZIO.fail(NotFoundError(s"Item \$id not found")))
-        } yield ans
+        val effect: IO[DomainError, Item] = for {
+          id        <- extractLong(itemId)
+          r         <- request.bodyAs[PartialUpdateItemRequest].mapError(ValidationError)
+          maybeItem <- application.partialUpdateItem(ItemId(id), r.name, r.price)
+          item      <- maybeItem
+                         .map(ZIO.succeed(_))
+                         .getOrElse(ZIO.fail(NotFoundError.empty))
+        } yield item
 
         effect.foldZIO(handleError, _.toResponseZIO)
 
