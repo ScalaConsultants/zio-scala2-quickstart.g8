@@ -5,7 +5,7 @@ val zioAkkaHttpInterop    = "0.6.0"
 val akkaHttpZioJson       = "1.40.0-RC3"
 $endif$
 $if(enable_zio_http.truthy)$
-val zioHttpVersion        = "2.0.0-RC10"
+val zioHttpVersion        = "2.0.0-RC11"
 $endif$
 $if(enable_slick.truthy)$
 val slickVersion          = "3.4.1"
