@@ -1,12 +1,12 @@
 package $package$
 
-$if(enable_slick.truthy)$
+$if(enable_slick.truthy) $
 import com.typesafe.config.Config
 import slick.interop.zio.DatabaseProvider
 import slick.jdbc.JdbcProfile
 import slick.jdbc.PostgresProfile
 $endif$
-$if(enable_quill.truthy)$
+$if(enable_quill.truthy) $
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import io.getquill.jdbczio.Quill
@@ -18,13 +18,13 @@ $endif$
 import zio._
 import zio.logging.backend.SLF4J
 
-$if(enable_slick.truthy)$
-import $package$.infrastructure.slick.{SlickHealthCheckService, SlickItemRepository}
+$if(enable_slick.truthy) $
+import $package$.infrastructure.slick.{ SlickHealthCheckService, SlickItemRepository }
 $endif$
-$if(enable_quill.truthy)$
-import $package$.infrastructure.quill.{QuillHealthCheckService, QuillItemRepository}
+$if(enable_quill.truthy) $
+import $package$.infrastructure.quill.{ QuillHealthCheckService, QuillItemRepository }
 $endif$
-$if(!enable_quill.truthy&&!enable_slick.truthy)$
+$if(!enable_quill.truthy &&! enable_slick.truthy) $
 import $package$.api.healthcheck.InMemoryHealthCheckService
 import $package$.domain.InMemoryItemRepository
 $endif$
@@ -41,14 +41,14 @@ object Layers {
     )
   }
 
-$if(enable_slick.truthy)$
+  $if(enable_slick.truthy) $
   object Repository {
 
     val jdbcProfileLayer: ULayer[JdbcProfile] = ZLayer.succeed[JdbcProfile](PostgresProfile)
 
     val dbConfigLayer: URLayer[Config, Config] = ZLayer {
       for {
-        config <- ZIO.service[Config]
+        config  <- ZIO.service[Config]
         dbConfig = config.getConfig("db")
       } yield dbConfig
     }
@@ -56,23 +56,23 @@ $if(enable_slick.truthy)$
     val slickLayer: URLayer[Config, DatabaseProvider] =
       (jdbcProfileLayer ++ dbConfigLayer) >>> DatabaseProvider.live.orDie
 
-    val itemRepository: RLayer[Config, ItemRepository] = (slickLayer >>> SlickItemRepository.live).orDie
+    val itemRepository: RLayer[Config, ItemRepository]         = (slickLayer >>> SlickItemRepository.live).orDie
     val healthCheckService: RLayer[Config, HealthCheckService] = (slickLayer >>> SlickHealthCheckService.live).orDie
   }
-$endif$
-$if(enable_quill.truthy)$
+  $endif$
+  $if(enable_quill.truthy) $
   object Repository {
 
     val quillDataSourceLayer: RLayer[Config, DataSource] = ZLayer {
       for {
-        config <- ZIO.service[Config]
+        config  <- ZIO.service[Config]
         dbConfig = config.getConfig("db")
       } yield Quill.DataSource.fromConfig(
         ConfigFactory.parseMap(
           Map(
             "dataSourceClassName" -> "org.postgresql.ds.PGSimpleDataSource",
-            "dataSource.url" -> dbConfig.getString("url"),
-            "dataSource.user" -> dbConfig.getString("user"),
+            "dataSource.url"      -> dbConfig.getString("url"),
+            "dataSource.user"     -> dbConfig.getString("user"),
             "dataSource.password" -> dbConfig.getString("password")
           ).asJava
         )
@@ -83,15 +83,15 @@ $if(enable_quill.truthy)$
 
     val quillLayer: RLayer[Config, Quill.Postgres[Literal]] = (quillDataSourceLayer >>> quillPostgresLayer).orDie
 
-    val itemRepository: RLayer[Config, ItemRepository] = (quillLayer >>> QuillItemRepository.live).orDie
+    val itemRepository: RLayer[Config, ItemRepository]         = (quillLayer >>> QuillItemRepository.live).orDie
     val healthCheckService: RLayer[Config, HealthCheckService] = (quillLayer >>> QuillHealthCheckService.live).orDie
   }
-$endif$
-$if(!enable_quill.truthy&&!enable_slick.truthy)$
+  $endif$
+  $if(!enable_quill.truthy &&! enable_slick.truthy) $
   object Repository {
 
-    val itemRepository: ULayer[ItemRepository] = InMemoryItemRepository.live
+    val itemRepository: ULayer[ItemRepository]         = InMemoryItemRepository.live
     val healthCheckService: ULayer[HealthCheckService] = InMemoryHealthCheckService.live
   }
-$endif$
+  $endif$
 }
