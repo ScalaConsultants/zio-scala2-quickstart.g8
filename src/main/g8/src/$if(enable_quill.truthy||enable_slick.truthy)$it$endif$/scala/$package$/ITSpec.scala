@@ -40,7 +40,7 @@ abstract class ITSpec(schema: Option[String]) extends ZIOSpecDefault {
       )
     }
 
-$if(enable_slick.truthy)$
+    $if(enable_slick.truthy) $
     object Repository {
       import slick.jdbc.PostgresProfile
       import slick.interop.zio.DatabaseProvider
@@ -59,15 +59,14 @@ $if(enable_slick.truthy)$
       val itemRepositoryLayer: RLayer[SchemaAwarePostgresContainer, ItemRepository] =
         slickLayer >>> SlickItemRepository.live
     }
-$endif$
-$if(enable_quill.truthy)$
+    $endif$
+    $if(enable_quill.truthy) $
     object Repository {
       import io.getquill.jdbczio.Quill
       import io.getquill.Literal
       import javax.sql.DataSource
       import $package$.infrastructure.quill.QuillItemRepository
       import $package$.domain.ItemRepository
-
 
       val quillDataSourceLayer: RLayer[SchemaAwarePostgresContainer, DataSource] = config.flatMap { rawConfig =>
         val dbConfig: Config = rawConfig.get.getConfig("db")
@@ -92,7 +91,7 @@ $if(enable_quill.truthy)$
       val itemRepositoryLayer: RLayer[SchemaAwarePostgresContainer, ItemRepository] =
         quillLayer >>> QuillItemRepository.live
     }
-$endif$
+    $endif$
 
     ZLayer.makeSome[Scope, FlywayProvider with ItemRepository](
       logging,
