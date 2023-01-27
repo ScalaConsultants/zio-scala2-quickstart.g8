@@ -14,7 +14,7 @@ val flywayVersion         = "9.4.0"
 val testContainersVersion = "0.40.11"
 val postgresVersion       = "42.5.0"
 val zioJsonVersion        = "0.3.0-RC11"
-val logbackClassicVersion = "1.4.5"
+val logbackClassicVersion = "1.2.11"
 val jansiVersion          = "2.4.0"
 
 lazy val It = config("it").extend(Test)
