@@ -1,3 +1,11 @@
+val zioVersion            = "2.0.2"
+val zioJsonVersion        = "0.3.0-RC11"
+val zioConfigVersion      = "3.0.2"
+val logbackClassicVersion = "1.2.11"
+val postgresqlVersion     = "42.5.0"
+val testContainersVersion = "0.40.11"
+val zioLoggingVersion     = "2.1.2"
+val flywayVersion         = "9.4.0"
 $if(enable_akka_http.truthy)$
 val akkaHttpVersion       = "10.2.10"
 val akkaVersion           = "2.6.20"
@@ -14,15 +22,6 @@ $endif$
 $if(enable_quill.truthy)$
 val quillVersion          = "4.6.0"
 $endif$
-val zioVersion            = "2.0.2"
-val zioLoggingVersion     = "2.1.2"
-val zioConfigVersion      = "3.0.2"
-val flywayVersion         = "9.4.0"
-val testContainersVersion = "0.40.11"
-val postgresVersion       = "42.5.0"
-val zioJsonVersion        = "0.3.0-RC11"
-val logbackClassicVersion = "1.2.11"
-val jansiVersion          = "2.4.0"
 
 val dockerReleaseSettings = Seq(
   dockerExposedPorts   := Seq(8080),
@@ -74,14 +73,13 @@ $endif$
       "dev.zio"        %% "zio-config"          % zioConfigVersion,
       "dev.zio"        %% "zio-config-magnolia" % zioConfigVersion,
       "dev.zio"        %% "zio-config-typesafe" % zioConfigVersion,
-      "org.postgresql"  % "postgresql"          % postgresVersion,
+      "org.postgresql"  % "postgresql"          % postgresqlVersion,
       "org.flywaydb"    % "flyway-core"         % flywayVersion,
 
       // logging
       "dev.zio"             %% "zio-logging"       % zioLoggingVersion,
       "dev.zio"             %% "zio-logging-slf4j" % zioLoggingVersion,
       "ch.qos.logback"       % "logback-classic"   % logbackClassicVersion,
-      "org.fusesource.jansi" % "jansi"             % jansiVersion,
 
       // test
 $if(enable_akka_http.truthy)$
