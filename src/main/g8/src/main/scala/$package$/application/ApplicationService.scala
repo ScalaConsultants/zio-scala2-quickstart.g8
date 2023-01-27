@@ -14,9 +14,9 @@ trait ApplicationService {
 
   val getItems: IO[DomainError, List[Item]]
 
-  def partialUpdateItem(itemId: ItemId, name: Option[String], price: Option[BigDecimal]): IO[DomainError, Option[Unit]]
+  def partialUpdateItem(itemId: ItemId, name: Option[String], price: Option[BigDecimal]): IO[DomainError, Option[Item]]
 
-  def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Unit]]
+  def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Item]]
 }
 
 object ApplicationService {
@@ -41,7 +41,7 @@ object ApplicationService {
         itemId: ItemId,
         name: Option[String],
         price: Option[BigDecimal]
-      ): IO[DomainError, Option[Unit]] = {
+      ): IO[DomainError, Option[Item]] = {
 
         val result = for {
           item <- repo.getById(itemId).some
@@ -49,13 +49,17 @@ object ApplicationService {
           _    <- repo
                     .update(itemId, data)
                     .mapError(Some(_))
-        } yield ()
+        } yield Item.withData(itemId, data)
 
         result.unsome
       }
 
-      def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Unit]] =
-        repo.update(itemId, ItemData(name, price))
+      def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Item]] =
+        for {
+          data         <- ZIO.succeed(ItemData(name, price))
+          maybeUpdated <- repo.update(itemId, data)
+          maybeItem     = maybeUpdated.map(_ => Item.withData(itemId, data))
+        } yield maybeItem
     }
   }
 
@@ -75,10 +79,10 @@ object ApplicationService {
     itemId: ItemId,
     name: Option[String],
     price: Option[BigDecimal]
-  ): ZIO[ApplicationService, DomainError, Option[Unit]] =
+  ): ZIO[ApplicationService, DomainError, Option[Item]] =
     ZIO.environmentWithZIO(_.get.partialUpdateItem(itemId, name, price))
 
-  def updateItem(itemId: ItemId, name: String, price: BigDecimal): ZIO[ApplicationService, DomainError, Option[Unit]] =
+  def updateItem(itemId: ItemId, name: String, price: BigDecimal): ZIO[ApplicationService, DomainError, Option[Item]] =
     ZIO.environmentWithZIO(_.get.updateItem(itemId, name, price))
 
 }

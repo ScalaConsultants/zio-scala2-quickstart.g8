@@ -88,11 +88,10 @@ object ApiAkkaHttp {
                   ApplicationService
                     .partialUpdateItem(ItemId(itemId), req.name, req.price)
                     .flatMap {
-                      case Some(()) => ZIO.unit
-                      case None => ZIO.fail(NotFoundError(s"Item \$itemId not found"))
+                      case Some(item) => ZIO.succeed(item)
+                      case None       => ZIO.fail(NotFoundError.empty)
                     }
                     .provide(applicationLayer)
-                    .as(EmptyResponse())
                 }
               }
             } ~
@@ -102,11 +101,10 @@ object ApiAkkaHttp {
                   ApplicationService
                     .updateItem(ItemId(itemId), req.name, req.price)
                     .flatMap {
-                      case Some(()) => ZIO.unit
-                      case None => ZIO.fail(NotFoundError(s"Item \$itemId not found"))
+                      case Some(item) => ZIO.succeed(item)
+                      case None       => ZIO.fail(NotFoundError.empty)
                     }
                     .provide(applicationLayer)
-                    .as(EmptyResponse())
                 }
               }
             }
