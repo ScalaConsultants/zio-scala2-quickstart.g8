@@ -16,7 +16,7 @@ val quillVersion          = "4.6.0"
 $endif$
 val zioVersion            = "2.0.2"
 val zioLoggingVersion     = "2.1.2"
-val zioConfigVersion      = "3.0.7"
+val zioConfigVersion      = "3.0.2"
 val flywayVersion         = "9.4.0"
 val testContainersVersion = "0.40.11"
 val postgresVersion       = "42.5.0"
