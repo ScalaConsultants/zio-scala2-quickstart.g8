@@ -9,7 +9,6 @@ import zio._
 
 import $package$.Layers._
 import $package$.api._
-import $package$.application.ApplicationService
 import $package$.config.AppConfig
 import $package$.infrastructure.flyway.FlywayProvider
 
@@ -21,7 +20,6 @@ object BootAkkaHttp extends ZIOAppDefault {
     AkkaActorSystem.live,
     Repository.healthCheckService,
     Repository.itemRepository,
-    ApplicationService.live,
     ApiAkkaHttp.live,
     ApiRoutes.live,
     HttpServer.live,

@@ -1,0 +1,21 @@
+package $package$.api
+
+import zio._
+import zhttp.http._
+
+import $package$.api.healthcheck.HealthCheckService
+
+object HealthCheckApp {
+
+  val app: HttpApp[HealthCheckService, Nothing] = Http.collectZIO[Request] {
+
+    case Method.HEAD -> !! / "healthcheck" =>
+      ZIO.succeed(Response.status(Status.NoContent))
+
+    case Method.GET -> !! / "healthcheck" =>
+      HealthCheckService.healthCheck.map { dbStatus =>
+        if (dbStatus.status) Response.ok
+        else Response.status(Status.InternalServerError)
+      }
+  }
+}

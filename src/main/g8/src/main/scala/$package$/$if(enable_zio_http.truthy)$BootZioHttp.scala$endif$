@@ -1,80 +1,40 @@
 package $package$
 
 import zio._
-import zhttp.service.{ EventLoopGroup, Server, ServerChannelFactory }
-import zhttp.service.server.ServerChannelFactory
+import zhttp.service.Server
 
 import $package$.Layers._
-import $package$.api.ApiZioHttp
-import $package$.application.ApplicationService
+import $package$.api.{ HealthCheckApp, ItemApp }
 import $package$.config.AppConfig
 import $package$.infrastructure.flyway.FlywayProvider
 
 object BootZioHttp extends ZIOAppDefault {
 
-  import http._
+  val routes = ItemApp.app ++ HealthCheckApp.app
+  
+  val startHttpServer = 
+    ZIO.service[AppConfig.ApiConfig].flatMap { cfg => 
+      Server.start(cfg.port, routes)
+    }
 
-  override def run: Task[Nothing] = program.provide(
-    Scope.default,
-    AppConfig.Api.live,
-    Repository.itemRepository,
-    Repository.healthCheckService,
-    ApplicationService.live,
-    ApiZioHttp.live,
-    EventLoopGroup.auto(0),
-    ServerChannelFactory.auto,
-    HttpService.live,
-    AppConfig.RawConfig.live,
-    FlywayProvider.live,
-    Logger.live
-  )
+  val migrateDbSchema: RIO[FlywayProvider, Unit] =
+    FlywayProvider.flyway
+      .flatMap(_.migrate)
+      .retry(Schedule.exponential(200.millis))
+      .flatMap(res => Console.printLine(s"Flyway migration completed with: \$res"))
 
-  type ProgramEnv = Scope with FlywayProvider with EventLoopGroup with ServerChannelFactory with HttpService
-
-  private val program: RIO[ProgramEnv, Nothing] = {
-
-    val startHttpServer: RIO[Scope with EventLoopGroup with ServerChannelFactory with HttpService, Server.Start] =
-      HttpService.start.tap(start => Console.printLine(s"Server online on port: \${start.port}."))
-
-    val migrateDbSchema: RIO[FlywayProvider, Unit] =
-      FlywayProvider.flyway
-        .flatMap(_.migrate)
-        .retry(Schedule.exponential(200.millis))
-        .flatMap(res => Console.printLine(s"Flyway migration completed with: \$res"))
-
-    startHttpServer *>
+  val program =
     migrateDbSchema *>
-    ZIO.never
-  }
+    startHttpServer
 
-  object http {
+  override val run = 
+    program.provide(
+      AppConfig.Api.live,
+      Repository.itemRepository,
+      Repository.healthCheckService,
+      AppConfig.RawConfig.live,
+      FlywayProvider.live,
+      Logger.live
+    )
 
-    trait HttpService {
-      def start: ZIO[Scope with EventLoopGroup with ServerChannelFactory, Throwable, Server.Start]
-    }
-
-    object HttpService {
-
-      val live: ZLayer[ApiZioHttp with AppConfig.ApiConfig, Nothing, HttpService] = ZLayer {
-        for {
-          api <- ZIO.service[ApiZioHttp]
-          app  = Server.app(api.apps)
-
-          cfg <- ZIO.service[AppConfig.ApiConfig]
-          host = cfg.host
-          port = cfg.port
-          bind = Server.bind(host, port)
-
-          server = bind ++ app
-        } yield new HttpService {
-          override def start: ZIO[Scope with EventLoopGroup with ServerChannelFactory, Throwable, Server.Start] =
-            server.make
-        }
-      }
-
-      def start: ZIO[Scope with EventLoopGroup with ServerChannelFactory with HttpService, Throwable, Server.Start] =
-        ZIO.serviceWithZIO[HttpService](_.start)
-    }
-
-  }
 }
