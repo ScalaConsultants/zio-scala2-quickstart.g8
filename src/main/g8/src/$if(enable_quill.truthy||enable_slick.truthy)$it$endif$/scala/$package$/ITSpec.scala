@@ -91,15 +91,17 @@ $if(enable_quill.truthy)$
 
       val itemRepositoryLayer: RLayer[SchemaAwarePostgresContainer, ItemRepository] =
         quillLayer >>> QuillItemRepository.live
+
+      val flywayLayer: RLayer[SchemaAwarePostgresContainer, FlywayProvider] = quillDataSourceLayer >>> FlywayProvider.live
+
     }
 $endif$
 
     ZLayer.makeSome[Scope, FlywayProvider with ItemRepository](
       logging,
-      config,
       postgres,
       Repository.itemRepositoryLayer,
-      FlywayProvider.live
+      Repository.flywayLayer
     )
   }
 

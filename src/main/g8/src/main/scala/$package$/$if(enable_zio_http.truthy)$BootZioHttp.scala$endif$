@@ -3,7 +3,6 @@ package $package$
 import zio._
 import zhttp.service.Server
 
-import $package$.Layers._
 import $package$.api.{ HealthCheckApp, ItemApp }
 import $package$.config.AppConfig
 import $package$.infrastructure.flyway.FlywayProvider
@@ -30,11 +29,10 @@ object BootZioHttp extends ZIOAppDefault {
   override val run = 
     program.provide(
       AppConfig.Api.live,
-      Repository.itemRepository,
-      Repository.healthCheckService,
-      AppConfig.RawConfig.live,
-      FlywayProvider.live,
-      Logger.live
+      Layers.itemRepository,
+      Layers.healthCheckService,
+      Layers.flyway,
+      Layers.logger
     )
 
 }

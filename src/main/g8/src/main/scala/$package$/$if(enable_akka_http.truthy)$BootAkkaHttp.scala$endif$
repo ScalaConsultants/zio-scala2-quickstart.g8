@@ -7,7 +7,6 @@ import akka.http.scaladsl.server.Route
 
 import zio._
 
-import $package$.Layers._
 import $package$.api._
 import $package$.config.AppConfig
 import $package$.infrastructure.flyway.FlywayProvider
@@ -18,14 +17,14 @@ object BootAkkaHttp extends ZIOAppDefault {
     Scope.default,
     HttpServerConfig.live,
     AkkaActorSystem.live,
-    Repository.healthCheckService,
-    Repository.itemRepository,
+    Layers.healthCheckService,
+    Layers.itemRepository,
     ApiAkkaHttp.live,
     ApiRoutes.live,
     HttpServer.live,
     AppConfig.RawConfig.live,
     FlywayProvider.live,
-    Logger.live
+    Layers.logger
   )
 
   private val program: RIO[Scope with FlywayProvider with HttpServer, Nothing] = {
