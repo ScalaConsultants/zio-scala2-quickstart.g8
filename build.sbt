@@ -13,7 +13,7 @@ val zioAkkaHttpInterop    = "0.6.0"
 val akkaHttpZioJson       = "1.40.0-RC3"
 val zioHttpVersion        = "2.0.0-RC10"
 val slickVersion          = "3.4.1"
-val zioSlickInterop       = "0.5.0"
+val zioSlickInterop       = "0.6.0"
 val quillVersion          = "4.6.0"
 
 lazy val It = config("it").extend(Test)
@@ -67,16 +67,16 @@ val root = (project in file("."))
       "org.flywaydb"   % "flyway-core"         % flywayVersion,
 
       // logging
-      "dev.zio"             %% "zio-logging"       % zioLoggingVersion,
-      "dev.zio"             %% "zio-logging-slf4j" % zioLoggingVersion,
-      "ch.qos.logback"       % "logback-classic"   % logbackClassicVersion,
+      "dev.zio"       %% "zio-logging"       % zioLoggingVersion,
+      "dev.zio"       %% "zio-logging-slf4j" % zioLoggingVersion,
+      "ch.qos.logback" % "logback-classic"   % logbackClassicVersion,
 
       // test
       "com.typesafe.akka" %% "akka-http-testkit"               % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-stream-testkit"             % akkaVersion,
       "com.typesafe.akka" %% "akka-actor-testkit-typed"        % akkaVersion,
       "dev.zio"           %% "zio-test-sbt"                    % zioVersion            % Test,
-      "com.dimafeng"      %% "testcontainers-scala-postgresql" % testContainersVersion % It,
+      "com.dimafeng"      %% "testcontainers-scala-postgresql" % testContainersVersion % It
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
