@@ -17,7 +17,7 @@ val zioHttpVersion        = "2.0.0-RC10"
 $endif$
 $if(enable_slick.truthy)$
 val slickVersion          = "3.4.1"
-val zioSlickInterop       = "0.5.0"
+val zioSlickInterop       = "0.6.0"
 $endif$
 $if(enable_quill.truthy)$
 val quillVersion          = "4.6.0"

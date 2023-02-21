@@ -1,6 +1,7 @@
 package $package$.infrastructure.flyway
 
-import com.typesafe.config.Config
+import javax.sql.DataSource
+
 import org.flywaydb.core.api.FlywayException
 
 import zio._
@@ -11,14 +12,11 @@ trait FlywayProvider {
 
 object FlywayProvider {
 
-  val live: RLayer[Config, FlywayProvider] = ZLayer {
+  val live: RLayer[DataSource, FlywayProvider] = ZLayer {
     for {
-      cfg  <- ZIO.service[Config]
-      url  <- ZIO.attempt(cfg.getString("db.url"))
-      user <- ZIO.attempt(cfg.getString("db.user"))
-      pwd  <- ZIO.attempt(cfg.getString("db.password"))
+      ds  <- ZIO.service[DataSource]
     } yield new FlywayProvider {
-      override val flyway: IO[FlywayException, Flyway] = Flyway(url, user, pwd)
+      override val flyway: IO[FlywayException, Flyway] = Flyway(ds)
     }
   }
 
