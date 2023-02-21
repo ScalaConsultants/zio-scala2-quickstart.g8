@@ -2,15 +2,15 @@ package $package$
 
 $if(enable_slick.truthy)$
 import com.typesafe.config.Config
+import com.zaxxer.hikari.{ HikariConfig, HikariDataSource }
 import slick.interop.zio.DatabaseProvider
-import slick.jdbc.JdbcProfile
-import slick.jdbc.PostgresProfile
+import slick.jdbc.{ JdbcProfile, PostgresProfile }
+import slick.util.ConfigExtensionMethods._
 $endif$
 $if(enable_quill.truthy)$
 import io.getquill.Literal
 import io.getquill.jdbczio.Quill
 $endif$
-
 import zio._
 import zio.logging.backend.SLF4J
 
@@ -26,6 +26,9 @@ import $package$.domain.InMemoryItemRepository
 $endif$
 import $package$.infrastructure.flyway.FlywayProvider
 import $package$.api.healthcheck.HealthCheckService
+$if(enable_slick.truthy)$
+import $package$.config.AppConfig
+$endif$
 import $package$.domain.ItemRepository
 
 object Layers {
@@ -38,19 +41,24 @@ object Layers {
 $if(enable_slick.truthy)$
   private val jdbcProfileLayer: ULayer[JdbcProfile] = ZLayer.succeed[JdbcProfile](PostgresProfile)
 
-  private val dbConfigLayer: URLayer[Config, Config] = ZLayer {
-    for {
-      config <- ZIO.service[Config]
-      dbConfig = config.getConfig("db")
-    } yield dbConfig
+  private val dbConfigLayer: ULayer[Config] = AppConfig.RawConfig.live.project { config =>
+    config.getConfig("dataSource")
   }
 
-  private val slickLayer: URLayer[Config, DatabaseProvider] =
-    (jdbcProfileLayer ++ dbConfigLayer) >>> DatabaseProvider.live.orDie
+  private val dataSourceLayer = dbConfigLayer.project[HikariDataSource] { config => 
+    new HikariDataSource(
+      new HikariConfig(config.toProperties)
+    )
+  }
 
-  val itemRepository: RLayer[Config, ItemRepository] = (slickLayer >>> SlickItemRepository.live).orDie
+  private val slickLayer: ULayer[DatabaseProvider] =
+    (jdbcProfileLayer ++ dataSourceLayer) >>> DatabaseProvider.fromDataSource().orDie
+
+  val itemRepository: ULayer[ItemRepository] = (slickLayer >>> SlickItemRepository.live).orDie
   
-  val healthCheckService: RLayer[Config, HealthCheckService] = (slickLayer >>> SlickHealthCheckService.live).orDie
+  val healthCheckService: ULayer[HealthCheckService] = (slickLayer >>> SlickHealthCheckService.live).orDie
+
+  val flyway: ULayer[FlywayProvider] = (dataSourceLayer >>> FlywayProvider.live).orDie
 $endif$
 $if(enable_quill.truthy)$
   private val dataSourceLayer = Quill.DataSource.fromPrefix("db")

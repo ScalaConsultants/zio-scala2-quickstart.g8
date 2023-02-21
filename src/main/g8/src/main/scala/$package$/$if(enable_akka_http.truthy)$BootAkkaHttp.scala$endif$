@@ -13,35 +13,32 @@ import $package$.infrastructure.flyway.FlywayProvider
 
 object BootAkkaHttp extends ZIOAppDefault {
 
-  def run: Task[Nothing] = program.provide(
-    Scope.default,
-    HttpServerConfig.live,
-    AkkaActorSystem.live,
-    Layers.healthCheckService,
-    Layers.itemRepository,
-    ApiAkkaHttp.live,
-    ApiRoutes.live,
-    HttpServer.live,
-    AppConfig.RawConfig.live,
-    FlywayProvider.live,
-    Layers.logger
-  )
+  private val startHttpServer: RIO[Scope with HttpServer, Http.ServerBinding] =
+    HttpServer.start.tap(_ => Console.printLine("Server online."))
 
-  private val program: RIO[Scope with FlywayProvider with HttpServer, Nothing] = {
+  private val migrateDbSchema: RIO[FlywayProvider, Unit] =
+    FlywayProvider.flyway
+      .flatMap(_.migrate)
+      .retry(Schedule.exponential(200.millis))
+      .flatMap(res => Console.printLine(s"Flyway migration completed with: \$res"))
 
-    val startHttpServer: RIO[Scope with HttpServer, Http.ServerBinding] =
-      HttpServer.start.tap(_ => Console.printLine("Server online."))
-
-    val migrateDbSchema: RIO[FlywayProvider, Unit] =
-      FlywayProvider.flyway
-        .flatMap(_.migrate)
-        .retry(Schedule.exponential(200.millis))
-        .flatMap(res => Console.printLine(s"Flyway migration completed with: \$res"))
-
+  private val program: RIO[Scope with FlywayProvider with HttpServer, Nothing] =
     startHttpServer *>
     migrateDbSchema *>
     ZIO.never
-  }
+
+  override val run = program.provide(
+    Scope.default,
+    HttpServerConfig.live,
+    AkkaActorSystem.live,
+    ApiAkkaHttp.live,
+    ApiRoutes.live,
+    HttpServer.live,
+    Layers.itemRepository,
+    Layers.healthCheckService,
+    Layers.flyway,
+    Layers.logger
+  )
 
   object AkkaActorSystem {
     val live: RLayer[Scope, ActorSystem] = {

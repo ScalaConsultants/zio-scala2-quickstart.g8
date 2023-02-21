@@ -13,7 +13,7 @@ val zioAkkaHttpInterop    = "0.6.0"
 val akkaHttpZioJson       = "1.40.0-RC3"
 val zioHttpVersion        = "2.0.0-RC10"
 val slickVersion          = "3.4.1"
-val zioSlickInterop       = "0.5.0"
+val zioSlickInterop       = "0.6.0"
 val quillVersion          = "4.6.0"
 
 lazy val It = config("it").extend(Test)
