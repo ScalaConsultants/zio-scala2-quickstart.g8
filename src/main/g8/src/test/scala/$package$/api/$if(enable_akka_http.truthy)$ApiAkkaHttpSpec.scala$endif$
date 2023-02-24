@@ -23,7 +23,7 @@ object ApiAkkaHttpSpec extends ZioRouteTest {
   private implicit val rt: Runtime[Any] = Runtime.default
 
   val testLayers
-    : ULayer[HttpServer.Config with ApplicationService with HealthCheckService with ApiAkkaHttp with Annotations] = {
+    : ULayer[HttpServer.Config with ItemRepository with HealthCheckService with ApiAkkaHttp with Annotations] = {
 
     val logging: ULayer[Unit] = ZLayer.make[Unit](
       Runtime.removeDefaultLoggers,
@@ -32,19 +32,18 @@ object ApiAkkaHttpSpec extends ZioRouteTest {
 
     val config: ULayer[HttpServer.Config] = ZLayer.succeed(HttpServer.Config("localhost", 8080))
 
-    ZLayer.make[HttpServer.Config with ApplicationService with HealthCheckService with ApiAkkaHttp with Annotations](
+    ZLayer.make[HttpServer.Config with ItemRepository with HealthCheckService with ApiAkkaHttp with Annotations](
       logging,
       config,
       InMemoryItemRepository.live,
-      ApplicationService.live,
       InMemoryHealthCheckService.live,
       ApiAkkaHttp.live,
       Annotations.live
     )
   }
 
-  private def allItems: ZIO[ApplicationService, Throwable, List[Item]] =
-    ApplicationService.getItems.mapError(_.asThrowable)
+  private def allItems: ZIO[ItemRepository, Throwable, List[Item]] =
+    ApplicationService.getAllItems().mapError(_.asThrowable)
 
   private val specs =
     suite("Api")(

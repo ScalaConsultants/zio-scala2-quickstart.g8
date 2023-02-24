@@ -19,7 +19,7 @@ trait ApiAkkaHttp {
 
 object ApiAkkaHttp {
 
-  class Impl(healthCheck: HealthCheckService, application: ApplicationService)
+  class Impl(healthCheck: HealthCheckService, itemRepository: ItemRepository)
       extends ApiAkkaHttp
       with JsonSupport
       with ZIOSupport {
@@ -35,7 +35,7 @@ object ApiAkkaHttp {
     private implicit val rt: Runtime[Any] = Runtime.default
 
     private val healthCheckLayer = ZLayer.succeed(healthCheck)
-    private val applicationLayer = ZLayer.succeed(application)
+    private val itemRepositoryLayer = ZLayer.succeed(itemRepository)
 
     val itemRoute: Route =
       path("healthcheck") {
@@ -46,13 +46,13 @@ object ApiAkkaHttp {
         logRequestResult(("items", InfoLevel)) {
           pathEnd {
             get {
-              complete(ApplicationService.getItems.provide(applicationLayer))
+              complete(ApplicationService.getAllItems().provide(itemRepositoryLayer))
             } ~
             post {
               entity(Directives.as[CreateItemRequest]) { req =>
                 ApplicationService
                   .addItem(req.name, req.price)
-                  .provide(applicationLayer)
+                  .provide(itemRepositoryLayer)
                   .map { id =>
                     complete {
                       (StatusCodes.Created, Item(id, req.name, req.price))
@@ -65,7 +65,7 @@ object ApiAkkaHttp {
             delete {
               complete {
                 for {
-                  amount <- ApplicationService.deleteItem(ItemId(itemId)).provide(applicationLayer)
+                  amount <- ApplicationService.deleteItem(ItemId(itemId)).provide(itemRepositoryLayer)
                   _      <- if (amount <= 0) ZIO.fail(NotFoundError.empty)
                             else ZIO.unit
                 } yield StatusCodes.NoContent
@@ -74,12 +74,12 @@ object ApiAkkaHttp {
             get {
               complete {
                 ApplicationService
-                  .getItem(ItemId(itemId))
+                  .getItemById(ItemId(itemId))
                   .flatMap {
                     case Some(item) => ZIO.succeed(item)
                     case None => ZIO.fail(NotFoundError(s"Item \$itemId not found"))
                   }
-                  .provide(applicationLayer)
+                  .provide(itemRepositoryLayer)
               }
             } ~
             patch {
@@ -91,7 +91,7 @@ object ApiAkkaHttp {
                       case Some(item) => ZIO.succeed(item)
                       case None       => ZIO.fail(NotFoundError.empty)
                     }
-                    .provide(applicationLayer)
+                    .provide(itemRepositoryLayer)
                 }
               }
             } ~
@@ -104,7 +104,7 @@ object ApiAkkaHttp {
                       case Some(item) => ZIO.succeed(item)
                       case None       => ZIO.fail(NotFoundError.empty)
                     }
-                    .provide(applicationLayer)
+                    .provide(itemRepositoryLayer)
                 }
               }
             }
@@ -117,11 +117,11 @@ object ApiAkkaHttp {
   val routes: URIO[ApiAkkaHttp, Route] =
     ZIO.environmentWithZIO[ApiAkkaHttp](api => ZIO.succeed(Route.seal(api.get.routes)))
 
-  val live: URLayer[HttpServer.Config with ApplicationService with HealthCheckService, ApiAkkaHttp] = ZLayer {
+  val live: URLayer[HttpServer.Config with ItemRepository with HealthCheckService, ApiAkkaHttp] = ZLayer {
     for {
       healthCheck <- ZIO.service[HealthCheckService]
-      application <- ZIO.service[ApplicationService]
-    } yield new Impl(healthCheck, application)
+      itemRepository <- ZIO.service[ItemRepository]
+    } yield new Impl(healthCheck, itemRepository)
   }
 
 }
