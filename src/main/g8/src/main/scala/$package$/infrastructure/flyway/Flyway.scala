@@ -1,5 +1,7 @@
 package $package$.infrastructure.flyway
 
+import javax.sql.DataSource
+
 import org.flywaydb.core.api.FlywayException
 import org.flywaydb.core.{ Flyway => FlywayCore }
 
@@ -14,9 +16,9 @@ final class Flyway private (private val underlying: FlywayCore) {
 }
 
 object Flyway {
-  def apply(url: String, user: String, password: String): IO[FlywayException, Flyway] =
+  def apply(ds: DataSource): IO[FlywayException, Flyway] =
     ZIO
-      .attempt(FlywayCore.configure().dataSource(url, user, password).load())
+      .attempt(FlywayCore.configure().dataSource(ds).load)
       .refineToOrDie[FlywayException]
       .map(flywayCore => new Flyway(flywayCore))
 

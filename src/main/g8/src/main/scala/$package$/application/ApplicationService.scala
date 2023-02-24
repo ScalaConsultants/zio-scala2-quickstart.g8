@@ -1,88 +1,48 @@
 package $package$.application
 
-import zio.{ IO, URLayer, ZIO, ZLayer }
+import zio.ZIO
 
 import $package$.domain._
 
-trait ApplicationService {
-
-  def addItem(name: String, price: BigDecimal): IO[DomainError, ItemId]
-
-  def deleteItem(itemId: ItemId): IO[DomainError, Int]
-
-  def getItem(itemId: ItemId): IO[DomainError, Option[Item]]
-
-  val getItems: IO[DomainError, List[Item]]
-
-  def partialUpdateItem(itemId: ItemId, name: Option[String], price: Option[BigDecimal]): IO[DomainError, Option[Item]]
-
-  def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Item]]
-}
-
 object ApplicationService {
 
-  val live: URLayer[ItemRepository, ApplicationService] = ZLayer {
+  def addItem(name: String, price: BigDecimal): ZIO[ItemRepository, DomainError, ItemId] =
+    ZIO.serviceWithZIO[ItemRepository](_.add(ItemData(name, price)))
+
+  def deleteItem(id: ItemId): ZIO[ItemRepository, DomainError, Int] =
+    ZIO.serviceWithZIO[ItemRepository](_.delete(id))
+
+  def getAllItems(): ZIO[ItemRepository, DomainError, List[Item]] =
+    ZIO.serviceWithZIO[ItemRepository](_.getAll)
+
+  def getItemById(id: ItemId): ZIO[ItemRepository, DomainError, Option[Item]] =
+    ZIO.serviceWithZIO[ItemRepository](_.getById(id))
+
+  def updateItem(
+      id: ItemId,
+      name: String,
+      price: BigDecimal,
+    ): ZIO[ItemRepository, DomainError, Option[Item]] =
     for {
-      repo <- ZIO.service[ItemRepository]
-    } yield new ApplicationService {
-      override def addItem(name: String, price: BigDecimal): IO[DomainError, ItemId] =
-        repo.add(ItemData(name, price))
-
-      override def deleteItem(itemId: ItemId): IO[DomainError, Int] =
-        repo.delete(itemId)
-
-      override def getItem(itemId: ItemId): IO[DomainError, Option[Item]] =
-        repo.getById(itemId)
-
-      override val getItems: IO[DomainError, List[Item]] =
-        repo.getAll
-
-      override def partialUpdateItem(
-        itemId: ItemId,
-        name: Option[String],
-        price: Option[BigDecimal]
-      ): IO[DomainError, Option[Item]] = {
-
-        val result = for {
-          item <- repo.getById(itemId).some
-          data  = ItemData(name.getOrElse(item.name), price.getOrElse(item.price))
-          _    <- repo
-                    .update(itemId, data)
-                    .mapError(Some(_))
-        } yield Item.withData(itemId, data)
-
-        result.unsome
-      }
-
-      def updateItem(itemId: ItemId, name: String, price: BigDecimal): IO[DomainError, Option[Item]] =
-        for {
-          data         <- ZIO.succeed(ItemData(name, price))
-          maybeUpdated <- repo.update(itemId, data)
-          maybeItem     = maybeUpdated.map(_ => Item.withData(itemId, data))
-        } yield maybeItem
-    }
-  }
-
-  def addItem(name: String, price: BigDecimal): ZIO[ApplicationService, DomainError, ItemId] =
-    ZIO.environmentWithZIO(_.get.addItem(name, price))
-
-  def deleteItem(itemId: ItemId): ZIO[ApplicationService, DomainError, Int] =
-    ZIO.environmentWithZIO(_.get.deleteItem(itemId))
-
-  def getItem(itemId: ItemId): ZIO[ApplicationService, DomainError, Option[Item]] =
-    ZIO.environmentWithZIO(_.get.getItem(itemId))
-
-  val getItems: ZIO[ApplicationService, DomainError, List[Item]] =
-    ZIO.environmentWithZIO(_.get.getItems)
+      repo         <- ZIO.service[ItemRepository]
+      data         <- ZIO.succeed(ItemData(name, price))
+      maybeUpdated <- repo.update(id, data)
+    } yield maybeUpdated.map(_ => Item.withData(id, data))
 
   def partialUpdateItem(
-    itemId: ItemId,
-    name: Option[String],
-    price: Option[BigDecimal]
-  ): ZIO[ApplicationService, DomainError, Option[Item]] =
-    ZIO.environmentWithZIO(_.get.partialUpdateItem(itemId, name, price))
+      id: ItemId,
+      name: Option[String],
+      price: Option[BigDecimal],
+    ): ZIO[ItemRepository, DomainError, Option[Item]] = {
+    
+    val result = for {
+      repo        <- ZIO.service[ItemRepository]
+      currentItem <- repo.getById(id).some
+      data        = ItemData(name.getOrElse(currentItem.name), price.getOrElse(currentItem.price))
+      _           <- repo.update(id, data).some
+    } yield Item.withData(id, data)
 
-  def updateItem(itemId: ItemId, name: String, price: BigDecimal): ZIO[ApplicationService, DomainError, Option[Item]] =
-    ZIO.environmentWithZIO(_.get.updateItem(itemId, name, price))
+    result.unsome
+  }
 
 }
