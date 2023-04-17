@@ -3,7 +3,7 @@ val zioJsonVersion        = "0.3.0-RC11"
 val zioConfigVersion      = "3.0.2"
 val logbackClassicVersion = "1.2.11"
 val postgresqlVersion     = "42.5.4"
-val testContainersVersion = "0.40.11"
+val testContainersVersion = "0.40.15"
 val zioLoggingVersion     = "2.1.2"
 val flywayVersion         = "9.15.0"
 $if(enable_akka_http.truthy)$
