@@ -1,11 +1,11 @@
-val zioVersion            = "2.0.2"
-val zioJsonVersion        = "0.3.0-RC11"
-val zioConfigVersion      = "3.0.2"
-val logbackClassicVersion = "1.2.11"
-val postgresqlVersion     = "42.5.4"
-val testContainersVersion = "0.40.11"
-val zioLoggingVersion     = "2.1.2"
-val flywayVersion         = "9.15.0"
+val zioVersion            = "2.0.13"
+val zioJsonVersion        = "0.5.0"
+val zioConfigVersion      = "3.0.7"
+val logbackClassicVersion = "1.4.7"
+val postgresqlVersion     = "42.6.0"
+val testContainersVersion = "0.40.15"
+val zioLoggingVersion     = "2.1.12"
+val flywayVersion         = "9.16.3"
 $if(enable_akka_http.truthy)$
 val akkaHttpVersion       = "10.2.10"
 val akkaVersion           = "2.6.20"
@@ -13,7 +13,7 @@ val zioAkkaHttpInterop    = "0.6.0"
 val akkaHttpZioJson       = "1.40.0-RC3"
 $endif$
 $if(enable_zio_http.truthy)$
-val zioHttpVersion        = "2.0.0-RC10"
+val zioHttpVersion        = "3.0.0-RC1"
 $endif$
 $if(enable_slick.truthy)$
 val slickVersion          = "3.4.1"
@@ -29,12 +29,8 @@ val dockerReleaseSettings = Seq(
   dockerBaseImage      := "eclipse-temurin:17.0.4_8-jre"
 )
 
-lazy val It = config("it").extend(Test)
-
 val root = (project in file("."))
-  .configs(It)
   .settings(
-    inConfig(It)(Defaults.testSettings),
     inThisBuild(
       List(
         organization := "$organization$",
@@ -46,7 +42,7 @@ val root = (project in file("."))
     libraryDependencies ++= Seq(
 $if(enable_zio_http.truthy)$
       // zio-http
-      "io.d11" %% "zhttp" % zioHttpVersion,
+      "dev.zio" %% "zio-http" % zioHttpVersion,
 $endif$
 $if(enable_akka_http.truthy)$
       // akka-http
@@ -88,7 +84,7 @@ $if(enable_akka_http.truthy)$
       "com.typesafe.akka"  %% "akka-actor-testkit-typed"        % akkaVersion           % Test,
 $endif$
       "dev.zio"            %% "zio-test-sbt"                    % zioVersion            % Test,
-      "com.dimafeng"       %% "testcontainers-scala-postgresql" % testContainersVersion % It
+      "com.dimafeng"       %% "testcontainers-scala-postgresql" % testContainersVersion % Test
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     dockerReleaseSettings

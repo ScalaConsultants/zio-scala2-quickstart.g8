@@ -22,7 +22,7 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
 
   private def allItems: ZIO[ItemRepository, Throwable, List[Item]] = ItemRepository.getAll.mapError(_.asThrowable)
 
-  ZIO.scoped(migrateDbSchema)
+  ZIO.scoped(migrateDbSchema): Unit
 
   private val suites = suite("Item Repository")(
     //  def addItem
@@ -45,7 +45,6 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
     test("Should not allow to add wrong data to db") {
       val name: String      = ""
       val price: BigDecimal = null
-      ZIO.scoped(migrateDbSchema)
       for {
         error <- ItemRepository.add(ItemData(name, price)).flip.orDieWith(flippingFailure)
       } yield assert(error.toString)(startsWithString("RepositoryError(java.lang.NullPointerException"))
@@ -123,6 +122,6 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
     }
   ) @@ before(FlywayProvider.flyway.flatMap(_.migrate))
 
-  override val spec: Spec[TestEnvironment with Scope, Object] = suites.provideLayer(itLayers)
+  override val spec: Spec[TestEnvironment with Scope, Object] = suites.provide(itLayers)
 
 }

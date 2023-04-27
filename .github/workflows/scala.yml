@@ -10,8 +10,23 @@ jobs:
   build:
     strategy:
       matrix:
-        enable-zio-http: [yes, no]
-        enable-akka-http: [yes, no]
+        include:
+          - enable-zio-http: yes
+            enable-akka-http: no
+            enable-quill: yes
+            enable-slick: no
+          - enable-zio-http: yes
+            enable-akka-http: no
+            enable-quill: no
+            enable-slick: yes
+          - enable-zio-http: no
+            enable-akka-http: yes
+            enable-quill: yes
+            enable-slick: no
+          - enable-zio-http: no
+            enable-akka-http: yes
+            enable-quill: no
+            enable-slick: yes
     runs-on: ubuntu-latest
     steps:
     - name: Checkout source code
@@ -37,6 +52,6 @@ jobs:
           ~/Library/Caches/Coursier/v1
         key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
-    - name: Run | enable_zio_http=${{ matrix.enable-zio-http}}, enable_akka_http=${{ matrix.enable-akka-http }}
-      run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("enable_zio_http" -> "${{ matrix.enable-zio-http }}", "enable_akka_http" -> "${{ matrix.enable-akka-http }}") }; test'
+    - name: Run | enable_zio_http=${{ matrix.enable-zio-http}}, enable_akka_http=${{ matrix.enable-akka-http }}, enable_quill=${{ matrix.enable-quill }}, enable_slick=${{ matrix.enable-slick }}
+      run: sbt ';set g8Properties in g8 in Test ~= { _ ++ Map("enable_zio_http" -> "${{ matrix.enable-zio-http }}", "enable_akka_http" -> "${{ matrix.enable-akka-http }}", "enable_quill" -> "${{ matrix.enable-quill }}", "enable_slick" -> "${{ matrix.enable-slick }}") }; test'
 
