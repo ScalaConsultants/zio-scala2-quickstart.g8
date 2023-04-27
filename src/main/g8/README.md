@@ -42,14 +42,9 @@ You can override the defaults with the following environment variables:
 
 ## Testing
 
-Run unit tests: 
+Run tests: 
 ```
 sbt test
-```
-
-Run integration tests:
-```
-sbt it:test
 ```
 
 The integration tests are using [testcontainers](https://www.testcontainers.org/) to run dockerized PostgrSQL instance and Flyway to apply schema evolutions before running the tests.

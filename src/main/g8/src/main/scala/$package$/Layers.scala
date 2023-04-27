@@ -1,7 +1,7 @@
 package $package$
 
 $if(enable_slick.truthy)$
-import com.typesafe.config.Config
+import com.typesafe.config.{ Config, ConfigFactory }
 import com.zaxxer.hikari.{ HikariConfig, HikariDataSource }
 import slick.interop.zio.DatabaseProvider
 import slick.jdbc.{ JdbcProfile, PostgresProfile }
@@ -26,9 +26,6 @@ import $package$.domain.InMemoryItemRepository
 $endif$
 import $package$.infrastructure.flyway.FlywayProvider
 import $package$.api.healthcheck.HealthCheckService
-$if(enable_slick.truthy)$
-import $package$.config.AppConfig
-$endif$
 import $package$.domain.ItemRepository
 
 object Layers {
@@ -41,9 +38,13 @@ object Layers {
 $if(enable_slick.truthy)$
   private val jdbcProfileLayer: ULayer[JdbcProfile] = ZLayer.succeed[JdbcProfile](PostgresProfile)
 
-  private val dbConfigLayer: ULayer[Config] = AppConfig.RawConfig.live.project { config =>
-    config.getConfig("dataSource")
-  }
+  private val dbConfigLayer: ULayer[Config] = 
+    ZLayer {
+      ZIO
+        .attempt(ConfigFactory.load.resolve)
+        .orDie
+        .map(_.getConfig("dataSource"))
+    }
 
   private val dataSourceLayer = dbConfigLayer.project[HikariDataSource] { config => 
     new HikariDataSource(
