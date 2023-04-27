@@ -15,7 +15,7 @@ object BootZioHttp extends ZIOAppDefault {
     ZLayer
       .service[ApiConfig]
       .flatMap { cfg =>
-        Server.defaultWithPort(cfg.get.port)
+        Server.defaultWith(_.binding(cfg.get.host, cfg.get.port))
       }
       .orDie
 
