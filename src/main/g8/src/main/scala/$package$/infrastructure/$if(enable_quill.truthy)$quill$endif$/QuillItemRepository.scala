@@ -26,7 +26,7 @@ class QuillItemRepository(quill: Quill.Postgres[Literal]) extends ItemRepository
     run(addQuery).either.resurrect.refineOrDie { case e: NullPointerException =>
       RepositoryError(e)
     }.flatMap {
-      case Left(e) => ZIO.fail(RepositoryError(e))
+      case Left(e)       => ZIO.fail(RepositoryError(e))
       case Right(itemId) => ZIO.succeed(itemId)
     }
   }
@@ -67,7 +67,7 @@ class QuillItemRepository(quill: Quill.Postgres[Literal]) extends ItemRepository
   }
 
   override def update(id: ItemId, data: ItemData): IO[RepositoryError, Option[Unit]] = {
-    
+
     val updateQuery = quote {
       itemsSchema
         .filter(item => item.id == lift(id))
