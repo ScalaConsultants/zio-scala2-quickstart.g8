@@ -32,8 +32,6 @@ By default the server is started at `http://localhost:8080`. Expects the databas
 
 You can override the defaults with the following environment variables:
 
-- API_HOST
-- API_PORT
 - DB_HOST
 - DB_PORT
 - DB_NAME
