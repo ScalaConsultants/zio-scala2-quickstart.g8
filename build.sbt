@@ -1,5 +1,5 @@
 // Dependencies are needed for Scala Steward to check if there are newer versions
-val zioVersion            = "2.0.2"
+val zioVersion            = "2.0.11"
 val zioJsonVersion        = "0.3.0-RC11"
 val zioConfigVersion      = "3.0.2"
 val logbackClassicVersion = "1.2.11"
@@ -11,7 +11,7 @@ val akkaHttpVersion       = "10.2.10"
 val akkaVersion           = "2.6.20"
 val zioAkkaHttpInterop    = "0.6.0"
 val akkaHttpZioJson       = "1.40.0-RC3"
-val zioHttpVersion        = "2.0.0-RC10"
+val zioHttpVersion        = "3.0.0-RC1"
 val slickVersion          = "3.4.1"
 val zioSlickInterop       = "0.6.0"
 val quillVersion          = "4.6.0"
@@ -40,7 +40,7 @@ val root = (project in file("."))
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     libraryDependencies ++= Seq(
       // zio-http
-      "io.d11" %% "zhttp" % zioHttpVersion,
+      "dev.zio" %% "zio-http" % zioHttpVersion,
 
       // akka-http
       "com.typesafe.akka" %% "akka-http"             % akkaHttpVersion,
@@ -76,7 +76,7 @@ val root = (project in file("."))
       "com.typesafe.akka" %% "akka-stream-testkit"             % akkaVersion,
       "com.typesafe.akka" %% "akka-actor-testkit-typed"        % akkaVersion,
       "dev.zio"           %% "zio-test-sbt"                    % zioVersion            % Test,
-      "com.dimafeng"      %% "testcontainers-scala-postgresql" % testContainersVersion % It
+      "com.dimafeng"      %% "testcontainers-scala-postgresql" % testContainersVersion % Test
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
