@@ -123,6 +123,6 @@ object ItItemRepositorySpec extends ITSpec(Some("items")) {
     }
   ) @@ before(FlywayProvider.flyway.flatMap(_.migrate))
 
-  override val spec: Spec[TestEnvironment with Scope, Object] = suites.provideLayer(itLayers)
+  override val spec: Spec[TestEnvironment with Scope, Object] = suites.provide(itLayers)
 
 }

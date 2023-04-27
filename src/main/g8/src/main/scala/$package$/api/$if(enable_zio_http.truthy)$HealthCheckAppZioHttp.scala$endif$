@@ -1,7 +1,7 @@
 package $package$.api
 
 import zio._
-import zhttp.http._
+import zio.http._
 
 import $package$.api.healthcheck.HealthCheckService
 

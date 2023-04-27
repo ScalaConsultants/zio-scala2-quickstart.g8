@@ -26,7 +26,7 @@ object Postgres {
     }
   }
 
-  def postgres(currentSchema: Option[String] = None): URLayer[Scope, SchemaAwarePostgresContainer] = {
+  def postgres(currentSchema: Option[String] = None): ULayer[SchemaAwarePostgresContainer] = {
 
     val acquire: UIO[SchemaAwarePostgresContainer] = ZIO.attemptBlocking {
 
@@ -45,7 +45,7 @@ object Postgres {
 
     }.orDie
 
-    ZLayer {
+    ZLayer.scoped {
       ZIO.acquireRelease(acquire) { container =>
         ZIO.attemptBlocking(container.stop()).orDie
       }

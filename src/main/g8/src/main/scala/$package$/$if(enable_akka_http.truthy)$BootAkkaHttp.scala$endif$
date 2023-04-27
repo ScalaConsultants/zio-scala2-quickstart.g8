@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import $package$.api._
-import $package$.config.AppConfig
+import $package$.config.Configuration.ApiConfig
 import $package$.infrastructure.flyway.FlywayProvider
 
 object BootAkkaHttp extends ZIOAppDefault {
@@ -37,7 +37,8 @@ object BootAkkaHttp extends ZIOAppDefault {
     Layers.itemRepository,
     Layers.healthCheckService,
     Layers.flyway,
-    Layers.logger
+    Layers.logger,
+    ApiConfig.layer,
   )
 
   object AkkaActorSystem {
@@ -55,11 +56,12 @@ object BootAkkaHttp extends ZIOAppDefault {
   }
 
   object HttpServerConfig {
-    val live: ULayer[HttpServer.Config] =
-      AppConfig.Api.live.flatMap { appConfigEnv: ZEnvironment[AppConfig.ApiConfig] =>
-        val appConfig = appConfigEnv.get
-        ZLayer.succeed(HttpServer.Config(appConfig.host, appConfig.port))
-      }
+    val live =
+      ZLayer
+        .service[ApiConfig]
+        .flatMap { cfg =>
+          ZLayer.succeed(HttpServer.Config(cfg.get.host, cfg.get.port))
+        }
   }
 
 }
