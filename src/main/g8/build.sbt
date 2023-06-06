@@ -1,4 +1,4 @@
-val zioVersion            = "2.0.13"
+val zioVersion            = "2.0.15"
 val zioJsonVersion        = "0.5.0"
 val zioConfigVersion      = "3.0.7"
 val logbackClassicVersion = "1.4.7"
