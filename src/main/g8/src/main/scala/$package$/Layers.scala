@@ -38,7 +38,7 @@ object Layers {
   $if(enable_slick.truthy) $
   private val jdbcProfileLayer: ULayer[JdbcProfile] = ZLayer.succeed[JdbcProfile](PostgresProfile)
 
-  private val dbConfigLayer: ULayer[Config] = 
+  private val dbConfigLayer: ULayer[Config] =
     ZLayer {
       ZIO
         .attempt(ConfigFactory.load.resolve)
