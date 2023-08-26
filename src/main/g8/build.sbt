@@ -1,5 +1,5 @@
 val zioVersion            = "2.0.13"
-val zioJsonVersion        = "0.5.0"
+val zioJsonVersion        = "0.6.1"
 val zioConfigVersion      = "3.0.7"
 val logbackClassicVersion = "1.4.7"
 val postgresqlVersion     = "42.6.0"
