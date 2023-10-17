@@ -5,7 +5,7 @@ val logbackClassicVersion = "1.4.7"
 val postgresqlVersion     = "42.6.0"
 val testContainersVersion = "0.40.15"
 val zioLoggingVersion     = "2.1.12"
-val flywayVersion         = "9.16.3"
+val flywayVersion         = "9.22.3"
 $if(enable_akka_http.truthy)$
 val akkaHttpVersion       = "10.2.10"
 val akkaVersion           = "2.6.20"
