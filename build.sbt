@@ -1,5 +1,5 @@
 // Dependencies are needed for Scala Steward to check if there are newer versions
-val zioVersion            = "2.0.19"
+val zioVersion            = "2.0.21"
 val zioJsonVersion        = "0.6.2"
 val zioConfigVersion      = "3.0.7"
 val logbackClassicVersion = "1.4.7"
