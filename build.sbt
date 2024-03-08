@@ -12,7 +12,7 @@ val akkaVersion           = "2.6.20"
 val zioAkkaHttpInterop    = "0.6.0"
 val akkaHttpZioJson       = "1.40.0-RC3"
 val zioHttpVersion        = "3.0.0-RC1"
-val slickVersion          = "3.4.1"
+val slickVersion          = "3.5.0"
 val zioSlickInterop       = "0.6.0"
 val quillVersion          = "4.6.1"
 
