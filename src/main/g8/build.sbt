@@ -20,7 +20,7 @@ val slickVersion          = "3.4.1"
 val zioSlickInterop       = "0.6.0"
 $endif$
 $if(enable_quill.truthy)$
-val quillVersion          = "4.6.1"
+val quillVersion          = "4.8.3"
 $endif$
 
 val dockerReleaseSettings = Seq(
